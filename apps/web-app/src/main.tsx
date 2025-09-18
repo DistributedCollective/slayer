@@ -1,17 +1,15 @@
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
-import { sdk } from 'sdk';
 
+import * as PrivyProvider from './integrations/privy/root-provider.tsx';
 import * as TanStackQueryProvider from './integrations/tanstack-query/root-provider.tsx';
-
+import * as Wagmi from './integrations/wagmi/root-provider.tsx';
 // Import the generated route tree
 import { routeTree } from './routeTree.gen';
 
 import reportWebVitals from './reportWebVitals.ts';
 import './styles.css';
-
-console.log(sdk());
 
 // Create a new router instance
 
@@ -40,9 +38,13 @@ if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
-      <TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
-        <RouterProvider router={router} />
-      </TanStackQueryProvider.Provider>
+      <PrivyProvider.Provider>
+        <TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
+          <Wagmi.Provider>
+            <RouterProvider router={router} />
+          </Wagmi.Provider>
+        </TanStackQueryProvider.Provider>
+      </PrivyProvider.Provider>
     </StrictMode>,
   );
 }

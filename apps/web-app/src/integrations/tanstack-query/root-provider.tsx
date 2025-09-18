@@ -15,7 +15,6 @@ export function Provider({
   queryClient: QueryClient;
 }) {
   return (
-    // @ts-expect-error react-query types are broken
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 }
