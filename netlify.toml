@@ -1,5 +1,4 @@
 [build]
-  base = "apps/web-app/"
   publish = "apps/web-app/dist"
   command = "pnpm build"
   ignore = "git diff --quiet HEAD^ HEAD apps/web-app"
