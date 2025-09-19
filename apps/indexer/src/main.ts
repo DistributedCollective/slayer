@@ -1,6 +1,8 @@
 import Fastify from 'fastify';
+import { slayerShared } from 'slayer-shared';
 import { app } from './app/app';
 
+console.log(slayerShared());
 const host = process.env.HOST ?? 'localhost';
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
 
