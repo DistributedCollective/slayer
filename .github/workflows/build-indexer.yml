@@ -9,7 +9,7 @@ on:
 
 jobs:
   call-workflow-init:
-    uses: DistributedCollective/.github/.github/workflows/init.yml@v2_staging
+    uses: DistributedCollective/.github/.github/workflows/init.yml@v3_staging
     with:
       ref: ${{ github.ref }}
       base_ref: ${{ github.base_ref }}
@@ -70,5 +70,5 @@ jobs:
           context: .
           file: ${{ needs.call-workflow-init.outputs.dockerfile_path }}/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ needs.call-workflow-init.outputs.registry }}/${{ inputs.IMAGE_NAME }}:${{ inputs.KUBE_NAMESPACE }}
+          tags: ${{ needs.call-workflow-init.outputs.registry }}/${{ inputs.IMAGE_NAME }}:${{ needs.call-workflow-init.outputs.KUBE_NAMESPACE }}
           labels: ${{ steps.meta.outputs.labels }}
