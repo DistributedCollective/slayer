@@ -15,6 +15,7 @@
   "devDependencies": {
     "@eslint/js": "^9.8.0",
     "@nx/devkit": "21.5.2",
+    "@nx/docker": "21.5.2",
     "@nx/esbuild": "21.5.2",
     "@nx/eslint": "21.5.2",
     "@nx/eslint-plugin": "21.5.2",

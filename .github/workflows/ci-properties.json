@@ -1,0 +1,29 @@
+{
+  "app_name": "slayer-indexer",
+  "aws_region": "us-east-2",
+  "k8s_cluster_name": "k8-mainnet",
+  "registry": "docker.io",
+  "image_name": "sovryn/slayer-indexer",
+  "prod_branch": "main",
+  "staging_branch": "staging",
+  "dev_branch": "develop",
+  "dockerfile_path": "./apps/indexer/",
+  "APP_ENV_VARS": {
+    "APP_NAME": "slayer-indexer",
+    "NODE_ENV": "production",
+    "LOG_LEVEL": "debug",
+    "PORT": "3000",
+    "POSTGRES_PORT": "5432",
+    "TZ": "UTC"
+  },
+  "DEV_ENV_VARS": {
+    "NODE_ENV": "production",
+    "SPAWN_WORKERS": "true",
+    "QUEUE_ACCESS": "true"
+  },
+  "STAGING_ENV_VARS": {},
+  "PROD_ENV_VARS": {
+    "NODE_ENV": "production",
+    "BYPASS_RATE_LIMIT": "true"
+  }
+}

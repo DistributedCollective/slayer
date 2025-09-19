@@ -105,6 +105,12 @@
       },
       "test": {
         "executor": "@nx/vite:test"
+      },
+      "docker:build": {
+        "dependsOn": [
+          "build",
+          "prune"
+        ]
       }
     }
   },
