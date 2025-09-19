@@ -21,7 +21,10 @@
     "SPAWN_WORKERS": "true",
     "QUEUE_ACCESS": "true"
   },
-  "STAGING_ENV_VARS": {},
+  "STAGING_ENV_VARS": {
+    "NODE_ENV": "production",
+    "BYPASS_RATE_LIMIT": "true"
+  },
   "PROD_ENV_VARS": {
     "NODE_ENV": "production",
     "BYPASS_RATE_LIMIT": "true"
