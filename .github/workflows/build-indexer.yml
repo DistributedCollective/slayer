@@ -15,6 +15,7 @@ jobs:
       base_ref: ${{ github.base_ref }}
 
   build:
+    needs: call-workflow-init
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -70,5 +71,5 @@ jobs:
           context: .
           file: ${{ needs.call-workflow-init.outputs.dockerfile_path }}/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ needs.call-workflow-init.outputs.registry }}/${{ inputs.IMAGE_NAME }}:${{ needs.call-workflow-init.outputs.KUBE_NAMESPACE }}
+          tags: ${{ needs.call-workflow-init.outputs.registry }}/${{ needs.call-workflow-init.outputs.image_name }}:${{ needs.call-workflow-init.outputs.KUBE_NAMESPACE }}
           labels: ${{ steps.meta.outputs.labels }}
