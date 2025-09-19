@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "nx dev web-app",
-    "build": "nx build web-app",
-    "lint": "nx eslint",
-    "format": "prettier",
-    "check": "prettier --write . && eslint --fix"
+    "build": "nx run-many -t build",
+    "build:web": "nx build web-app",
+    "build:indexer": "nx build indexer",
+    "serve:web": "nx serve web-app",
+    "serve:indexer": "nx serve indexer"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",
