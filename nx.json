@@ -76,13 +76,6 @@
       "options": {
         "targetName": "e2e"
       }
-    },
-    {
-      "plugin": "@nx/docker",
-      "options": {
-        "buildTarget": "docker:build",
-        "runTarget": "docker:run"
-      }
     }
   ],
   "generators": {

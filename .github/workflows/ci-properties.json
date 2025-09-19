@@ -7,7 +7,7 @@
   "prod_branch": "main",
   "staging_branch": "staging",
   "dev_branch": "develop",
-  "dockerfile_path": "./apps/indexer/",
+  "dockerfile_path": ".",
   "APP_ENV_VARS": {
     "APP_NAME": "slayer-indexer",
     "NODE_ENV": "production",
