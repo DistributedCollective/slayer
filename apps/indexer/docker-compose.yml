@@ -1,0 +1,32 @@
+services:
+  node-api-db:
+    image: postgres:14.5-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=db
+    networks:
+      - slayer-network
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+
+  node-api-redis:
+    image: redis:8.2-alpine
+    restart: unless-stopped
+    networks:
+      - slayer-network
+    volumes:
+      - redisdata:/data
+    ports:
+      - '6379:6379'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+
+networks:
+  slayer-network:
+    driver: bridge

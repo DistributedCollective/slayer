@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "drizzle-kit": "nx run indexer:drizzle-kit",
     "build:web": "nx build web-app",
     "build:indexer": "nx build indexer",
     "serve:web": "nx serve web-app",

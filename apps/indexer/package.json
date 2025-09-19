@@ -2,6 +2,9 @@
   "name": "indexer",
   "version": "0.0.1",
   "private": true,
+  "scripts": {
+    "drizzle-kit": "drizzle-kit"
+  },
   "nx": {
     "targets": {
       "build": {
