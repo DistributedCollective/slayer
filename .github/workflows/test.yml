@@ -1,0 +1,40 @@
+name: Run Tests
+
+on:
+  push:
+    branches: ['develop', 'main']
+  pull_request:
+    branches: ['develop', 'main']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [24.x]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: NX cache
+        id: cache-nx
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-nx
+        with:
+          path: .nx
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - run: pnpm install
+      - run: pnpm nx run-many -t test

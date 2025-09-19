@@ -1,4 +1,6 @@
-import Fastify, { FastifyInstance } from 'fastify';
+import type { FastifyInstance } from 'fastify';
+import Fastify from 'fastify';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { app } from './app';
 
 describe('GET /', () => {
