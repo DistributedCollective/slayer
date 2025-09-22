@@ -28,6 +28,8 @@ export default [
           ],
         },
       ],
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      'no-constant-binary-expression': 'off',
     },
   },
 ];

@@ -7,11 +7,13 @@ import {
 } from 'fastify-type-provider-zod';
 import path from 'node:path';
 import { app } from './app/app';
+import './crontab';
 import { client } from './database/client';
 import { ENV } from './env';
 import { logger } from './libs/logger';
 import { onShutdown } from './libs/shutdown';
 import { notifyReady, onReady } from './libs/startup';
+import './workers/spawner';
 
 // Instantiate Fastify with some config
 const server = Fastify({
@@ -54,5 +56,11 @@ server.register(app);
 })();
 
 // we can add hooks to startup and shutdown events
-onReady(() => logger.info('Service is ready to accept requests'));
+onReady(() => {
+  logger.info('Service is ready to accept requests');
+  if (ENV.READ_ONLY_MODE) {
+    logger.warn('Running in READ-ONLY mode');
+  }
+});
+
 onShutdown(() => server.close());

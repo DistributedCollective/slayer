@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { cleanEnv, port, str } from 'envalid';
+import { bool, cleanEnv, port, str } from 'envalid';
 
 export const ENV = cleanEnv(process.env, {
   PORT: port({ default: 8000 }),
@@ -10,4 +10,6 @@ export const ENV = cleanEnv(process.env, {
   REDIS_URL: str(),
 
   CORS_ORIGINS: str({ default: '*' }),
+
+  READ_ONLY_MODE: bool({ default: false }),
 });
