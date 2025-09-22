@@ -10,6 +10,8 @@ interface ImportMetaEnv {
   readonly VITE_APP_TITLE: string;
   readonly VITE_PRIVY_APP_ID: string;
   readonly VITE_PRIVY_APP_CLIENT_ID: string;
+
+  readonly VTE_API_BASE: string;
 }
 
 interface ImportMeta {

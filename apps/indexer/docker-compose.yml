@@ -1,6 +1,7 @@
 services:
-  node-api-db:
-    image: postgres:14.5-alpine
+  slayer-db:
+    container_name: slayer-db
+    image: postgres:13.18-alpine
     restart: unless-stopped
     environment:
       - POSTGRES_USER=postgres
@@ -8,20 +9,17 @@ services:
       - POSTGRES_DB=db
     networks:
       - slayer-network
-    volumes:
-      - pgdata:/var/lib/postgresql/data
     ports:
       - '5432:5432'
     extra_hosts:
       - 'host.docker.internal:host-gateway'
 
-  node-api-redis:
-    image: redis:8.2-alpine
+  slayer-redis:
+    container_name: slayer-redis
+    image: redis:7.0.7-alpine
     restart: unless-stopped
     networks:
       - slayer-network
-    volumes:
-      - redisdata:/data
     ports:
       - '6379:6379'
     extra_hosts:

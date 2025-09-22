@@ -69,4 +69,7 @@ export default defineConfig(() => ({
       // 'sdk': path.resolve(__dirname, '../../packages/sdk/src'),
     },
   },
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+  },
 }));

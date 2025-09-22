@@ -8,7 +8,9 @@
     "build:indexer": "nx build indexer",
     "serve:web": "nx serve web-app",
     "serve:indexer": "nx serve indexer",
+    "docker:indexer": "nx docker indexer",
     "build": "nx run-many -t build",
+    "serve": "nx run-many -t serve",
     "test": "nx run-many -t test",
     "format": "prettier --write . && eslint --fix"
   },
