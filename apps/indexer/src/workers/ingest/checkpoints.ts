@@ -62,7 +62,7 @@ const markBackfillProgress = async (
         ? now.getTime() - new Date(Number(highWater)).getTime() <= 300_000
         : false;
 
-    if (cursor === null || nearNow) {
+    if (cursor === undefined || nearNow) {
       await client
         .update(tIngestionSources)
         .set({
@@ -91,12 +91,12 @@ const markBackfillProgress = async (
 
 const markIncrementalProgress = async (
   key: string,
-  cursor?: string | null,
+  cursor?: string,
   highWater?: string,
 ) => {
   try {
     const now = new Date();
-    if (highWater !== undefined && highWater !== null) {
+    if (highWater !== undefined) {
       await client
         .update(tIngestionSources)
         .set({

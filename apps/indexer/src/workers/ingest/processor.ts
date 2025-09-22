@@ -111,10 +111,10 @@ async function handleBackfill(
   const { highWater } = await adapter.ingest(items, ctx);
 
   if (!isLiveFallback) {
-    await adapter.onBackfillIngested?.(items, ctx, nextCursor === null);
+    await adapter.onBackfillIngested?.(items, ctx, nextCursor === undefined);
     await checkpoints.markBackfillProgress(cp, nextCursor, highWater);
   } else {
-    await adapter.onLiveIngested?.(items, ctx, nextCursor === null);
+    await adapter.onLiveIngested?.(items, ctx, nextCursor === undefined);
     await checkpoints.markIncrementalProgress(cp.key, nextCursor, highWater);
   }
 
