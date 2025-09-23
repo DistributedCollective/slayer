@@ -3,6 +3,7 @@ import viteReact from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 
+import { devtools } from '@tanstack/devtools-vite';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
@@ -27,9 +28,11 @@ export default defineConfig(() => ({
   _root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/web-app',
   plugins: [
+    devtools(),
     fixPureAnnotations(),
     nodePolyfills(),
-    tanstackRouter({ autoCodeSplitting: true }),
+    // @ts-expect-error not well typed
+    ...tanstackRouter({ autoCodeSplitting: true }),
     viteReact(),
     tailwindcss(),
   ],

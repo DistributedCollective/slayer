@@ -2,14 +2,14 @@ import { defineConfig } from 'vite';
 
 export default defineConfig(() => ({
   root: __dirname,
-  cacheDir: '../../node_modules/.vite/packages/slayer-shared',
+  cacheDir: '../../node_modules/.vite/packages/shared',
   plugins: [],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
   test: {
-    name: 'slayer-shared',
+    name: 'shared',
     watch: false,
     globals: true,
     environment: 'node',

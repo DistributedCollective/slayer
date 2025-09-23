@@ -34,7 +34,7 @@
   },
   "references": [
     {
-      "path": "../../packages/slayer-shared"
+      "path": "../../packages/shared"
     },
     {
       "path": "../../packages/sdk"

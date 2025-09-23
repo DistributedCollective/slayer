@@ -4,5 +4,8 @@
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit",
     "source.sortImports": "explicit"
-  }
+  },
+  "cSpell.words": [
+    "sovryn"
+  ]
 }

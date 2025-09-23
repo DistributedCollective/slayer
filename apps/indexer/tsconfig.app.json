@@ -19,7 +19,10 @@
   ],
   "references": [
     {
-      "path": "../../packages/slayer-shared/tsconfig.lib.json"
+      "path": "../../packages/shared/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/sdk/tsconfig.lib.json"
     }
   ]
 }
