@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { bool, cleanEnv, port, str, testOnly } from 'envalid';
+import { bool, cleanEnv, makeValidator, port, str, testOnly } from 'envalid';
 
 export const ENV = cleanEnv(process.env, {
   PORT: port({ default: 8000 }),
@@ -14,4 +14,14 @@ export const ENV = cleanEnv(process.env, {
   CORS_ORIGINS: str({ default: '*' }),
 
   READ_ONLY_MODE: bool({ default: false }),
+
+  FLAGS: makeValidator((x) => {
+    try {
+      if (x && x.length)
+        return x.split(',').map((s: string) => s.trim().toLowerCase());
+      return [];
+    } catch {
+      throw new Error('FLAGS must be a comma-separated list of strings');
+    }
+  })({ default: [] }),
 });

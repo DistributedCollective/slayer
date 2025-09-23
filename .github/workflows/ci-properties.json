@@ -17,16 +17,10 @@
     "TZ": "UTC"
   },
   "DEV_ENV_VARS": {
-    "NODE_ENV": "production",
-    "SPAWN_WORKERS": "true",
-    "QUEUE_ACCESS": "true"
+    "FLAGS": "ui"
   },
   "STAGING_ENV_VARS": {
-    "NODE_ENV": "production",
-    "BYPASS_RATE_LIMIT": "true"
+    "FLAGS": "staging,ui"
   },
-  "PROD_ENV_VARS": {
-    "NODE_ENV": "production",
-    "BYPASS_RATE_LIMIT": "true"
-  }
+  "PROD_ENV_VARS": {}
 }
