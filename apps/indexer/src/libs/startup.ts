@@ -5,10 +5,10 @@ let ready = false;
 
 const log = logger.child({ module: 'startup' });
 
-export function onReady(callback?: () => void) {
+export async function onReady(callback?: () => void | Promise<void>) {
   if (callback) {
     if (ready) {
-      Promise.allSettled([callback()]);
+      await Promise.allSettled([callback()]);
     } else {
       callbacks.push(callback);
     }
