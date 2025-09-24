@@ -1,9 +1,9 @@
+import { Chain, ChainId } from '../../configs/chains';
 import { TIngestionSource } from '../../database/schema';
-import { Chain } from '../../libs/chain';
 
 export type IngestWorkerType = {
   source: string;
-  chainId: number;
+  chainId: ChainId;
   cursor?: string;
 };
 
@@ -29,7 +29,7 @@ export enum HighWaterMark {
 
 export interface SourceAdapter<T = unknown, C = unknown> {
   name: string;
-  chains: number[];
+  chains: ChainId[];
 
   // highWaterMark determines the strategy for watermarking (date timestamps or block numbers (blocks can be also used as alphanumeric strings))
   highWaterMark?: HighWaterMark;

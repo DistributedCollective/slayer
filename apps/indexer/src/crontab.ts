@@ -1,6 +1,6 @@
 import { CronJob } from 'cron';
+import { chains } from './configs/chains';
 import { ENV } from './env';
-import { networks } from './libs/chain';
 import { onReady } from './libs/startup';
 import { ingestSources } from './workers/ingest/sources';
 import { ingestQueue } from './workers/queues';
@@ -10,10 +10,9 @@ if (!ENV.READ_ONLY_MODE) {
     CronJob.from({
       cronTime: '*/10 * * * * *',
       onTick: async () => {
-        // const chains = networks.list()
         const items = ingestSources.flatMap((item) =>
           item.chains
-            .filter((chainId) => networks.find((c) => c.chainId === chainId))
+            .filter((chainId) => chains.get(chainId))
             .map((chainId) => ({ source: item.name, chainId })),
         );
 
