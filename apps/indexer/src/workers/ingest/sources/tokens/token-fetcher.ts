@@ -28,9 +28,9 @@ export const tokenFetcherSource: SourceAdapter<TokenData> = {
     // rsk testnet
     31,
     // bob mainnet
-    60808,
+    // 60808,
     // bob testnet
-    808813,
+    // 808813,
   ],
 
   // update once per 5 minutes

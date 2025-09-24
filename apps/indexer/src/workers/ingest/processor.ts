@@ -4,8 +4,8 @@ import '../../env';
 import { getAdapter } from './helpers';
 import { Context, HighWaterMark, IngestWorkerType } from './types';
 
+import { chains } from '../../configs/chains';
 import { TIngestionSource, TIngestionSourceMode } from '../../database/schema';
-import { Chain } from '../../libs/chain';
 import { encode } from '../../libs/encode';
 import { logger } from '../../libs/logger';
 import { ingestQueue } from '../queues';
@@ -26,8 +26,7 @@ export default async function (job: Job<IngestWorkerType>) {
       adapter.highWaterMark,
     );
 
-    // const chain = networks.getByChainId(job.data.chainId);
-    const chain: Chain = { chainId: Number(job.data.chainId) }; // TODO: implement chain fetching
+    const chain = chains.get(job.data.chainId);
     const ctx: Context = { chain, checkpoint: cp };
 
     if (adapter.enabled) {
