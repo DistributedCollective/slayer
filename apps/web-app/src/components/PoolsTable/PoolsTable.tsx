@@ -63,8 +63,12 @@ export default function PoolsTable() {
                   </TableRow>
                 </CollapsibleTrigger>
 
-                <CollapsibleContent className="w-full" asChild>
-                  <PoolDetails />
+                <CollapsibleContent asChild>
+                  <TableRow>
+                    <TableCell colSpan={6} className="p-0">
+                      <PoolDetails />
+                    </TableCell>
+                  </TableRow>
                 </CollapsibleContent>
               </>
             </Collapsible>

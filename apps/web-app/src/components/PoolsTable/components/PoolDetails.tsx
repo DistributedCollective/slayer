@@ -22,22 +22,20 @@ const data = [
 
 export default function PoolDetails() {
   return (
-    <div className="flex items-center justify-between m-4 w-full">
+    <div className="flex items-center justify-around p-6 gap-4">
       <Card>
-        <CardContent>
-          <div className="flex justify-between mb-2">
-            <span className="font-medium">DLLR/BTC</span>
-            <span className="text-sm text-muted-foreground">
-              Up to 0.16% APR
-            </span>
-          </div>
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Current balance</span>
-            <span>0 DLLR / 0 BTC</span>
-          </div>
+        <CardContent className="gap-2 grid grid-cols-2">
+          <span className="font-medium">LP fee rate</span>
+          <span className="text-right">0%</span>
+
+          <span className="font-medium">Stakers fee rate</span>
+          <span className="text-right">1%</span>
+
+          <span className="font-medium">Total fee rate</span>
+          <span className="text-right">1%</span>
         </CardContent>
       </Card>
-      <div className="w-full h-[500px] bg-muted rounded-xl p-6">
+      <div className="h-[350px] w-[500px] bg-muted rounded-xl p-6">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#333" />
