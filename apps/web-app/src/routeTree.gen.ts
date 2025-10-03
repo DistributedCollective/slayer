@@ -9,15 +9,39 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StakeRouteImport } from './routes/stake'
 import { Route as MoneyMarketRouteImport } from './routes/money-market'
+import { Route as LendRouteImport } from './routes/lend'
+import { Route as ConvertRouteImport } from './routes/convert'
+import { Route as ComponentsRouteImport } from './routes/components'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo.tanstack-query'
 import { Route as DemoFormSimpleRouteImport } from './routes/demo.form.simple'
 import { Route as DemoFormAddressRouteImport } from './routes/demo.form.address'
 
+const StakeRoute = StakeRouteImport.update({
+  id: '/stake',
+  path: '/stake',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MoneyMarketRoute = MoneyMarketRouteImport.update({
   id: '/money-market',
   path: '/money-market',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LendRoute = LendRouteImport.update({
+  id: '/lend',
+  path: '/lend',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConvertRoute = ConvertRouteImport.update({
+  id: '/convert',
+  path: '/convert',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComponentsRoute = ComponentsRouteImport.update({
+  id: '/components',
+  path: '/components',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -43,14 +67,22 @@ const DemoFormAddressRoute = DemoFormAddressRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/components': typeof ComponentsRoute
+  '/convert': typeof ConvertRoute
+  '/lend': typeof LendRoute
   '/money-market': typeof MoneyMarketRoute
+  '/stake': typeof StakeRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/demo/form/address': typeof DemoFormAddressRoute
   '/demo/form/simple': typeof DemoFormSimpleRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/components': typeof ComponentsRoute
+  '/convert': typeof ConvertRoute
+  '/lend': typeof LendRoute
   '/money-market': typeof MoneyMarketRoute
+  '/stake': typeof StakeRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/demo/form/address': typeof DemoFormAddressRoute
   '/demo/form/simple': typeof DemoFormSimpleRoute
@@ -58,7 +90,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/components': typeof ComponentsRoute
+  '/convert': typeof ConvertRoute
+  '/lend': typeof LendRoute
   '/money-market': typeof MoneyMarketRoute
+  '/stake': typeof StakeRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/demo/form/address': typeof DemoFormAddressRoute
   '/demo/form/simple': typeof DemoFormSimpleRoute
@@ -67,21 +103,33 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/components'
+    | '/convert'
+    | '/lend'
     | '/money-market'
+    | '/stake'
     | '/demo/tanstack-query'
     | '/demo/form/address'
     | '/demo/form/simple'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/components'
+    | '/convert'
+    | '/lend'
     | '/money-market'
+    | '/stake'
     | '/demo/tanstack-query'
     | '/demo/form/address'
     | '/demo/form/simple'
   id:
     | '__root__'
     | '/'
+    | '/components'
+    | '/convert'
+    | '/lend'
     | '/money-market'
+    | '/stake'
     | '/demo/tanstack-query'
     | '/demo/form/address'
     | '/demo/form/simple'
@@ -89,7 +137,11 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ComponentsRoute: typeof ComponentsRoute
+  ConvertRoute: typeof ConvertRoute
+  LendRoute: typeof LendRoute
   MoneyMarketRoute: typeof MoneyMarketRoute
+  StakeRoute: typeof StakeRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   DemoFormAddressRoute: typeof DemoFormAddressRoute
   DemoFormSimpleRoute: typeof DemoFormSimpleRoute
@@ -97,11 +149,39 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/stake': {
+      id: '/stake'
+      path: '/stake'
+      fullPath: '/stake'
+      preLoaderRoute: typeof StakeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/money-market': {
       id: '/money-market'
       path: '/money-market'
       fullPath: '/money-market'
       preLoaderRoute: typeof MoneyMarketRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lend': {
+      id: '/lend'
+      path: '/lend'
+      fullPath: '/lend'
+      preLoaderRoute: typeof LendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/convert': {
+      id: '/convert'
+      path: '/convert'
+      fullPath: '/convert'
+      preLoaderRoute: typeof ConvertRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/components': {
+      id: '/components'
+      path: '/components'
+      fullPath: '/components'
+      preLoaderRoute: typeof ComponentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -137,7 +217,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ComponentsRoute: ComponentsRoute,
+  ConvertRoute: ConvertRoute,
+  LendRoute: LendRoute,
   MoneyMarketRoute: MoneyMarketRoute,
+  StakeRoute: StakeRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   DemoFormAddressRoute: DemoFormAddressRoute,
   DemoFormSimpleRoute: DemoFormSimpleRoute,
