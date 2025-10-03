@@ -10,7 +10,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 import type { QueryClient } from '@tanstack/react-query';
 
 import { Footer } from '@/components/Footer/Footer';
-import Header from '@/components/Header';
+import Header from '@/components/Header/Header';
 import {
   ThemeProvider,
   useTheme,

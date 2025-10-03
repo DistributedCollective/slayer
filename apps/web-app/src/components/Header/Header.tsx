@@ -2,10 +2,10 @@ import { usePrivy } from '@privy-io/react-auth';
 import { Link } from '@tanstack/react-router';
 import { LogOutIcon } from 'lucide-react';
 import { useAccount, useDisconnect } from 'wagmi';
-import { Links } from './Header/Links';
-import { SocialLinks } from './Header/SocialLinks';
-import { ModeToggle } from './theme-toggle';
-import { Button } from './ui/button';
+import { ModeToggle } from '../theme-toggle';
+import { Button } from '../ui/button';
+import { Links } from './Links';
+import { SocialLinks } from './SocialLinks';
 
 export default function Header() {
   return (
