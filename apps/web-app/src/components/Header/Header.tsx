@@ -73,7 +73,7 @@ function ConnectButton() {
   if (authenticated) {
     return (
       <div className="flex flex-row gap-4 items-center">
-        <div>
+        <div className="hidden lg:block">
           {address?.substring(0, 6)}...{address?.substring(address.length - 4)}
         </div>
         <Button
