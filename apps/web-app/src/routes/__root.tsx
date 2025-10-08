@@ -57,7 +57,7 @@ function RootDocument({ children }: PropsWithChildren) {
     <>
       <HeadContent />
       <Header />
-      {children}
+      <main className="relative z-0 overflow-x-hidden">{children}</main>
       <Footer />
       <TanStackDevtools
         config={{

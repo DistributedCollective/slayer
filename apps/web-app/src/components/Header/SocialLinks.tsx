@@ -1,6 +1,6 @@
 const items = [
   {
-    href: '#',
+    href: 'https://twitter.com/SovrynBTC',
     label: 'X',
     icon: (
       <svg
@@ -15,7 +15,7 @@ const items = [
     ),
   },
   {
-    href: '#',
+    href: 'https://discord.gg/sovryn',
     label: 'Discord',
     icon: (
       <svg
@@ -30,7 +30,7 @@ const items = [
     ),
   },
   {
-    href: '#',
+    href: 'https://github.com/DistributedCollective',
     label: 'GitHub',
     icon: (
       <svg
@@ -41,8 +41,8 @@ const items = [
         xmlns="http://www.w3.org/2000/svg"
       >
         <path
-          fill-rule="evenodd"
-          clip-rule="evenodd"
+          fillRule="evenodd"
+          clipRule="evenodd"
           d="M5.99995 -0.000553131C2.68638 -0.000553131 -0.000366211 2.75316 -0.000366211 6.15245C-0.000366211 8.87134 1.71937 11.175 4.10342 11.9894C4.40344 12.0456 4.51327 11.8554 4.51327 11.692C4.51327 11.5447 4.50791 11.159 4.50523 10.6447C2.83639 11.017 2.4828 9.81961 2.4828 9.81961C2.20957 9.10975 1.8158 8.91956 1.8158 8.91956C1.27202 8.5365 1.85598 8.54454 1.85598 8.54454C2.45869 8.5874 2.77478 9.1794 2.77478 9.1794C3.31052 10.1196 4.17843 9.84907 4.5213 9.69103C4.57488 9.29458 4.73024 9.02135 4.90168 8.86866C3.57036 8.7133 2.16939 8.18559 2.16939 5.82833C2.16939 5.15597 2.40244 4.60683 2.7855 4.17824C2.72388 4.02287 2.51762 3.39605 2.84443 2.54958C2.84443 2.54958 3.34802 2.3835 4.49451 3.17908C4.974 3.04246 5.48564 2.9755 5.99727 2.97282C6.50623 2.9755 7.02054 3.04246 7.50003 3.17908C8.64652 2.3835 9.14744 2.54958 9.14744 2.54958C9.47424 3.39605 9.26798 4.02287 9.20637 4.17824C9.58943 4.60951 9.82247 5.15865 9.82247 5.82833C9.82247 8.19095 8.41883 8.71062 7.08215 8.86331C7.29645 9.0535 7.48932 9.42852 7.48932 10.0018C7.48932 10.8241 7.48128 11.4884 7.48128 11.6893C7.48128 11.8528 7.58843 12.0456 7.8938 11.984C10.2832 11.1724 12.0003 8.86867 12.0003 6.15245C12.0003 2.75316 9.31352 -0.000553131 5.99995 -0.000553131Z"
         />
       </svg>
@@ -53,13 +53,13 @@ const items = [
 export const SocialLinks = () => {
   return (
     <div className="flex flex-row items-center justify-start gap-2">
-      {items.map((item) => (
+      {items.map((item, index) => (
         <a
-          key={item.href}
+          key={index}
           href={item.href}
-          className="w-6 h-6 flex items-center justify-center bg-neutral-800 text-neutral-200 rounded-full"
+          className="w-6 h-6 flex items-center justify-center bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 rounded-full"
           target="_blank"
-          rel="noreferrer"
+          rel="noreferrer noopener"
         >
           {item.icon}
         </a>
