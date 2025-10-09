@@ -36,8 +36,8 @@ export const PrivyConnector = () => {
   }
 
   return (
-    <div className="flex flex-row gap-4 p-2">
-      <div className="w-1/2 border p-4">
+    <div className="flex flex-col lg:flex-row gap-4 p-2">
+      <div className="lg:w-1/2 border p-4">
         <h1 className="text-4xl">Privy</h1>
         {ready && !authenticated && (
           <>
@@ -93,7 +93,7 @@ export const PrivyConnector = () => {
         )}
       </div>
 
-      <div className="w-1/2 border p-4">
+      <div className="lg:w-1/2 border p-4">
         <h1 className="text-4xl">WAGMI</h1>
         {isDisconnected && <p>You are disconnected from WAGMI</p>}
         {isConnecting && <p>Connecting to WAGMI...</p>}
