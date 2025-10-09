@@ -74,7 +74,7 @@ export const Footer = () => {
 
         <div className="shrink-0 flex flex-col items-start justify-center">
           <div className="lg:hidden">Sovryn Dex</div>
-          <div className="text-xs lg:text-sm">Copyright 2026</div>
+          <div className="text-xs lg:text-sm">Copyright {new Date().getFullYear()}</div>
         </div>
       </div>
     </footer>
