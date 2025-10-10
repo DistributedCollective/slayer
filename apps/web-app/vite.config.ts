@@ -30,8 +30,7 @@ export default defineConfig(() => ({
   cacheDir: '../../node_modules/.vite/apps/web-app',
   plugins: [
     i18nextVitePlugin({
-      sourceDir: path.resolve(__dirname, 'public/locales'),
-      silent: false,
+      sourceDir: path.resolve(__dirname, 'public', 'locales'),
     }),
     devtools(),
     fixPureAnnotations(),
