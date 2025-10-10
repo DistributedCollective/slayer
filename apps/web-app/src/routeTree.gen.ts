@@ -15,6 +15,7 @@ import { Route as LendRouteImport } from './routes/lend'
 import { Route as ConvertRouteImport } from './routes/convert'
 import { Route as ComponentsRouteImport } from './routes/components'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as I18nIndexRouteImport } from './routes/i18n/index'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo.tanstack-query'
 import { Route as DemoFormSimpleRouteImport } from './routes/demo.form.simple'
 import { Route as DemoFormAddressRouteImport } from './routes/demo.form.address'
@@ -49,6 +50,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const I18nIndexRoute = I18nIndexRouteImport.update({
+  id: '/i18n/',
+  path: '/i18n/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DemoTanstackQueryRoute = DemoTanstackQueryRouteImport.update({
   id: '/demo/tanstack-query',
   path: '/demo/tanstack-query',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/money-market': typeof MoneyMarketRoute
   '/stake': typeof StakeRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
+  '/i18n': typeof I18nIndexRoute
   '/demo/form/address': typeof DemoFormAddressRoute
   '/demo/form/simple': typeof DemoFormSimpleRoute
 }
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/money-market': typeof MoneyMarketRoute
   '/stake': typeof StakeRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
+  '/i18n': typeof I18nIndexRoute
   '/demo/form/address': typeof DemoFormAddressRoute
   '/demo/form/simple': typeof DemoFormSimpleRoute
 }
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/money-market': typeof MoneyMarketRoute
   '/stake': typeof StakeRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
+  '/i18n/': typeof I18nIndexRoute
   '/demo/form/address': typeof DemoFormAddressRoute
   '/demo/form/simple': typeof DemoFormSimpleRoute
 }
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/money-market'
     | '/stake'
     | '/demo/tanstack-query'
+    | '/i18n'
     | '/demo/form/address'
     | '/demo/form/simple'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/money-market'
     | '/stake'
     | '/demo/tanstack-query'
+    | '/i18n'
     | '/demo/form/address'
     | '/demo/form/simple'
   id:
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/money-market'
     | '/stake'
     | '/demo/tanstack-query'
+    | '/i18n/'
     | '/demo/form/address'
     | '/demo/form/simple'
   fileRoutesById: FileRoutesById
@@ -143,6 +155,7 @@ export interface RootRouteChildren {
   MoneyMarketRoute: typeof MoneyMarketRoute
   StakeRoute: typeof StakeRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
+  I18nIndexRoute: typeof I18nIndexRoute
   DemoFormAddressRoute: typeof DemoFormAddressRoute
   DemoFormSimpleRoute: typeof DemoFormSimpleRoute
 }
@@ -191,6 +204,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/i18n/': {
+      id: '/i18n/'
+      path: '/i18n'
+      fullPath: '/i18n'
+      preLoaderRoute: typeof I18nIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/demo/tanstack-query': {
       id: '/demo/tanstack-query'
       path: '/demo/tanstack-query'
@@ -223,6 +243,7 @@ const rootRouteChildren: RootRouteChildren = {
   MoneyMarketRoute: MoneyMarketRoute,
   StakeRoute: StakeRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
+  I18nIndexRoute: I18nIndexRoute,
   DemoFormAddressRoute: DemoFormAddressRoute,
   DemoFormSimpleRoute: DemoFormSimpleRoute,
 }

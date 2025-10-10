@@ -1,6 +1,7 @@
+import { i18nextVitePlugin } from '@i18next-selector/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 import viteReact from '@vitejs/plugin-react';
-import { resolve } from 'node:path';
+import path, { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 
 import { devtools } from '@tanstack/devtools-vite';
@@ -28,6 +29,10 @@ export default defineConfig(() => ({
   _root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/web-app',
   plugins: [
+    i18nextVitePlugin({
+      sourceDir: path.resolve(__dirname, 'public', 'locales'),
+      silent: true,
+    }),
     devtools(),
     fixPureAnnotations(),
     nodePolyfills(),

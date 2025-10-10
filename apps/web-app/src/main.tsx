@@ -1,6 +1,7 @@
 import { RouterProvider, createRouter } from '@tanstack/react-router';
-import { StrictMode } from 'react';
+import { StrictMode, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
+import './i18n/index.ts';
 
 import * as PrivyProvider from './integrations/privy/root-provider.tsx';
 import * as TanStackQueryProvider from './integrations/tanstack-query/root-provider.tsx';
@@ -41,13 +42,15 @@ if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
-      <PrivyProvider.Provider>
-        <TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
-          <Wagmi.Provider>
-            <RouterProvider router={router} />
-          </Wagmi.Provider>
-        </TanStackQueryProvider.Provider>
-      </PrivyProvider.Provider>
+      <Suspense fallback={<div>Loading...</div>}>
+        <PrivyProvider.Provider>
+          <TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
+            <Wagmi.Provider>
+              <RouterProvider router={router} />
+            </Wagmi.Provider>
+          </TanStackQueryProvider.Provider>
+        </PrivyProvider.Provider>
+      </Suspense>
     </StrictMode>,
   );
 }
