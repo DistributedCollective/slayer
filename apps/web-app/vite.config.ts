@@ -31,6 +31,7 @@ export default defineConfig(() => ({
   plugins: [
     i18nextVitePlugin({
       sourceDir: path.resolve(__dirname, 'public', 'locales'),
+      silent: true,
     }),
     devtools(),
     fixPureAnnotations(),

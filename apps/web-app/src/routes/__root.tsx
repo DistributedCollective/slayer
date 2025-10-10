@@ -54,10 +54,10 @@ function RootDocument({ children }: PropsWithChildren) {
   }, [theme]);
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col justify-between">
       <HeadContent />
       <Header />
-      <main className="relative z-0 overflow-x-hidden">{children}</main>
+      <main className="relative z-0 overflow-x-hidden grow">{children}</main>
       <Footer />
       <TanStackDevtools
         config={{
@@ -74,6 +74,6 @@ function RootDocument({ children }: PropsWithChildren) {
           },
         ]}
       />
-    </>
+    </div>
   );
 }
