@@ -4,9 +4,9 @@ export interface IAsset {
   balance: string;
   usdBalance?: string;
   apy: string;
-  icon: React.ReactNode;
+  icon: string;
   isHighApy?: boolean;
-  isSortable?: boolean; // can be set to true or false for each column
+  isSortable?: boolean;
 }
 
 export type OrderSorting = 'asc' | 'desc';

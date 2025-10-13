@@ -35,27 +35,29 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
 
   const sortAssets = useCallback(
     (column: keyof IAsset) => {
-      setSortDirection((prev) =>
-        prev === OrderType.ASC ? OrderType.DESC : OrderType.ASC,
-      );
+      const newSortDirection =
+        sortDirection === OrderType.ASC ? OrderType.DESC : OrderType.ASC;
+      setSortDirection(newSortDirection);
+
       const sorted = [...sortedAssets].sort((a, b) => {
         if (column === OrderColumn.SYMBOL || column === OrderColumn.NAME) {
-          return sortDirection === OrderType.ASC
+          return newSortDirection === OrderType.ASC
             ? a[column].localeCompare(b[column])
             : b[column].localeCompare(a[column]);
         } else if (column === OrderColumn.BALANCE) {
           const balanceA = parseFloat(a.balance.replace(/,/g, ''));
           const balanceB = parseFloat(b.balance.replace(/,/g, ''));
-          return sortDirection === OrderType.ASC
+          return newSortDirection === OrderType.ASC
             ? balanceA - balanceB
             : balanceB - balanceA;
         } else if (column === OrderColumn.APY) {
           const apyA = parseFloat(a.apy.replace('%', ''));
           const apyB = parseFloat(b.apy.replace('%', ''));
-          return sortDirection === OrderType.ASC ? apyA - apyB : apyB - apyA;
+          return newSortDirection === OrderType.ASC ? apyA - apyB : apyB - apyA;
         }
         return 0;
       });
+
       setSortedAssets(sorted);
     },
     [sortDirection, sortedAssets],
@@ -137,11 +139,11 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
         {sortedAssets.map((asset, index) => (
           <React.Fragment key={asset.symbol}>
             <TableRow className="hover:bg-transparent">
-              <TableCell className="border-neutral-800 border-y-1 border-l-1 rounded-tl-[1.25rem] rounded-bl-[1.25rem]">
+              <TableCell className="border-neutral-800 border-y border-l rounded-tl-[1.25rem] rounded-bl-[1.25rem]">
                 <div className="flex items-center">
                   <img
-                    src={String(asset.icon)}
-                    alt={String(asset.symbol)}
+                    src={asset.icon}
+                    alt={asset.symbol}
                     className="w-9 h-9"
                   />
                   <div className="ml-2">
@@ -172,10 +174,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
               </TableCell>
               <TableCell className="border-neutral-800 border-y border-r rounded-tr-[1.25rem] rounded-br-[1.25rem]">
                 <div className="flex items-center gap-4 justify-end">
-                  <Button
-                    color="orange"
-                    className="rounded-full min-w-24 h-10 hover:cursor-pointer"
-                  >
+                  <Button className="rounded-full min-w-24 h-10 hover:cursor-pointer bg-orange-500">
                     Lend
                   </Button>
 
