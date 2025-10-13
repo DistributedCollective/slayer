@@ -139,7 +139,11 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
             <TableRow className="hover:bg-transparent">
               <TableCell className="border-neutral-800 border-y-1 border-l-1 rounded-tl-[1.25rem] rounded-bl-[1.25rem]">
                 <div className="flex items-center">
-                  {asset.icon}
+                  <img
+                    src={String(asset.icon)}
+                    alt={String(asset.symbol)}
+                    className="w-9 h-9"
+                  />
                   <div className="ml-2">
                     <p className="text-gray-50 font-medium">{asset.symbol}</p>
                     <p className="text-neutral-500 font-medium text-xs">
