@@ -15,7 +15,6 @@ export const Route = createFileRoute('/lend')({
 
 function RouteComponent() {
   const [filteredAssets, setFilteredAssets] = useState(assets);
-  console.log(filteredAssets);
 
   const handleSearch = useCallback((filteredAssets: IAsset[]) => {
     setFilteredAssets(filteredAssets);

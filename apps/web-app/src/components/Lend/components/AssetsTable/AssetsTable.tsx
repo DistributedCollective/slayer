@@ -29,7 +29,6 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
     OrderType.ASC,
   );
   const [sortedAssets, setSortedAssets] = useState<IAsset[]>(assets);
-  console.log('aa', sortedAssets);
   useEffect(() => {
     setSortedAssets(assets);
   }, [assets]);

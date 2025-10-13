@@ -6,7 +6,7 @@ import iconWbtc from '@/assets/tokens/wbtc.png';
 import type { IAsset } from './components/AssetsTable/AssetsTable.types';
 
 export const tabClassName =
-  'dark:data-[state=active]:bg-neutral-700 rounded-full min-h-8 dark:data-[state=active]:text-[#FF6228] px-3 text-sm dark:data-[state=active]:hover:bg-neutral-600 bg-transparent dark:data-[state=inactive]text-neutral-300 dark:data-[state=inactive]:hover:text-neutral-200 cursor-pointer';
+  'dark:data-[state=active]:bg-neutral-700 rounded-full min-h-8 dark:data-[state=active]:text-[#FF6228] px-3 text-sm dark:data-[state=active]:hover:bg-neutral-600 bg-transparent dark:data-[state=inactive]:text-neutral-300 dark:data-[state=inactive]:hover:text-neutral-200 cursor-pointer';
 export const assets: IAsset[] = [
   {
     symbol: 'BTC',
