@@ -1,12 +1,12 @@
 import { Search } from 'lucide-react';
 import { useCallback, useState } from 'react';
-import type { IAsset } from '../Lend/components/AssetsTable/AssetsTable.types';
+import type { IPool } from '../Lend/components/AssetsTable/AssetsTable.types';
 import { Input } from '../ui/input';
 
-interface SearchBarProps {
-  assets: IAsset[];
-  onSearch: (filteredAssets: IAsset[]) => void;
-}
+type SearchBarProps = {
+  assets: IPool[];
+  onSearch: (filteredAssets: IPool[]) => void;
+};
 
 export const SearchBar: React.FC<SearchBarProps> = ({ assets, onSearch }) => {
   const [query, setQuery] = useState('');

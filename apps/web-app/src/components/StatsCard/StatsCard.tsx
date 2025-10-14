@@ -6,12 +6,12 @@ import {
 import { Info } from 'lucide-react';
 import type { FC } from 'react';
 
-interface IStatsCardProps {
+type IStatsCardProps = {
   title: string;
   value: string;
   percent: string;
   tooltip?: string;
-}
+};
 
 export const StatsCard: FC<IStatsCardProps> = ({
   title,

@@ -16,25 +16,25 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '../../../ui/tooltip';
 import {
   OrderColumn,
   OrderType,
-  type IAsset,
+  type IPool,
   type OrderSorting,
 } from './AssetsTable.types';
 
 type AssetsTableProps = {
-  assets: IAsset[];
+  assets: IPool[];
 };
 
 export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
   const [sortDirection, setSortDirection] = useState<OrderSorting>(
     OrderType.ASC,
   );
-  const [sortedAssets, setSortedAssets] = useState<IAsset[]>(assets);
+  const [sortedAssets, setSortedAssets] = useState<IPool[]>(assets);
   useEffect(() => {
     setSortedAssets(assets);
   }, [assets]);
 
   const sortAssets = useCallback(
-    (column: keyof IAsset) => {
+    (column: keyof IPool) => {
       const newSortDirection =
         sortDirection === OrderType.ASC ? OrderType.DESC : OrderType.ASC;
       setSortDirection(newSortDirection);

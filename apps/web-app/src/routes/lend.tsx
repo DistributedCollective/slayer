@@ -1,7 +1,7 @@
 import { Hero } from '@/components/Hero/Hero';
 import { AssetsTable } from '@/components/Lend/components/AssetsTable/AssetsTable';
-import type { IAsset } from '@/components/Lend/components/AssetsTable/AssetsTable.types';
-import { assets, tabClassName } from '@/components/Lend/Lend.constants';
+import type { IPool } from '@/components/Lend/components/AssetsTable/AssetsTable.types';
+import { POOLS, TAB_CLASSNAME } from '@/components/Lend/Lend.constants';
 import { SearchBar } from '@/components/SearchBar/SearchBar';
 import { StatsCard } from '@/components/StatsCard/StatsCard';
 import { Button } from '@/components/ui/button';
@@ -14,9 +14,9 @@ export const Route = createFileRoute('/lend')({
 });
 
 function RouteComponent() {
-  const [filteredAssets, setFilteredAssets] = useState(assets);
+  const [filteredAssets, setFilteredAssets] = useState(POOLS);
 
-  const handleSearch = useCallback((filteredAssets: IAsset[]) => {
+  const handleSearch = useCallback((filteredAssets: IPool[]) => {
     setFilteredAssets(filteredAssets);
   }, []);
   return (
@@ -72,14 +72,14 @@ function RouteComponent() {
       <Tabs defaultValue="assets" className="mt-10">
         <div className="flex justify-between items-center w-full flex-col-reverse lg:flex-row gap-4">
           <TabsList className="flex bg-transparent gap-3">
-            <TabsTrigger value="assets" className={tabClassName}>
+            <TabsTrigger value="assets" className={TAB_CLASSNAME}>
               Assets to lend
             </TabsTrigger>
-            <TabsTrigger value="dashboard" className={tabClassName}>
+            <TabsTrigger value="dashboard" className={TAB_CLASSNAME}>
               Dashboard
             </TabsTrigger>
           </TabsList>
-          <SearchBar assets={assets} onSearch={handleSearch} />
+          <SearchBar assets={POOLS} onSearch={handleSearch} />
         </div>
 
         <TabsContent value="assets">

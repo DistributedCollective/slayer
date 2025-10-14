@@ -1,4 +1,4 @@
-export interface IAsset {
+export interface IPool {
   symbol: string;
   name: string;
   balance: string;
