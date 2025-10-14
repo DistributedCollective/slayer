@@ -103,7 +103,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                 APY
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="cursor-pointer leading-0">
+                    <div className="cursor-pointer leading-none">
                       <Info className="inline h-3 w-3 text-neutral-400 ml-1" />
                     </div>
                   </TooltipTrigger>

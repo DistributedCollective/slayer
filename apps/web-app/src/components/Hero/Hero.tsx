@@ -12,7 +12,7 @@ export const Hero: FC<PropsWithChildren<HeroProps>> = ({
   className,
 }) => (
   <div className={cn('mt-12 mb-9', className)}>
-    <h1 className="inline-block mb-4 font-bold text-3xl lg:text-5xl bg-gradient-to-r from-black dark:from-white to-[#989898] bg-clip-text text-transparent">
+    <h1 className="inline-block mb-4 font-bold text-3xl leading-10 lg:leading-13 lg:text-5xl bg-gradient-to-r from-black dark:from-white to-[#989898] bg-clip-text text-transparent">
       {title}
     </h1>
     <div className="font-medium text-neutral-400">{children}</div>
