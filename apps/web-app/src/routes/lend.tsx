@@ -21,7 +21,7 @@ function RouteComponent() {
     setFilteredAssets(filteredAssets);
   }, []);
   return (
-    <div className="container mx-auto my-8 px-4 max-w-6xl">
+    <div className="container mx-auto mb-8 px-4 max-w-6xl">
       <Hero title="Lending" className="mb-3">
         <p>
           Lorem bitcoinae dollar situs ametus, consensusium adipiscing elitum,
@@ -70,7 +70,7 @@ function RouteComponent() {
         />
       </div>
 
-      <Tabs defaultValue="assets" className="mt-10">
+      <Tabs defaultValue="assets" className="mt-11 gap-1">
         <div className="flex justify-between items-center w-full flex-col-reverse lg:flex-row gap-4">
           <TabsList className="flex bg-transparent gap-3">
             <TabsTrigger value="assets" className={TAB_CLASSNAME}>
@@ -84,13 +84,13 @@ function RouteComponent() {
         </div>
 
         <TabsContent value="assets">
-          <div className="mt-6">
+          <div>
             <AssetsTable assets={filteredAssets} />
           </div>
         </TabsContent>
 
         <TabsContent value="dashboard">
-          <div className="mt-6">
+          <div>
             <div>Dashboard content goes here...</div>
           </div>
         </TabsContent>

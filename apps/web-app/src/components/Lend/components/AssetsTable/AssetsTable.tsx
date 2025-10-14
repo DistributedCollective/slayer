@@ -144,7 +144,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                   <img
                     src={asset.icon}
                     alt={asset.symbol}
-                    className="w-9 h-9"
+                    className="w-8 h-8"
                   />
                   <div className="ml-2">
                     <p className="text-gray-50 font-medium">{asset.symbol}</p>
