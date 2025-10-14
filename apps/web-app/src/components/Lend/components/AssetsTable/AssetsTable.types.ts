@@ -1,4 +1,4 @@
-export interface IPool {
+export type Pool = {
   symbol: string;
   name: string;
   balance: string;
@@ -7,7 +7,7 @@ export interface IPool {
   icon: string;
   isHighApy?: boolean;
   isSortable?: boolean;
-}
+};
 
 export type OrderSorting = 'asc' | 'desc';
 export enum OrderType {

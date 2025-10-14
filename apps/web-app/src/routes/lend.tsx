@@ -1,11 +1,12 @@
 import { Hero } from '@/components/Hero/Hero';
 import { AssetsTable } from '@/components/Lend/components/AssetsTable/AssetsTable';
-import type { IPool } from '@/components/Lend/components/AssetsTable/AssetsTable.types';
+import type { Pool } from '@/components/Lend/components/AssetsTable/AssetsTable.types';
 import { POOLS, TAB_CLASSNAME } from '@/components/Lend/Lend.constants';
 import { SearchBar } from '@/components/SearchBar/SearchBar';
 import { StatsCard } from '@/components/StatsCard/StatsCard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ROUTES } from '@/constants/routes';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useCallback, useState } from 'react';
 
@@ -16,7 +17,7 @@ export const Route = createFileRoute('/lend')({
 function RouteComponent() {
   const [filteredAssets, setFilteredAssets] = useState(POOLS);
 
-  const handleSearch = useCallback((filteredAssets: IPool[]) => {
+  const handleSearch = useCallback((filteredAssets: Pool[]) => {
     setFilteredAssets(filteredAssets);
   }, []);
   return (
@@ -27,7 +28,7 @@ function RouteComponent() {
           sed do proofus-of-workium.{' '}
           <Link
             className="text-neutral-50 hover:no-underline underline"
-            to="/stake"
+            to={ROUTES.STAKE}
           >
             Learn more
           </Link>
@@ -43,7 +44,7 @@ function RouteComponent() {
         </Button>
         <Link
           className="text-orange-600 hover:underline no-underline text-sm"
-          to="/stake"
+          to={ROUTES.STAKE}
         >
           Learn more
         </Link>

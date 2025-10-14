@@ -3,11 +3,11 @@ import iconBtc from '@/assets/tokens/btc.png';
 import iconSov from '@/assets/tokens/sov.png';
 import iconTether from '@/assets/tokens/usdt.png';
 import iconWbtc from '@/assets/tokens/wbtc.png';
-import type { IPool } from './components/AssetsTable/AssetsTable.types';
+import type { Pool } from './components/AssetsTable/AssetsTable.types';
 
 export const TAB_CLASSNAME =
   'dark:data-[state=active]:bg-neutral-700 rounded-full min-h-8 dark:data-[state=active]:text-[#FF6228] px-3 text-sm dark:data-[state=active]:hover:bg-neutral-600 bg-transparent dark:data-[state=inactive]:text-neutral-300 dark:data-[state=inactive]:hover:text-neutral-200 cursor-pointer';
-export const POOLS: IPool[] = [
+export const POOLS: Pool[] = [
   {
     symbol: 'BTC',
     name: 'Bitcoin',
