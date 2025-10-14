@@ -174,7 +174,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
               </TableCell>
               <TableCell className="border-neutral-800 border-y border-r rounded-tr-[1.25rem] rounded-br-[1.25rem]">
                 <div className="flex items-center gap-4 justify-end">
-                  <Button className="rounded-full min-w-24 h-10 hover:cursor-pointer bg-orange-500">
+                  <Button className="rounded-full min-w-24 h-10 hover:cursor-pointer">
                     Lend
                   </Button>
 
