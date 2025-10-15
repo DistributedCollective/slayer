@@ -59,7 +59,7 @@ export const Links = () => {
   };
 
   return (
-    <div className="w-full lg:w-auto">
+    <div className="w-full lg:w-auto text-sm">
       <Button
         variant="outline"
         size="icon"
@@ -115,7 +115,7 @@ export const Links = () => {
         {main.map((item) => (
           <Link
             to={item.to}
-            className="px-4 py-2 rounded-xl font-medium"
+            className="px-4 py-2 rounded-xl font-medium leading-none text-sm flex items-center justify-center"
             activeProps={{
               className:
                 'bg-slate-100 text-slate-900 hover:bg-slate-300 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200',
@@ -132,8 +132,8 @@ export const Links = () => {
         {items.length > 3 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="px-4 py-2 rounded-xl font-medium hover:bg-slate-200 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100 flex flex-row items-center gap-2">
-                More <ChevronDown />
+              <button className="px-4 py-2 rounded-xl text-sm font-medium hover:bg-slate-200 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100 flex flex-row items-center gap-2">
+                More <ChevronDown size={12} />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
