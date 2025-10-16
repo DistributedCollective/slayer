@@ -1,4 +1,4 @@
-import Convert from '@/components/Convert/Convert';
+import { Convert } from '@/components/Convert/Convert';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/convert')({

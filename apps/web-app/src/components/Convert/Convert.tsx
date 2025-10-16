@@ -6,11 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowDownUp, Info, Settings } from 'lucide-react';
-import { useState } from 'react';
+import { useState, type FC } from 'react';
 import { Hero } from '../Hero/Hero';
-import AssetSelect from './components/AssetSelect';
+import { AssetSelect } from './components/AssetSelect';
+import { CryptoChart } from './components/ConvertChart';
 
-export default function Convert() {
+export const Convert: FC = () => {
   const [fromAsset, setFromAsset] = useState('BTC');
   const [toAsset, setToAsset] = useState('BTC');
   const [amount, setAmount] = useState('');
@@ -22,8 +23,8 @@ export default function Convert() {
   };
 
   return (
-    <div className="grid grid-cols-12 gap-6">
-      <div className="flex flex-col gap-6 col-span-12 lg:col-span-4 lg:col-start-5">
+    <div className="flex items-center gap-6 justify-center">
+      <div className="flex flex-col gap-6 w-full lg:w-1/3">
         <Hero title="Convert">
           Lorem bitcoinae dollar situs ametus, consensusium adipiscing elitum,
           sed do proofus-of-workium.
@@ -141,6 +142,12 @@ export default function Convert() {
           Convert
         </Button>
       </div>
+
+      {showChart && (
+        <div className=" w-full lg:w-1/2">
+          <CryptoChart />
+        </div>
+      )}
     </div>
   );
-}
+};

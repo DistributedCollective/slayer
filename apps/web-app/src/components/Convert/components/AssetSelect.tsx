@@ -5,14 +5,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import type { FC } from 'react';
 
-export default function AssetSelect({
-  value,
-  onChange,
-}: {
+export const AssetSelect: FC<{
   value?: string;
   onChange?(value: string): void;
-}) {
+}> = ({ value, onChange }) => {
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="shadow-none w-40 border-none text-lg cursor-pointer h-5">
@@ -34,4 +32,4 @@ export default function AssetSelect({
       </SelectContent>
     </Select>
   );
-}
+};
