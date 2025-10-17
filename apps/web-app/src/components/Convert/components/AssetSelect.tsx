@@ -5,6 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { BTC, ETH, USDT } from '@/constants/tokens';
 import type { FC } from 'react';
 
 export const AssetSelect: FC<{
@@ -19,15 +20,15 @@ export const AssetSelect: FC<{
       <SelectContent>
         <SelectItem className="text-lg" value="BTC">
           <img className="size-6 rounded-full" src="/images/btc.png" />
-          BTC
+          {BTC}
         </SelectItem>
         <SelectItem className="text-lg" value="ETH">
           <img className="size-6 rounded-full" src="/images/btc.png" />
-          ETH
+          {ETH}
         </SelectItem>
         <SelectItem className="text-lg" value="USDT">
           <img className="size-6 rounded-full" src="/images/btc.png" />
-          USDT
+          {USDT}
         </SelectItem>
       </SelectContent>
     </Select>

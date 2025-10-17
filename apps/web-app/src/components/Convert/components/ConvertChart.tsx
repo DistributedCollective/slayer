@@ -22,9 +22,8 @@ export const CryptoChart: FC = () => {
   const ranges = ['24H', '1W', '1M', '1Y'];
 
   return (
-    <Card className="dark:bg-neutral-900 bg-neutral-100 text-white border-0 rounded-2xl">
+    <Card className="dark:bg-neutral-900 bg-neutral-100  border-0 rounded-2xl">
       <CardContent className="p-6">
-        {/* Header */}
         <div className="flex justify-between items-start mb-2">
           <div>
             <div className="flex items-center gap-2">
@@ -56,7 +55,6 @@ export const CryptoChart: FC = () => {
           </div>
         </div>
 
-        {/* Chart */}
         <div className="h-[320px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data}>

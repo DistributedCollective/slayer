@@ -23,7 +23,7 @@ export const Convert: FC = () => {
   };
 
   return (
-    <div className="flex items-center gap-6 justify-center">
+    <div className="flex flex-col lg:flex-row items-center gap-6 justify-center">
       <div className="flex flex-col gap-6 w-full lg:w-1/3">
         <Hero title="Convert">
           Lorem bitcoinae dollar situs ametus, consensusium adipiscing elitum,
