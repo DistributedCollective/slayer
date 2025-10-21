@@ -1,3 +1,3 @@
 export const BTC = 'BTC';
-export const ETH = 'ETH';
+export const BOB = 'BOB';
 export const USDT = 'USDT';

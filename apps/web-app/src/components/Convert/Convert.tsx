@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,7 +13,7 @@ import { CryptoChart } from './components/ConvertChart';
 export const Convert: FC = () => {
   const [fromAsset, setFromAsset] = useState('BTC');
   const [toAsset, setToAsset] = useState('BTC');
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState('1');
   const [showChart, setShowChart] = useState(false);
 
   const handleSwap = () => {
@@ -23,131 +22,149 @@ export const Convert: FC = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row items-center gap-6 justify-center">
-      <div className="flex flex-col gap-6 w-full lg:w-1/3">
-        <Hero title="Convert">
+    <div>
+      <div className="flex flex-col lg:flex-row gap-6 justify-center">
+        <Hero className="w-full lg:w-1/3" title="Convert">
           Lorem bitcoinae dollar situs ametus, consensusium adipiscing elitum,
           sed do proofus-of-workium.
         </Hero>
-        <Card className="dark:bg-neutral-900 bg-neutral-100 border dark:border-neutral-800 rounded-2xl shadow-lg py-3">
-          <CardContent className="space-y-4 px-3">
-            <div className="flex items-center justify-between">
-              <Tabs defaultValue="convert" className="flex-1">
-                <TabsList className="flex items-center bg-neutral-200 dark:bg-neutral-800 rounded-full p-1 w-full max-w-md mx-auto">
-                  <TabsTrigger value="convert">Convert</TabsTrigger>
-                  <TabsTrigger value="cross">Cross-chain convert</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="ml-2 text-neutral-400 hover:text-white"
-              >
-                <Settings className="w-5 h-5" />
-              </Button>
-            </div>
+        {showChart && <div className="w-full lg:w-1/2" />}
+      </div>
 
-            <div className="space-y-6">
-              <div className="p-4 dark:bg-neutral-800 bg-neutral-200 rounded-xl">
-                <Label className="text-neutral-400">From</Label>
-                <div className="flex justify-between items-center mt-2">
-                  <AssetSelect value={fromAsset} onChange={setFromAsset} />
-                  <Input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.012"
-                    className="w-24 bg-transparent border-none text-right text-2xl font-medium focus-visible:ring-0
-             [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
-                </div>
-                <div className="flex justify-between items-center mt-4">
-                  <span className="text-sm text-neutral-500">Balance -</span>
-                  <span className="text-sm text-neutral-500">$100.012</span>
-                </div>
-              </div>
-
-              <div className="flex justify-center">
+      <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6 justify-center">
+        <div className="flex flex-col gap-6 w-full lg:w-1/3">
+          <Card className="bg-neutral-900 border-none rounded-2xl shadow-lg py-3">
+            <CardContent className="space-y-4 px-3">
+              <div className="flex items-center justify-between">
+                <Tabs defaultValue="convert" className="flex-1">
+                  <TabsList className="flex items-center bg-neutral-800 rounded-full p-1 w-full max-w-md mx-auto">
+                    <TabsTrigger value="convert">Convert</TabsTrigger>
+                    <TabsTrigger value="cross">Cross-chain convert</TabsTrigger>
+                  </TabsList>
+                </Tabs>
                 <Button
-                  className="bg-accent"
                   variant="ghost"
                   size="icon"
-                  onClick={handleSwap}
+                  className="ml-2 text-neutral-400 hover:text-white cursor-pointer"
                 >
-                  <ArrowDownUp className="h-5 w-5 text-neutral-400" />
+                  <Settings className="size-6" />
                 </Button>
               </div>
 
-              <div className="p-4 dark:bg-neutral-800 bg-neutral-200 rounded-xl">
-                <Label className="text-neutral-400">To</Label>
-                <div className="flex justify-between items-center mt-2">
-                  <AssetSelect value={toAsset} onChange={setToAsset} />
+              <div className="space-y-3">
+                <div className="p-4 bg-neutral-800 rounded-xl flex flex-col gap-4">
+                  <Label className="text-neutral-400 font-medium text-sm">
+                    From
+                  </Label>
+                  <div className="flex justify-between items-center">
+                    <AssetSelect value={fromAsset} onChange={setFromAsset} />
+                    <input
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      placeholder="0"
+                      className="flex-1 bg-transparent border-none text-right text-2xl font-semibold focus-visible:ring-0 text-white outline-none
+             [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  </div>
+                  <div className="flex justify-between items-center text-neutral-400 font-medium text-xs">
+                    <span>Balance -</span>
+                    <span>$100.012</span>
+                  </div>
+                </div>
 
-                  <Input
-                    type="number"
-                    value="0.012"
-                    readOnly
-                    className="w-24 bg-transparent border-none text-right text-lg font-medium focus-visible:ring-0"
+                <div className="flex justify-center">
+                  <Button
+                    className="bg-accent"
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleSwap}
+                  >
+                    <ArrowDownUp className="h-5 w-5 text-neutral-400" />
+                  </Button>
+                </div>
+
+                <div className="p-4 bg-neutral-800 rounded-xl flex flex-col gap-4">
+                  <Label className="text-neutral-400 font-medium text-sm">
+                    From
+                  </Label>
+                  <div className="flex justify-between items-center">
+                    <AssetSelect value={fromAsset} onChange={setFromAsset} />
+                    <input
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      placeholder="0"
+                      className="flex-1 bg-transparent border-none text-right text-2xl font-semibold focus-visible:ring-0 text-white outline-none
+             [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  </div>
+                  <div className="flex justify-between items-center text-neutral-400 font-medium text-xs">
+                    <span>Balance -</span>
+                    <span>$100.012</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-end items-center gap-2">
+                  <Label
+                    htmlFor="chart"
+                    className="text-sm cursor-pointer text-gray-50 font-medium"
+                  >
+                    Show chart
+                  </Label>
+                  <Switch
+                    className="cursor-pointer"
+                    checked={showChart}
+                    id="chart"
+                    onCheckedChange={setShowChart}
                   />
                 </div>
-                <div className="flex justify-between items-center mt-4">
-                  <span className="text-sm text-neutral-500">Balance -</span>
-                  <span className="text-sm text-neutral-500">$100.012</span>
-                </div>
               </div>
-
-              <div className="flex justify-end items-center gap-2">
-                <Label htmlFor="chart" className="text-sm text-neutral-400">
-                  Show chart
-                </Label>
-                <Switch
-                  checked={showChart}
-                  id="chart"
-                  onCheckedChange={setShowChart}
-                />
-              </div>
+            </CardContent>
+          </Card>
+          <div className="rounded-xl border border-neutral-700 p-4 space-y-2 text-xs font-medium text-gray-400">
+            <div className="flex justify-between">
+              <span>You’ll receive</span>
+              <span>0.004 XYZ</span>
             </div>
-          </CardContent>
-        </Card>
-        <div className="rounded-xl dark:bg-neutral-900 bg-neutral-100 border dark:border-neutral-800 p-4 space-y-2 text-sm text-neutral-400">
-          <div className="flex justify-between">
-            <span>You’ll receive</span>
-            <span className="dark:text-neutral-100">0.004 XYZ</span>
+            <div className="flex justify-between items-center">
+              <span className="flex items-center gap-1">
+                Estimated network fee <Info className="w-3 h-3" />
+              </span>
+              <span>0.004 XYZ</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Transaction fee</span>
+              <span>0.004 XYZ</span>
+            </div>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="flex items-center gap-1">
-              Estimated network fee <Info className="w-3 h-3" />
-            </span>
-            <span className="dark:text-neutral-100">0.004 XYZ</span>
+
+          <div className="space-y-1 mx-auto">
+            <div className="flex items-center gap-2">
+              <Checkbox id="terms" />
+              <Label
+                htmlFor="terms"
+                className="text-sm font-medium text-gray-50"
+              >
+                Accept terms and condition
+              </Label>
+            </div>
+            <p className="text-sm text-gray-50 pl-6">
+              You agree to our Terms of Service and Privacy Policy.
+            </p>
           </div>
-          <div className="flex justify-between">
-            <span>Transaction fee</span>
-            <span className="dark:text-neutral-100">0.004 XYZ</span>
-          </div>
+
+          <Button className=" bg-orange-500 hover:bg-orange-600 text-white text-base font-medium py-6 rounded-xl">
+            Convert
+          </Button>
         </div>
 
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Checkbox id="terms" />
-            <Label htmlFor="terms" className="text-sm">
-              Accept terms and condition
-            </Label>
+        {showChart && (
+          <div className="w-full lg:w-1/2">
+            <CryptoChart />
           </div>
-          <p className="text-xs text-neutral-500">
-            You agree to our Terms of Service and Privacy Policy.
-          </p>
-        </div>
-
-        <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white text-base font-medium py-6 rounded-xl">
-          Convert
-        </Button>
+        )}
       </div>
-
-      {showChart && (
-        <div className=" w-full lg:w-1/2">
-          <CryptoChart />
-        </div>
-      )}
     </div>
   );
 };
