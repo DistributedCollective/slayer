@@ -1,5 +1,13 @@
 import 'dotenv/config';
-import { bool, cleanEnv, makeValidator, port, str, testOnly } from 'envalid';
+import {
+  bool,
+  cleanEnv,
+  makeValidator,
+  port,
+  str,
+  testOnly,
+  url,
+} from 'envalid';
 
 export const ENV = cleanEnv(process.env, {
   PORT: port({ default: 8000 }),
@@ -14,6 +22,11 @@ export const ENV = cleanEnv(process.env, {
   CORS_ORIGINS: str({ default: '*' }),
 
   READ_ONLY_MODE: bool({ default: false }),
+
+  DATA_BASE_URL: url({
+    default:
+      'https://raw.githubusercontent.com/DistributedCollective/slayer-data/main',
+  }),
 
   FLAGS: makeValidator((x) => {
     try {

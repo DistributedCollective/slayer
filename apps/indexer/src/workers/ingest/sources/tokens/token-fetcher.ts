@@ -3,12 +3,10 @@ import { uniqBy } from 'lodash';
 
 import { client } from '../../../../database/client';
 import { TNewToken, tTokens } from '../../../../database/schema';
+import { ENV } from '../../../../env';
 import { encode } from '../../../../libs/encode';
 import { logger } from '../../../../libs/logger';
 import { SourceAdapter } from '../../types';
-
-export const GIT_TOKEN_LIST_URL =
-  'https://raw.githubusercontent.com/DistributedCollective/token-list/main';
 
 const log = logger.child({ module: 'token_fetcher_source' });
 
@@ -26,11 +24,11 @@ export const tokenFetcherSource: SourceAdapter<TokenData> = {
     // rsk mainnet
     30,
     // rsk testnet
-    31,
+    // 31,
     // bob mainnet
     // 60808,
     // bob testnet
-    // 808813,
+    808813,
   ],
 
   // update once per 5 minutes
@@ -150,7 +148,7 @@ export const tokenFetcherSource: SourceAdapter<TokenData> = {
 };
 
 async function fetchTokensByChain(chainId: number) {
-  const tokensUrl = `${GIT_TOKEN_LIST_URL}/${chainId}/tokens.json`;
+  const tokensUrl = `${ENV.DATA_BASE_URL}/chains/${chainId}/tokens.json`;
   try {
     const response = await fetch(tokensUrl);
 
@@ -162,7 +160,7 @@ async function fetchTokensByChain(chainId: number) {
 
     return await response.json().then((data) =>
       uniqBy(
-        (data as TokenData[]).map((item) => ({
+        (data as { items: TokenData[] }).items.map((item) => ({
           ...item,
           address: item.address.toLowerCase(),
         })),

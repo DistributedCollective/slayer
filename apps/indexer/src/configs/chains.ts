@@ -15,6 +15,11 @@ const items = [
     chainId: 31,
     name: 'Rootstock Testnet',
   },
+  {
+    key: 'bob-sepolia',
+    chainId: 808813,
+    name: 'BOB Sepolia',
+  },
 ] as const satisfies ChainConfig[];
 
 export type Chain = (typeof items)[number];
