@@ -154,7 +154,7 @@ export const Convert: FC = () => {
             </p>
           </div>
 
-          <Button className=" bg-orange-500 hover:bg-orange-600 text-white text-base font-medium py-6 rounded-xl">
+          <Button size="lg" className="w-40 mx-auto">
             Convert
           </Button>
         </div>

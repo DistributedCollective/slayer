@@ -8,25 +8,27 @@ import {
 import { BOB, BTC, USDT } from '@/constants/tokens';
 import type { FC } from 'react';
 
-export const AssetSelect: FC<{
+interface AssetSelectProps {
   value?: string;
   onChange?(value: string): void;
-}> = ({ value, onChange }) => {
+}
+
+export const AssetSelect: FC<AssetSelectProps> = ({ value, onChange }) => {
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="shadow-none w-36 border-none text-lg cursor-pointer h-5 pl-0">
         <SelectValue placeholder="Token" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem className="text-lg" value="BTC">
+        <SelectItem className="text-lg" value={BTC}>
           <img className="size-8 rounded-full" src="/images/btc.svg" />
           {BTC}
         </SelectItem>
-        <SelectItem className="text-lg" value="ETH">
+        <SelectItem className="text-lg" value={BOB}>
           <img className="size-8 rounded-full" src="/images/bob.svg" />
           {BOB}
         </SelectItem>
-        <SelectItem className="text-lg" value="USDT">
+        <SelectItem className="text-lg" value={USDT}>
           <img className="size-8 rounded-full" src="/images/btc.svg" />
           {USDT}
         </SelectItem>
