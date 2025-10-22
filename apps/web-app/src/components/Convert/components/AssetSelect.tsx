@@ -16,7 +16,7 @@ interface AssetSelectProps {
 export const AssetSelect: FC<AssetSelectProps> = ({ value, onChange }) => {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="shadow-none w-36 border-none text-lg cursor-pointer h-5 pl-0">
+      <SelectTrigger className="shadow-none min-w-36 border-none text-lg cursor-pointer h-5 pl-0">
         <SelectValue placeholder="Token" />
       </SelectTrigger>
       <SelectContent>

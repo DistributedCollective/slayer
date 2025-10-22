@@ -4,6 +4,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { ArrowDownUp, Info, Settings } from 'lucide-react';
 import { useState, type FC } from 'react';
 import { Hero } from '../Hero/Hero';
@@ -11,10 +12,24 @@ import { AssetSelect } from './components/AssetSelect';
 import { CryptoChart } from './components/ConvertChart';
 
 export const Convert: FC = () => {
+  const search = useSearch({ from: '/convert' });
+  const navigate = useNavigate({ from: '/convert' });
+
   const [fromAsset, setFromAsset] = useState('BTC');
   const [toAsset, setToAsset] = useState('BTC');
   const [amount, setAmount] = useState('1');
-  const [showChart, setShowChart] = useState(false);
+
+  const showChart = search.showChart === true;
+
+  const toggleChart = () => {
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        showChart: prev.showChart ? undefined : true,
+      }),
+      replace: true,
+    });
+  };
 
   const handleSwap = () => {
     setFromAsset(toAsset);
@@ -116,7 +131,7 @@ export const Convert: FC = () => {
                     className="cursor-pointer"
                     checked={showChart}
                     id="chart"
-                    onCheckedChange={setShowChart}
+                    onCheckedChange={toggleChart}
                   />
                 </div>
               </div>

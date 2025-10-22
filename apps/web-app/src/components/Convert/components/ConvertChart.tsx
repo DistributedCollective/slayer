@@ -99,7 +99,7 @@ export const CryptoChart: FC = () => {
                 tick={{ fill: '#6B7280', fontSize: 12 }}
                 tickLine={false}
                 axisLine={false}
-                width={50}
+                width={60}
                 tickFormatter={(v) =>
                   v === 0
                     ? ''
