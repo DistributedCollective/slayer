@@ -135,3 +135,10 @@ code {
     @apply bg-background text-foreground;
   }
 }
+
+.recharts-wrapper:focus,
+.recharts-surface:focus,
+.recharts-legend-wrapper:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
