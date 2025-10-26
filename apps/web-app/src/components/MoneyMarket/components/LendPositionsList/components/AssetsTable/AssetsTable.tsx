@@ -6,41 +6,40 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table/table';
-import { EllipsisVertical } from 'lucide-react';
-import React, { useCallback, useEffect, useState, type FC } from 'react';
-import { Button } from '../../../ui/button';
+import { Fragment, useCallback, useEffect, useState, type FC } from 'react';
 
-import iconFlame from '@/assets/lend/icon-fire.svg';
 import iconSort from '@/assets/lend/icon-sort.svg';
+import { Button } from '@/components/ui/button';
 import { InfoButton } from '@/components/ui/info-button';
+import { Switch } from '@/components/ui/switch';
 import {
   OrderColumn,
   OrderType,
   type OrderSorting,
-  type Pool,
-} from './AssetsTable.types';
+} from '@/components/ui/table/table.types';
+import type { LendPosition } from '../../LendPositionsList.types';
 
 type AssetsTableProps = {
-  assets: Pool[];
+  assets: LendPosition[];
 };
 
 export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
   const [sortDirection, setSortDirection] = useState<OrderSorting>(
     OrderType.ASC,
   );
-  const [sortedAssets, setSortedAssets] = useState<Pool[]>(assets);
+  const [sortedAssets, setSortedAssets] = useState<LendPosition[]>(assets);
   useEffect(() => {
     setSortedAssets(assets);
   }, [assets]);
 
   const sortAssets = useCallback(
-    (column: keyof Pool) => {
+    (column: keyof LendPosition) => {
       const newSortDirection =
         sortDirection === OrderType.ASC ? OrderType.DESC : OrderType.ASC;
       setSortDirection(newSortDirection);
 
       const sorted = [...sortedAssets].sort((a, b) => {
-        if (column === OrderColumn.SYMBOL || column === OrderColumn.NAME) {
+        if (column === OrderColumn.SYMBOL) {
           return newSortDirection === OrderType.ASC
             ? a[column].localeCompare(b[column])
             : b[column].localeCompare(a[column]);
@@ -63,13 +62,23 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
     [sortDirection, sortedAssets],
   );
 
+  const toggleCollateral = useCallback((symbol: string) => {
+    setSortedAssets((prevAssets) =>
+      prevAssets.map((asset) =>
+        asset.symbol === symbol
+          ? { ...asset, collateral: !asset.collateral }
+          : asset,
+      ),
+    );
+  }, []);
+
   return (
     <Table className="w-full border-separate">
       <TableHeader>
         <TableRow className="hover:bg-transparent border-none text-xs">
           <TableHead>
             <div className="flex items-center gap-2">
-              <span>Assets</span>
+              <span>Asset</span>
               {assets.some((asset) => asset.isSortable) && (
                 <Button
                   variant="ghost"
@@ -84,7 +93,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
           </TableHead>
           <TableHead>
             <div className="flex items-center gap-2">
-              <span>Wallet Balance</span>
+              <span>Balance</span>
               {assets.some((asset) => asset.isSortable) && (
                 <Button
                   variant="ghost"
@@ -115,15 +124,20 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
               )}
             </div>
           </TableHead>
+          <TableHead>
+            <div className="flex items-center gap-2">
+              <div>Collateral</div>
+            </div>
+          </TableHead>
           <TableHead></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {sortedAssets.map((asset, index) => (
-          <React.Fragment key={asset.symbol}>
+          <Fragment key={asset.symbol}>
             <TableRow className="hover:bg-transparent">
               <TableCell className="border-neutral-800 border-y border-l rounded-tl-[1.25rem] rounded-bl-[1.25rem]">
-                <div className="flex items-center">
+                <div className="flex items-center min-w-24">
                   <img
                     src={asset.icon}
                     alt={asset.symbol}
@@ -131,43 +145,38 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                   />
                   <div className="ml-2">
                     <p className="text-gray-50 font-medium">{asset.symbol}</p>
-                    <p className="text-neutral-500 font-medium text-xs">
-                      {asset.name}
-                    </p>
                   </div>
                 </div>
               </TableCell>
               <TableCell className="border-neutral-800 border-y">
                 <p className="text-gray-50 font-medium">{asset.balance}</p>
                 <p className="text-neutral-500 font-medium text-xs">
-                  ~${asset.usdBalance}
+                  ~${asset.balanceUsd}
                 </p>
               </TableCell>
               <TableCell className="border-neutral-800 border-y">
                 <div className="flex items-center">
                   <p className="text-gray-50 font-medium">{asset.apy}</p>
-                  {asset.isHighApy && (
-                    <img
-                      src={iconFlame}
-                      alt="High APY"
-                      className="ml-1.5 w-3"
-                    />
-                  )}
+                </div>
+              </TableCell>
+              <TableCell className="border-neutral-800 border-y">
+                <div className="flex items-center">
+                  <Switch
+                    className="cursor-pointer data-[state=checked]:bg-primary"
+                    checked={asset.collateral}
+                    id={`collateral-${asset.symbol}`}
+                    onClick={() => toggleCollateral(asset.symbol)}
+                    disabled={!asset.canToggleCollateral}
+                  />
                 </div>
               </TableCell>
               <TableCell className="border-neutral-800 border-y border-r rounded-tr-[1.25rem] rounded-br-[1.25rem]">
-                <div className="flex items-center gap-4 justify-end">
-                  <Button className="rounded-full min-w-24 h-10 hover:cursor-pointer">
-                    Lend
-                  </Button>
-
+                <div className="flex items-center justify-end">
                   <Button
-                    variant="ghost"
-                    className="hover:border-none cursor-pointer rounded-full "
+                    className="rounded-full min-w-24 h-10 hover:cursor-pointer"
+                    variant="secondary"
                   >
-                    <span className="text-gray-400">
-                      <EllipsisVertical className="w-5" />
-                    </span>
+                    Withdraw
                   </Button>
                 </div>
               </TableCell>
@@ -175,14 +184,14 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
 
             {index !== sortedAssets.length - 1 && (
               <TableRow className="h-1 hover:bg-transparent border-none">
-                <TableCell className="p-0.5" colSpan={4}></TableCell>
+                <TableCell className="p-0.5" colSpan={5}></TableCell>
               </TableRow>
             )}
-          </React.Fragment>
+          </Fragment>
         ))}
         {sortedAssets.length === 0 && (
           <TableRow>
-            <TableCell colSpan={4} className="text-center py-4">
+            <TableCell colSpan={5} className="text-center py-4">
               No assets found.
             </TableCell>
           </TableRow>

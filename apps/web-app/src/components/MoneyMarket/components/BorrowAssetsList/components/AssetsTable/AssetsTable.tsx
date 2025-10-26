@@ -6,41 +6,39 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table/table';
-import { EllipsisVertical } from 'lucide-react';
 import React, { useCallback, useEffect, useState, type FC } from 'react';
-import { Button } from '../../../ui/button';
 
-import iconFlame from '@/assets/lend/icon-fire.svg';
 import iconSort from '@/assets/lend/icon-sort.svg';
+import { Button } from '@/components/ui/button';
 import { InfoButton } from '@/components/ui/info-button';
 import {
   OrderColumn,
   OrderType,
   type OrderSorting,
-  type Pool,
-} from './AssetsTable.types';
+} from '@/components/ui/table/table.types';
+import type { BorrowAsset } from '../../ BorrowAssetsList.types';
 
 type AssetsTableProps = {
-  assets: Pool[];
+  assets: BorrowAsset[];
 };
 
 export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
   const [sortDirection, setSortDirection] = useState<OrderSorting>(
     OrderType.ASC,
   );
-  const [sortedAssets, setSortedAssets] = useState<Pool[]>(assets);
+  const [sortedAssets, setSortedAssets] = useState<BorrowAsset[]>(assets);
   useEffect(() => {
     setSortedAssets(assets);
   }, [assets]);
 
   const sortAssets = useCallback(
-    (column: keyof Pool) => {
+    (column: keyof BorrowAsset) => {
       const newSortDirection =
         sortDirection === OrderType.ASC ? OrderType.DESC : OrderType.ASC;
       setSortDirection(newSortDirection);
 
       const sorted = [...sortedAssets].sort((a, b) => {
-        if (column === OrderColumn.SYMBOL || column === OrderColumn.NAME) {
+        if (column === OrderColumn.SYMBOL) {
           return newSortDirection === OrderType.ASC
             ? a[column].localeCompare(b[column])
             : b[column].localeCompare(a[column]);
@@ -69,7 +67,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
         <TableRow className="hover:bg-transparent border-none text-xs">
           <TableHead>
             <div className="flex items-center gap-2">
-              <span>Assets</span>
+              <span>Asset</span>
               {assets.some((asset) => asset.isSortable) && (
                 <Button
                   variant="ghost"
@@ -84,7 +82,10 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
           </TableHead>
           <TableHead>
             <div className="flex items-center gap-2">
-              <span>Wallet Balance</span>
+              <div className="flex items-center">
+                Available
+                <InfoButton content="This is the total amount available for you to borrow. You can borrow based on your collateral and until the borrow cap is reached." />
+              </div>
               {assets.some((asset) => asset.isSortable) && (
                 <Button
                   variant="ghost"
@@ -123,7 +124,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
           <React.Fragment key={asset.symbol}>
             <TableRow className="hover:bg-transparent">
               <TableCell className="border-neutral-800 border-y border-l rounded-tl-[1.25rem] rounded-bl-[1.25rem]">
-                <div className="flex items-center">
+                <div className="flex items-center min-w-24">
                   <img
                     src={asset.icon}
                     alt={asset.symbol}
@@ -131,43 +132,32 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                   />
                   <div className="ml-2">
                     <p className="text-gray-50 font-medium">{asset.symbol}</p>
-                    <p className="text-neutral-500 font-medium text-xs">
-                      {asset.name}
-                    </p>
                   </div>
                 </div>
               </TableCell>
               <TableCell className="border-neutral-800 border-y">
-                <p className="text-gray-50 font-medium">{asset.balance}</p>
+                <p className="text-gray-50 font-medium">
+                  {asset.balance} {asset.symbol}
+                </p>
                 <p className="text-neutral-500 font-medium text-xs">
-                  ~${asset.usdBalance}
+                  ~${asset.balanceUsd}
                 </p>
               </TableCell>
               <TableCell className="border-neutral-800 border-y">
                 <div className="flex items-center">
-                  <p className="text-gray-50 font-medium">{asset.apy}</p>
-                  {asset.isHighApy && (
-                    <img
-                      src={iconFlame}
-                      alt="High APY"
-                      className="ml-1.5 w-3"
-                    />
-                  )}
+                  <p className="text-gray-50 font-medium">{asset.apy}%</p>
                 </div>
               </TableCell>
               <TableCell className="border-neutral-800 border-y border-r rounded-tr-[1.25rem] rounded-br-[1.25rem]">
-                <div className="flex items-center gap-4 justify-end">
+                <div className="flex items-center justify-end gap-4">
                   <Button className="rounded-full min-w-24 h-10 hover:cursor-pointer">
-                    Lend
+                    Borrow
                   </Button>
-
                   <Button
-                    variant="ghost"
-                    className="hover:border-none cursor-pointer rounded-full "
+                    className="rounded-full min-w-24 h-10 hover:cursor-pointer"
+                    variant="secondary"
                   >
-                    <span className="text-gray-400">
-                      <EllipsisVertical className="w-5" />
-                    </span>
+                    Details
                   </Button>
                 </div>
               </TableCell>

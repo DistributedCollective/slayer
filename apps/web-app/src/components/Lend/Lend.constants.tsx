@@ -11,7 +11,7 @@ export const POOLS: Pool[] = [
   {
     symbol: 'BTC',
     name: 'Bitcoin',
-    balance: '1,41234566',
+    balance: '1.41234566',
     usdBalance: '199,489.70',
     apy: '11.34%',
     icon: iconBtc,
@@ -21,7 +21,7 @@ export const POOLS: Pool[] = [
   {
     symbol: 'SOV',
     name: 'Sovryn token',
-    balance: '1,31234566',
+    balance: '1.31234566',
     usdBalance: '189,489.70',
     apy: '12.34%',
     icon: iconSov,
@@ -31,7 +31,7 @@ export const POOLS: Pool[] = [
   {
     symbol: 'wBTC',
     name: 'Wrapped Bitcoin',
-    balance: '1,21234566',
+    balance: '1.21234566',
     usdBalance: '179,489.70',
     apy: '13.34%',
     icon: iconWbtc,
@@ -40,7 +40,7 @@ export const POOLS: Pool[] = [
   {
     symbol: 'BOS',
     name: 'BOS',
-    balance: '1,11234566',
+    balance: '1.11234566',
     usdBalance: '169,489.70',
     apy: '14.34%',
     icon: iconBos,
@@ -50,7 +50,7 @@ export const POOLS: Pool[] = [
   {
     symbol: 'USDT',
     name: 'Tether',
-    balance: '1,01234566',
+    balance: '1.01234566',
     usdBalance: '159,489.70',
     apy: '15.34%',
     icon: iconTether,
