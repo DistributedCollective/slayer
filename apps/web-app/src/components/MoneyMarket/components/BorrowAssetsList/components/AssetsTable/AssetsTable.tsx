@@ -16,7 +16,7 @@ import {
   OrderType,
   type OrderSorting,
 } from '@/components/ui/table/table.types';
-import type { BorrowAsset } from '../../ BorrowAssetsList.types';
+import type { BorrowAsset } from '../../BorrowAssetsList.types';
 
 type AssetsTableProps = {
   assets: BorrowAsset[];

@@ -1,7 +1,7 @@
 import iconUsdc from '@/assets/tokens/usdc.png';
 import iconUsdt from '@/assets/tokens/usdt.png';
 import iconWbtc from '@/assets/tokens/wbtc.png';
-import type { BorrowAsset } from '../../ BorrowAssetsList.types';
+import type { BorrowAsset } from '../../BorrowAssetsList.types';
 
 export const BORROW_ASSETS: BorrowAsset[] = [
   {

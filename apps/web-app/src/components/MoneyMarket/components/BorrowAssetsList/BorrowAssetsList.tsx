@@ -1,6 +1,6 @@
 import { Accordion } from '@/components/ui/accordion';
 import { useState, type FC } from 'react';
-import type { BorrowAsset } from './ BorrowAssetsList.types';
+import type { BorrowAsset } from './BorrowAssetsList.types';
 import { AssetsTable } from './components/AssetsTable/AssetsTable';
 
 type BorrowAssetsListProps = {
