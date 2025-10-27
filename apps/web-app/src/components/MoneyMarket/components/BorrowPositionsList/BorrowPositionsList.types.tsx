@@ -6,4 +6,6 @@ export type BorrowPosition = {
   apy: string;
   apyType: [number, number];
   isSortable?: boolean;
+  poolId?: string;
+  address?: string;
 };

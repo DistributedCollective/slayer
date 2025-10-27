@@ -10,7 +10,7 @@ import {
   Fragment,
   useCallback,
   useEffect,
-  useRef,
+  useMemo,
   useState,
   type FC,
 } from 'react';
@@ -42,20 +42,18 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
   );
   const [sortedAssets, setSortedAssets] = useState<BorrowPosition[]>(assets);
 
-  // Selection per *object instance* (no collisions between pools with same symbol)
-  const selectionRef = useRef<WeakMap<BorrowPosition, number>>(new WeakMap());
-  // Just to trigger rerenders after updating WeakMap
-  const [, force] = useState(0);
-  const bump = useCallback(() => force((v) => v + 1), []);
+  const [selectedApy, setSelectedApy] = useState<Record<string, number>>({});
 
   useEffect(() => {
     setSortedAssets(assets);
-    // seed defaults for any new objects
-    for (const a of assets) {
-      if (!selectionRef.current.has(a)) {
-        selectionRef.current.set(a, inferDefaultSelected(a));
-      }
-    }
+    setSelectedApy((prev) => {
+      const next = { ...prev };
+      assets.forEach((a, i) => {
+        const id = rowKey(a, i);
+        if (next[id] == null) next[id] = inferDefaultSelected(a);
+      });
+      return next;
+    });
   }, [assets]);
 
   const parsePct = (v: unknown): number => {
@@ -76,11 +74,16 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
     return candidates.length ? candidates[0] : active;
   };
 
-  // Current (selected) APY per object
-  const currentApy = useCallback(
-    (a: BorrowPosition) =>
-      selectionRef.current.get(a) ?? inferDefaultSelected(a),
+  const rowKey = useMemo(
+    () => (asset: BorrowPosition, idx: number) =>
+      asset.poolId ?? asset.address ?? `${asset.symbol}-${idx}`,
     [],
+  );
+
+  const currentApy = useCallback(
+    (a: BorrowPosition, idx: number) =>
+      selectedApy[rowKey(a, idx)] ?? inferDefaultSelected(a),
+    [selectedApy, rowKey],
   );
 
   const sortAssets = useCallback(
@@ -102,8 +105,10 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
           }
           case OrderColumn.APY:
           case OrderColumn.APY_TYPE: {
-            const av = currentApy(a);
-            const bv = currentApy(b);
+            const ai = assets.indexOf(a);
+            const bi = assets.indexOf(b);
+            const av = currentApy(a, ai);
+            const bv = currentApy(b, bi);
             return nextDir === OrderType.ASC ? av - bv : bv - av;
           }
           default:
@@ -113,22 +118,17 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
 
       setSortedAssets(sorted);
     },
-    [sortDirection, sortedAssets, currentApy],
+    [sortDirection, sortedAssets, assets, currentApy],
   );
 
   const handleApyTypeChange = useCallback(
-    (asset: BorrowPosition, value: string) => {
-      selectionRef.current.set(asset, Number(value));
-      bump(); // trigger re-render
+    (asset: BorrowPosition, idx: number, value: string) => {
+      const id = rowKey(asset, idx);
+      setSelectedApy((prev) => ({ ...prev, [id]: Number(value) }));
+      setSortedAssets((prev) => [...prev]);
     },
-    [bump],
+    [rowKey],
   );
-
-  // If you do have a stable unique id, use it just for React keys (not for state):
-  const rowKey = (asset: BorrowPosition, idx: number) =>
-    // prefer poolId/address if present; fall back to a stable combo + idx
-    (asset as any).poolId ?? (asset as any).address ?? `${asset.symbol}-${idx}`;
-
   return (
     <Table className="w-full border-separate">
       <TableHeader>
@@ -205,7 +205,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
 
       <TableBody>
         {sortedAssets.map((asset, index) => {
-          const selected = currentApy(asset);
+          const selected = currentApy(asset, index);
           const types = (asset.apyType ?? [])
             .map(Number)
             .filter(Number.isFinite);
@@ -244,7 +244,9 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                   <div className="flex items-center">
                     <Select
                       value={String(selected)}
-                      onValueChange={(val) => handleApyTypeChange(asset, val)}
+                      onValueChange={(val) =>
+                        handleApyTypeChange(asset, index, val)
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
