@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
 import { Heading } from '../heading/heading';
 import { HeadingType } from '../heading/heading.types';
-import styles from './Accordion.module.css';
+import styles from './accordion.module.css';
 import { AccordionStyle } from './accordion.types';
 
 export interface IAccordionProps {

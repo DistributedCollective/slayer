@@ -59,7 +59,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
 
       setSortedAssets(sorted);
     },
-    [sortDirection, sortedAssets],
+    [sortDirection],
   );
 
   const toggleCollateral = useCallback((symbol: string) => {

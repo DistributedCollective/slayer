@@ -4,10 +4,19 @@ import type { BorrowPosition } from '../../BorrowPositionsList.types';
 export const BORROW_POSITIONS: BorrowPosition[] = [
   {
     symbol: 'USDT',
-    balance: '1,01234566',
+    balance: '1.01234566',
     balanceUsd: '159,489.70',
     apy: '15.34',
     apyType: [0, 5.12],
+    icon: iconTether,
+    isSortable: true,
+  },
+  {
+    symbol: 'USDT',
+    balance: '2.01234566',
+    balanceUsd: '159,489.70',
+    apy: '4.4',
+    apyType: [1, 6.12],
     icon: iconTether,
     isSortable: true,
   },
