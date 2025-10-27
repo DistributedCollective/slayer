@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { LendPositionsList } from '@/components/MoneyMarket/components/LendPositionsList/LendPositionsList';
 import { TopPanel } from '@/components/MoneyMarket/components/TopPanel/TopPanel';
 
-import { BorrowAssetsList } from '@/components/MoneyMarket/components/BorrowAssetsList/ BorrowAssetsList';
+import { BorrowAssetsList } from '@/components/MoneyMarket/components/BorrowAssetsList/BorrowAssetsList';
 import { BORROW_ASSETS } from '@/components/MoneyMarket/components/BorrowAssetsList/components/AssetsTable/AssetsTable.constants';
 import { BorrowPositionsList } from '@/components/MoneyMarket/components/BorrowPositionsList/BorrowPositionsList';
 import { BORROW_POSITIONS } from '@/components/MoneyMarket/components/BorrowPositionsList/components/AssetsTable/AssetsTable.constants';
