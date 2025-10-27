@@ -22,7 +22,7 @@ export const StatisticsCard: FC<StatisticsCardProps> = ({
   return (
     <div className={cn('space-y-3', className)}>
       <div className="flex space-x-2 items-center text-gray-30">
-        <span className="text-xs  font-medium">{label}</span>
+        <span className="text-xs font-medium">{label}</span>
         {help && <InfoButton content={help} />}
       </div>
 
