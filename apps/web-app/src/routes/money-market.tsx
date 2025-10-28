@@ -24,12 +24,38 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading/heading';
+import z from 'zod';
+
+const poolSearchSchema = z.object({
+  offset: z.number().min(0).default(0),
+  limit: z.number().min(1).max(100).default(20),
+  search: z.string().default(''),
+});
 
 export const Route = createFileRoute('/money-market')({
   component: RouteComponent,
+  validateSearch: poolSearchSchema,
+  loaderDeps: ({ search: { offset, limit, search } }) => ({
+    offset,
+    limit,
+    search,
+  }),
+  loader: ({ abortController, deps }) =>
+    new SDK({
+      indexerBaseUrl: ENV.VITE_API_BASE,
+      publicClient: createPublicClient({
+        chain: sepolia,
+        transport: http(),
+      }),
+    }).lending.listPools({
+      signal: abortController.signal,
+      query: deps,
+    }),
 });
 
 function RouteComponent() {
+  const pools = Route.useLoaderData();
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="text-center">

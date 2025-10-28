@@ -48,6 +48,7 @@ export class HttpClient {
   }
 
   async request<T>(path: string, opts: HttpRequestOptions = {}): Promise<T> {
+    console.log('fetching', path, opts);
     const f = this.config.fetch ?? globalThis.fetch;
     if (!f)
       throw new Error(
@@ -68,7 +69,7 @@ export class HttpClient {
       !opts.signal && this.config.timeoutMs ? new AbortController() : undefined;
 
     const timeout = controller
-      ? setTimeout(() => controller.abort(), this.config.timeoutMs)
+      ? setTimeout(() => controller.abort('timeout'), this.config.timeoutMs)
       : undefined;
 
     try {
@@ -78,6 +79,7 @@ export class HttpClient {
         body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
         signal: controller?.signal ?? opts.signal,
       });
+
       if (!res.ok) {
         const text = await res.text().catch(() => '');
         throw new HTTPClientError(res.status, res.statusText, text, url);
@@ -85,10 +87,30 @@ export class HttpClient {
       // Handle empty responses (204, etc.)
       if (res.status === 204) return undefined as unknown as T;
       return (await res.json()) as T;
+    } catch (error) {
+      console.log('HTTP request error:', error);
+      if (isAbortError(error)) {
+        const reason = controller?.signal.reason ?? error.reason;
+        const isTimeout =
+          (reason instanceof DOMException && reason.name === 'TimeoutError') ||
+          (error instanceof DOMException && error.name === 'TimeoutError') ||
+          reason === 'timeout';
+        if (isTimeout) throw new HTTPTimeoutError(url, reason);
+        throw new HTTPAbortError(url, reason);
+      }
+      throw new HTTPClientError(500, 'Internal Server Error', '', url);
     } finally {
       if (timeout) clearTimeout(timeout);
     }
   }
+}
+
+export function isAbortError(e: unknown): e is HTTPAbortError {
+  // Native fetch aborts: DOMException name === 'AbortError'
+  return (
+    (e instanceof DOMException && e.name === 'AbortError') ||
+    e instanceof HTTPAbortError
+  );
 }
 
 export class HTTPClientError extends Error {
@@ -99,5 +121,22 @@ export class HTTPClientError extends Error {
     public readonly url: string,
   ) {
     super(`HTTP ${status} ${statusText} for ${url}\n${body}`);
+  }
+}
+
+export class HTTPAbortError extends Error {
+  constructor(
+    public readonly url: string,
+    public readonly reason?: unknown, // e.g., 'timeout' or a custom object
+  ) {
+    super(`Request aborted for ${url}${reason ? `: ${String(reason)}` : ''}`);
+    this.name = 'HTTPAbortError';
+  }
+}
+
+export class HTTPTimeoutError extends HTTPAbortError {
+  constructor(url: string, reason?: unknown) {
+    super(url, reason ?? 'timeout');
+    this.name = 'HTTPTimeoutError';
   }
 }

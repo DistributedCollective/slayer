@@ -1,3 +1,4 @@
+import { HttpClient } from '@sovryn/slayer-shared';
 import { PublicClient, WalletClient } from 'viem';
 
 export type FetchLike = typeof fetch;
@@ -27,6 +28,8 @@ export class Context {
     Pick<SdkConfig, 'indexerBaseUrl' | 'publicClient'>
   > &
     SdkConfig;
+
+  readonly http: HttpClient;
 
   constructor(cfg: SdkConfig) {
     if (!cfg.publicClient)
