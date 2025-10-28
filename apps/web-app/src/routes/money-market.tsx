@@ -15,19 +15,12 @@ import {
   netApy,
   netWorth,
 } from '@/components/MoneyMarket/MoneyMarket.constants';
-import PoolsTable from '@/components/PoolsTable/PoolsTable';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading/heading';
 import { ENV } from '@/env';
+import { SDK } from '@sovryn/slayer-sdk';
 import { isAbortError } from '@sovryn/slayer-shared';
 import { createPublicClient, http } from 'viem';
-import { sepolia } from 'viem/chains';
+import { bobSepolia } from 'viem/chains';
 import z from 'zod';
 
 const poolSearchSchema = z.object({
@@ -48,11 +41,11 @@ export const Route = createFileRoute('/money-market')({
     new SDK({
       indexerBaseUrl: ENV.VITE_API_BASE,
       publicClient: createPublicClient({
-        chain: sepolia,
+        chain: bobSepolia,
         transport: http(),
       }),
-    }).lending
-      .listPools({
+    }).moneyMarket
+      .listReserves({
         signal: abortController.signal,
         query: deps,
       })
@@ -95,20 +88,6 @@ function RouteComponent() {
           <BorrowAssetsList borrowAssets={BORROW_ASSETS} />
         </div>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Liquidity Pools</CardTitle>
-          <CardDescription>
-            Provide a 1:1 ratio of two assets to the AMM pool and instantly
-            start accruing your share of weekly rewards. Next rewards
-            recalibration on October 7
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <PoolsTable />
-        </CardContent>
-      </Card>
     </div>
   );
 }

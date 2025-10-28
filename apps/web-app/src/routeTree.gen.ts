@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StakeRouteImport } from './routes/stake'
+import { Route as MoneyMarketRouteImport } from './routes/money-market'
 import { Route as LendRouteImport } from './routes/lend'
 import { Route as ConvertRouteImport } from './routes/convert'
 import { Route as ComponentsRouteImport } from './routes/components'
@@ -23,6 +24,11 @@ import { Route as DemoFormAddressRouteImport } from './routes/demo.form.address'
 const StakeRoute = StakeRouteImport.update({
   id: '/stake',
   path: '/stake',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MoneyMarketRoute = MoneyMarketRouteImport.update({
+  id: '/money-market',
+  path: '/money-market',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LendRoute = LendRouteImport.update({
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/components': typeof ComponentsRoute
   '/convert': typeof ConvertRoute
   '/lend': typeof LendRoute
+  '/money-market': typeof MoneyMarketRoute
   '/stake': typeof StakeRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/i18n': typeof I18nIndexRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/components': typeof ComponentsRoute
   '/convert': typeof ConvertRoute
   '/lend': typeof LendRoute
+  '/money-market': typeof MoneyMarketRoute
   '/stake': typeof StakeRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/i18n': typeof I18nIndexRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/components': typeof ComponentsRoute
   '/convert': typeof ConvertRoute
   '/lend': typeof LendRoute
+  '/money-market': typeof MoneyMarketRoute
   '/stake': typeof StakeRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/i18n/': typeof I18nIndexRoute
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/components'
     | '/convert'
     | '/lend'
+    | '/money-market'
     | '/stake'
     | '/demo/tanstack-query'
     | '/i18n'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/components'
     | '/convert'
     | '/lend'
+    | '/money-market'
     | '/stake'
     | '/demo/tanstack-query'
     | '/i18n'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/components'
     | '/convert'
     | '/lend'
+    | '/money-market'
     | '/stake'
     | '/demo/tanstack-query'
     | '/i18n/'
@@ -153,6 +165,7 @@ export interface RootRouteChildren {
   ComponentsRoute: typeof ComponentsRoute
   ConvertRoute: typeof ConvertRoute
   LendRoute: typeof LendRoute
+  MoneyMarketRoute: typeof MoneyMarketRoute
   StakeRoute: typeof StakeRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   I18nIndexRoute: typeof I18nIndexRoute
@@ -167,6 +180,13 @@ declare module '@tanstack/react-router' {
       path: '/stake'
       fullPath: '/stake'
       preLoaderRoute: typeof StakeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/money-market': {
+      id: '/money-market'
+      path: '/money-market'
+      fullPath: '/money-market'
+      preLoaderRoute: typeof MoneyMarketRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lend': {
@@ -241,6 +261,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComponentsRoute: ComponentsRoute,
   ConvertRoute: ConvertRoute,
   LendRoute: LendRoute,
+  MoneyMarketRoute: MoneyMarketRoute,
   StakeRoute: StakeRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   I18nIndexRoute: I18nIndexRoute,
