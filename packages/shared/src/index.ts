@@ -1,1 +1,1 @@
-export * from './lib/slayer-shared.js';
+export * from './lib/http-client.js';
