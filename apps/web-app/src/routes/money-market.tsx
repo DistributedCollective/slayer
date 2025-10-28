@@ -24,6 +24,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading/heading';
+import { ENV } from '@/env';
+import { isAbortError } from '@sovryn/slayer-shared';
+import { createPublicClient, http } from 'viem';
+import { sepolia } from 'viem/chains';
 import z from 'zod';
 
 const poolSearchSchema = z.object({
@@ -47,10 +51,12 @@ export const Route = createFileRoute('/money-market')({
         chain: sepolia,
         transport: http(),
       }),
-    }).lending.listPools({
-      signal: abortController.signal,
-      query: deps,
-    }),
+    }).lending
+      .listPools({
+        signal: abortController.signal,
+        query: deps,
+      })
+      .catch((e) => (isAbortError(e) ? null : Promise.reject(e))),
 });
 
 function RouteComponent() {

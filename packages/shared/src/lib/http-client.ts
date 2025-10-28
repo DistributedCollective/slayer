@@ -33,11 +33,10 @@ export class HttpClient {
     query?: HttpRequestOptions['query'],
     baseUrlOverride?: string,
   ) {
-    const base = (baseUrlOverride ?? this.config.baseUrl).replace(/\/+$/, '');
+    const base = baseUrlOverride ?? this.config.baseUrl;
     const url = new URL(
-      `${base}${path.replace(/^\/+/, '')}`.replace(/([^:]\/)\/+/g, '$1'),
+      `${base}${path}`.replace(/([^:]\/)\/+/g, '$1').replace(/\/+$/, ''),
     );
-    console.log('Built URL:', url.toString());
 
     if (query) {
       for (const [k, v] of Object.entries(query)) {
@@ -48,7 +47,6 @@ export class HttpClient {
   }
 
   async request<T>(path: string, opts: HttpRequestOptions = {}): Promise<T> {
-    console.log('fetching', path, opts);
     const f = this.config.fetch ?? globalThis.fetch;
     if (!f)
       throw new Error(
@@ -88,7 +86,6 @@ export class HttpClient {
       if (res.status === 204) return undefined as unknown as T;
       return (await res.json()) as T;
     } catch (error) {
-      console.log('HTTP request error:', error);
       if (isAbortError(error)) {
         const reason = controller?.signal.reason ?? error.reason;
         const isTimeout =

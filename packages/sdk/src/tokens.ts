@@ -13,8 +13,8 @@ export interface Token {
 
 export class TokensClient extends BaseClient {
   async get(id: string, options: SdkRequestOptions = {}): Promise<Token> {
-    return this.ctx.request<Token>(
-      `/v1/tokens/${encodeURIComponent(id)}`,
+    return this.ctx.http.request<Token>(
+      `/tokens/${encodeURIComponent(id)}`,
       options,
     );
   }
@@ -30,8 +30,8 @@ export class TokensClient extends BaseClient {
       // allow repeated query via comma join (API-agnostic placeholder)
       symbols: params.symbols?.join(','),
     };
-    return this.ctx.request<{ items: Token[]; nextCursor?: string }>(
-      `/v1/tokens`,
+    return this.ctx.http.request<{ items: Token[]; nextCursor?: string }>(
+      `/tokens`,
       { ...options, query },
     );
   }

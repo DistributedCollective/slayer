@@ -16,6 +16,7 @@ import {
   useTheme,
   type Theme,
 } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
 import { useEffect, type PropsWithChildren } from 'react';
 
 interface MyRouterContext {
@@ -54,26 +55,29 @@ function RootDocument({ children }: PropsWithChildren) {
   }, [theme]);
 
   return (
-    <div className="min-h-screen flex flex-col justify-between">
-      <HeadContent />
-      <Header />
-      <main className="relative z-0 overflow-x-hidden grow">{children}</main>
-      <Footer />
-      <TanStackDevtools
-        config={{
-          position: 'bottom-left',
-        }}
-        plugins={[
-          {
-            name: 'Tanstack Router',
-            render: <TanStackRouterDevtoolsPanel />,
-          },
-          {
-            name: 'Tanstack Query',
-            render: <ReactQueryDevtoolsPanel />,
-          },
-        ]}
-      />
-    </div>
+    <>
+      <div className="min-h-screen flex flex-col justify-between">
+        <HeadContent />
+        <Header />
+        <main className="relative z-0 overflow-x-hidden grow">{children}</main>
+        <Footer />
+        <TanStackDevtools
+          config={{
+            position: 'bottom-left',
+          }}
+          plugins={[
+            {
+              name: 'Tanstack Router',
+              render: <TanStackRouterDevtoolsPanel />,
+            },
+            {
+              name: 'Tanstack Query',
+              render: <ReactQueryDevtoolsPanel />,
+            },
+          ]}
+        />
+      </div>
+      <Toaster />
+    </>
   );
 }
