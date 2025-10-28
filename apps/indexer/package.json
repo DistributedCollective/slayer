@@ -93,7 +93,11 @@
         ],
         "options": {
           "buildTarget": "indexer:build",
-          "runBuildTargetDependencies": false
+          "runBuildTargetDependencies": false,
+          "runtimeArgs": [
+            "-r",
+            "tsconfig-paths/register"
+          ]
         },
         "configurations": {
           "development": {
@@ -113,7 +117,11 @@
         ],
         "options": {
           "buildTarget": "indexer:build",
-          "runBuildTargetDependencies": false
+          "runBuildTargetDependencies": false,
+          "runtimeArgs": [
+            "-r",
+            "tsconfig-paths/register"
+          ]
         },
         "configurations": {
           "development": {
@@ -158,6 +166,7 @@
     "@types/lodash": "4.17.20",
     "@types/pg": "8.15.5",
     "drizzle-kit": "0.31.4",
+    "tsconfig-paths": "^4.2.0",
     "vitest": "3.2.4"
   }
 }

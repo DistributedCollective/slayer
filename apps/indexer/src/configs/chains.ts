@@ -39,6 +39,6 @@ export const chains = {
     ? Extract<Chain, { chainId: T }>
     : Extract<Chain, { key: T }> =>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    items.find((c) => c.key === chain || c.chainId === chain)! as any,
+    items.find((c) => c.key === chain || c.chainId == chain)! as any,
   list: (): Chain[] => items,
 };
