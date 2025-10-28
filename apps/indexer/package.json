@@ -89,7 +89,27 @@
         "executor": "@nx/js:node",
         "defaultConfiguration": "development",
         "dependsOn": [
-          "build"
+          "watch-deps"
+        ],
+        "options": {
+          "buildTarget": "indexer:build",
+          "runBuildTargetDependencies": false
+        },
+        "configurations": {
+          "development": {
+            "buildTarget": "indexer:build:development"
+          },
+          "production": {
+            "buildTarget": "indexer:build:production"
+          }
+        }
+      },
+      "dev": {
+        "continuous": true,
+        "executor": "@nx/js:node",
+        "defaultConfiguration": "development",
+        "dependsOn": [
+          "watch-deps"
         ],
         "options": {
           "buildTarget": "indexer:build",
