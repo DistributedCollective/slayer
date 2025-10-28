@@ -9,11 +9,8 @@ import * as Wagmi from './integrations/wagmi/root-provider.tsx';
 // Import the generated route tree
 import { routeTree } from './routeTree.gen';
 
-import { slayerShared } from '@sovryn/slayer-shared';
 import reportWebVitals from './reportWebVitals.ts';
 import './styles.css';
-
-console.log(slayerShared());
 
 // Create a new router instance
 

@@ -18,7 +18,7 @@ export async function queryFromSubgraph<T = unknown>(
   };
 
   const response = await new HttpClient({ baseUrl: url }).request<{ data: T }>(
-    '',
+    '/',
     {
       method: 'POST',
       body,

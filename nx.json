@@ -4,6 +4,10 @@
     "dev": {
       "dependsOn": ["^dev"]
     },
+    "serve": {
+      "continuous": true,
+      "dependsOn": ["^build", "^dev"]
+    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["{projectRoot}/dist"],
@@ -29,10 +33,10 @@
     {
       "plugin": "@nx/vite/plugin",
       "options": {
-        "buildTargetName": "vite:build",
-        "testTargetName": "vite:test",
-        "serveTargetName": "vite:serve",
-        "devTargetName": "vite:dev",
+        "buildTargetName": "build",
+        "testTargetName": "test",
+        "serveTargetName": "serve",
+        "devTargetName": "dev",
         "previewTargetName": "preview",
         "serveStaticTargetName": "serve-static",
         "typecheckTargetName": "typecheck",

@@ -1,6 +1,6 @@
 export const Footer = () => {
   return (
-    <footer className="w-full pt-9 pb-12 mt-10 px-4 flex flex-col lg:flex-row gap-4 justify-start text-center text-sm text-black dark:text-slate-500 border-t border-t-stone-200 dark:border-t-stone-800 z-[1000]">
+    <footer className="w-full pt-9 pb-12 mt-10 px-4 flex flex-col lg:flex-row gap-4 justify-start text-center text-sm text-black dark:text-slate-500 border-t border-t-stone-200 dark:border-t-stone-800">
       <div className="flex flex-row flex-wrap justify-between items-start gap-8 lg:w-1/3 lg:flex-row lg:flex-nowrap">
         <div className="text-left">
           <h3 className="font-medium dark:text-gray-50 mb-3">
@@ -74,7 +74,9 @@ export const Footer = () => {
 
         <div className="shrink-0 flex flex-col items-start justify-center">
           <div className="lg:hidden">Sovryn Dex</div>
-          <div className="text-xs lg:text-sm">Copyright {new Date().getFullYear()}</div>
+          <div className="text-xs lg:text-sm">
+            Copyright {new Date().getFullYear()}
+          </div>
         </div>
       </div>
     </footer>

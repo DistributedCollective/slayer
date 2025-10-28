@@ -2,11 +2,6 @@
   "name": "web-app",
   "private": true,
   "type": "module",
-  "scripts": {
-    "build": "vite build && tsc",
-    "serve": "vite dev --port 3000 --open",
-    "test": "vitest run"
-  },
   "dependencies": {
     "@i18next-selector/vite-plugin": "^0.0.18",
     "@privy-io/react-auth": "3.0.1",

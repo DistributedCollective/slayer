@@ -71,6 +71,16 @@ export default defineConfig(() => ({
       provider: 'v8' as const,
     },
   },
+  server: {
+    port: 3000,
+    host: 'localhost',
+    open: true,
+  },
+  preview: {
+    port: 3000,
+    host: 'localhost',
+    open: true,
+  },
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),

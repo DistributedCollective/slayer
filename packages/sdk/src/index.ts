@@ -1,4 +1,5 @@
 import { Context, SdkConfig } from './lib/context.js';
+import { LendingManager } from './managers/lending.js';
 import { TokensClient } from './tokens.js';
 
 export class SDK {
@@ -14,5 +15,13 @@ export class SDK {
       this._tokens = new TokensClient(this.ctx);
     }
     return this._tokens;
+  }
+
+  private _lending?: LendingManager;
+  get lending(): LendingManager {
+    if (!this._lending) {
+      this._lending = new LendingManager(this.ctx);
+    }
+    return this._lending;
   }
 }

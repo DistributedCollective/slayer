@@ -32,6 +32,11 @@ const items = linkOptions([
     content: 'Stake assets to earn rewards',
   },
   {
+    to: '/money-market',
+    label: 'Money Maker',
+    content: 'Lend assets to earn yield',
+  },
+  {
     to: '/demo/tanstack-query',
     label: 'TanStack Query',
     content: 'Demo of TanStack Query',

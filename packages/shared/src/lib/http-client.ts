@@ -34,7 +34,11 @@ export class HttpClient {
     baseUrlOverride?: string,
   ) {
     const base = (baseUrlOverride ?? this.config.baseUrl).replace(/\/+$/, '');
-    const url = new URL(`${base}/${path.replace(/^\/+/, '')}`);
+    const url = new URL(
+      `${base}${path.replace(/^\/+/, '')}`.replace(/([^:]\/)\/+/g, '$1'),
+    );
+    console.log('Built URL:', url.toString());
+
     if (query) {
       for (const [k, v] of Object.entries(query)) {
         if (v !== undefined) url.searchParams.set(k, String(v));
