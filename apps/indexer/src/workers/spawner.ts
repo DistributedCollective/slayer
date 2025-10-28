@@ -37,4 +37,6 @@ if (!ENV.READ_ONLY_MODE) {
     await ingestWorker.run();
     log.info('Ingest worker is ready.');
   });
+} else {
+  logger.info('READ-ONLY mode enabled, not starting workers.');
 }

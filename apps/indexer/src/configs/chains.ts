@@ -5,6 +5,7 @@ type ChainConfig = {
 
   // Aave subgraph URL
   aaveSubgraphUrl?: string;
+  aavePriceFeedUrl?: string;
 };
 
 const items = [
@@ -24,6 +25,7 @@ const items = [
     name: 'BOB Sepolia',
     aaveSubgraphUrl:
       'https://bob-mm.test.sovryn.app/subgraphs/name/DistributedCollective/sov-protocol-subgraphs',
+    aavePriceFeedUrl: 'https://bob-mm-cache.test.sovryn.app/data/rates-history',
   },
 ] as const satisfies ChainConfig[];
 

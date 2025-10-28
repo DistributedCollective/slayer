@@ -10,10 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StakeRouteImport } from './routes/stake'
-import { Route as MoneyMarketRouteImport } from './routes/money-market'
 import { Route as LendRouteImport } from './routes/lend'
 import { Route as ConvertRouteImport } from './routes/convert'
 import { Route as ComponentsRouteImport } from './routes/components'
+import { Route as BorrowRouteImport } from './routes/borrow'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as I18nIndexRouteImport } from './routes/i18n/index'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo.tanstack-query'
@@ -23,11 +23,6 @@ import { Route as DemoFormAddressRouteImport } from './routes/demo.form.address'
 const StakeRoute = StakeRouteImport.update({
   id: '/stake',
   path: '/stake',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MoneyMarketRoute = MoneyMarketRouteImport.update({
-  id: '/money-market',
-  path: '/money-market',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LendRoute = LendRouteImport.update({
@@ -43,6 +38,11 @@ const ConvertRoute = ConvertRouteImport.update({
 const ComponentsRoute = ComponentsRouteImport.update({
   id: '/components',
   path: '/components',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BorrowRoute = BorrowRouteImport.update({
+  id: '/borrow',
+  path: '/borrow',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -73,10 +73,10 @@ const DemoFormAddressRoute = DemoFormAddressRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/borrow': typeof BorrowRoute
   '/components': typeof ComponentsRoute
   '/convert': typeof ConvertRoute
   '/lend': typeof LendRoute
-  '/money-market': typeof MoneyMarketRoute
   '/stake': typeof StakeRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/i18n': typeof I18nIndexRoute
@@ -85,10 +85,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/borrow': typeof BorrowRoute
   '/components': typeof ComponentsRoute
   '/convert': typeof ConvertRoute
   '/lend': typeof LendRoute
-  '/money-market': typeof MoneyMarketRoute
   '/stake': typeof StakeRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/i18n': typeof I18nIndexRoute
@@ -98,10 +98,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/borrow': typeof BorrowRoute
   '/components': typeof ComponentsRoute
   '/convert': typeof ConvertRoute
   '/lend': typeof LendRoute
-  '/money-market': typeof MoneyMarketRoute
   '/stake': typeof StakeRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/i18n/': typeof I18nIndexRoute
@@ -112,10 +112,10 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/borrow'
     | '/components'
     | '/convert'
     | '/lend'
-    | '/money-market'
     | '/stake'
     | '/demo/tanstack-query'
     | '/i18n'
@@ -124,10 +124,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/borrow'
     | '/components'
     | '/convert'
     | '/lend'
-    | '/money-market'
     | '/stake'
     | '/demo/tanstack-query'
     | '/i18n'
@@ -136,10 +136,10 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/borrow'
     | '/components'
     | '/convert'
     | '/lend'
-    | '/money-market'
     | '/stake'
     | '/demo/tanstack-query'
     | '/i18n/'
@@ -149,10 +149,10 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BorrowRoute: typeof BorrowRoute
   ComponentsRoute: typeof ComponentsRoute
   ConvertRoute: typeof ConvertRoute
   LendRoute: typeof LendRoute
-  MoneyMarketRoute: typeof MoneyMarketRoute
   StakeRoute: typeof StakeRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   I18nIndexRoute: typeof I18nIndexRoute
@@ -167,13 +167,6 @@ declare module '@tanstack/react-router' {
       path: '/stake'
       fullPath: '/stake'
       preLoaderRoute: typeof StakeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/money-market': {
-      id: '/money-market'
-      path: '/money-market'
-      fullPath: '/money-market'
-      preLoaderRoute: typeof MoneyMarketRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lend': {
@@ -195,6 +188,13 @@ declare module '@tanstack/react-router' {
       path: '/components'
       fullPath: '/components'
       preLoaderRoute: typeof ComponentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/borrow': {
+      id: '/borrow'
+      path: '/borrow'
+      fullPath: '/borrow'
+      preLoaderRoute: typeof BorrowRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -237,10 +237,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BorrowRoute: BorrowRoute,
   ComponentsRoute: ComponentsRoute,
   ConvertRoute: ConvertRoute,
   LendRoute: LendRoute,
-  MoneyMarketRoute: MoneyMarketRoute,
   StakeRoute: StakeRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   I18nIndexRoute: I18nIndexRoute,

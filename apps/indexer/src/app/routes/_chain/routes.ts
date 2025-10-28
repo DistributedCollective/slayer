@@ -1,10 +1,11 @@
-import { and, asc, eq, gte } from 'drizzle-orm';
+import { and, asc, eq, gte, inArray } from 'drizzle-orm';
 import { FastifyInstance } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import gql from 'graphql-tag';
 import { chains } from '../../../configs/chains';
 import { client } from '../../../database/client';
 import { tTokens } from '../../../database/schema';
+import { tTokensSelectors } from '../../../database/selectors';
 import { queryFromSubgraph } from '../../../libs/loaders/subgraph';
 import { paginationResponse, paginationSchema } from '../../../libs/pagination';
 
@@ -22,31 +23,21 @@ export default async function (fastify: FastifyInstance) {
     },
     async (req) => {
       const items = await client.query.tTokens.findMany({
-        columns: {
-          identifier: true,
-          address: true,
-          symbol: true,
-          name: true,
-          decimals: true,
-          logoUrl: true,
-          chainId: true,
-        },
-        orderBy: asc(tTokens.identifier),
+        columns: tTokensSelectors.columns,
+        orderBy: asc(tTokens.address),
         where: and(
           eq(tTokens.chainId, req.chain.chainId),
-          req.query.cursor
-            ? gte(tTokens.identifier, req.query.cursor)
-            : undefined,
+          req.query.cursor ? gte(tTokens.address, req.query.cursor) : undefined,
         ),
         limit: req.query.limit,
       });
 
-      return paginationResponse(items, req.query.limit, 'identifier');
+      return paginationResponse(items, req.query.limit, 'address');
     },
   );
 
   fastify.withTypeProvider<ZodTypeProvider>().get(
-    '/m',
+    '/money-market',
     {
       schema: {
         querystring: paginationSchema,
@@ -61,7 +52,18 @@ export default async function (fastify: FastifyInstance) {
 
       const chain = chains.get('bob-sepolia');
 
-      const items = await queryFromSubgraph<{ pools: Array<{ id: string }> }>(
+      const items = await queryFromSubgraph<{
+        pools: Array<{
+          id: string;
+          reserves: {
+            id: string;
+            totalLiquidity: string;
+            underlyingAsset: string;
+            usageAsCollateralEnabled: boolean;
+            borrowingEnabled: boolean;
+          }[];
+        }>;
+      }>(
         chain.aaveSubgraphUrl,
         gql`
           query {
@@ -69,16 +71,37 @@ export default async function (fastify: FastifyInstance) {
               id
               reserves {
                 id
-                symbol
-                decimals
                 totalLiquidity
+                underlyingAsset
+                usageAsCollateralEnabled
+                borrowingEnabled
               }
             }
           }
         `,
-      ).then((data) => data.pools);
+      ).then((data) => data.pools.flatMap((pool) => pool.reserves));
 
-      return { data: items };
+      const tokens = await client.query.tTokens.findMany({
+        columns: tTokensSelectors.columns,
+        where: and(
+          eq(tTokens.chainId, req.chain.chainId),
+          inArray(
+            tTokens.address,
+            items.map((i) => i.underlyingAsset),
+          ),
+        ),
+      });
+
+      return {
+        data: items
+          .map((item) => ({
+            ...item,
+            token: tokens.find((t) => t.address === item.underlyingAsset),
+          }))
+          .filter((i) => i.token),
+        nextCursor: null,
+        count: items.length,
+      };
     },
   );
 }
