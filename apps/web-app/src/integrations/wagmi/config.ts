@@ -1,11 +1,13 @@
 import { createConfig } from '@privy-io/wagmi';
 import { http } from 'viem';
-import { rootstockTestnet } from 'viem/chains';
+import { bobSepolia } from 'viem/chains';
 
 export const config = createConfig({
-  chains: [rootstockTestnet],
+  chains: [bobSepolia],
   transports: {
-    [rootstockTestnet.id]: http(),
+    // [rootstock.id]: slayer(),
+    [bobSepolia.id]: http(),
+    // [rootstockTestnet.id]: slayer(),
   },
 });
 

@@ -4,23 +4,18 @@ import { LendPositionsList } from '@/components/MoneyMarket/components/LendPosit
 import { TopPanel } from '@/components/MoneyMarket/components/TopPanel/TopPanel';
 
 import { BorrowAssetsList } from '@/components/MoneyMarket/components/BorrowAssetsList/BorrowAssetsList';
-import { BORROW_ASSETS } from '@/components/MoneyMarket/components/BorrowAssetsList/components/AssetsTable/AssetsTable.constants';
 import { BorrowPositionsList } from '@/components/MoneyMarket/components/BorrowPositionsList/BorrowPositionsList';
 import { BORROW_POSITIONS } from '@/components/MoneyMarket/components/BorrowPositionsList/components/AssetsTable/AssetsTable.constants';
 import { LEND_ASSETS } from '@/components/MoneyMarket/components/LendAssetsList/components/AssetsTable/AssetsTable.constants';
 import { LendAssetsList } from '@/components/MoneyMarket/components/LendAssetsList/LendAssetsList';
-import { LEND_POSITIONS } from '@/components/MoneyMarket/components/LendPositionsList/components/AssetsTable/AssetsTable.constants';
 import {
   healthFactor,
   netApy,
   netWorth,
 } from '@/components/MoneyMarket/MoneyMarket.constants';
 import { Heading } from '@/components/ui/heading/heading';
-import { ENV } from '@/env';
-import { SDK } from '@sovryn/slayer-sdk';
+import { sdk } from '@/lib/sdk';
 import { isAbortError } from '@sovryn/slayer-shared';
-import { createPublicClient, http } from 'viem';
-import { bobSepolia } from 'viem/chains';
 import z from 'zod';
 
 const poolSearchSchema = z.object({
@@ -38,13 +33,7 @@ export const Route = createFileRoute('/money-market')({
     search,
   }),
   loader: ({ abortController, deps }) =>
-    new SDK({
-      indexerBaseUrl: ENV.VITE_API_BASE,
-      publicClient: createPublicClient({
-        chain: bobSepolia,
-        transport: http(),
-      }),
-    }).moneyMarket
+    sdk.moneyMarket
       .listReserves({
         signal: abortController.signal,
         query: deps,
@@ -71,7 +60,7 @@ function RouteComponent() {
       <div className="grid grid-cols-1 2xl:grid-cols-2 2xl:gap-4 space-y-4">
         <div className="space-y-4">
           <LendPositionsList
-            lendPositions={LEND_POSITIONS}
+            lendPositions={pools?.data ?? []}
             supplyBalance={100}
             collateralBalance={50}
             supplyWeightedApy={2.5}
@@ -85,7 +74,7 @@ function RouteComponent() {
             borrowPower={1.29}
             supplyWeightedApy={0.05}
           />
-          <BorrowAssetsList borrowAssets={BORROW_ASSETS} />
+          <BorrowAssetsList borrowAssets={pools?.data ?? []} />
         </div>
       </div>
     </div>

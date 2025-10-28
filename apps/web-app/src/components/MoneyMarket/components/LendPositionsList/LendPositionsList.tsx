@@ -1,14 +1,14 @@
 import { Accordion } from '@/components/ui/accordion';
+import type { MoneyMarketPoolReserve } from '@sovryn/slayer-sdk';
 import { useState, type FC } from 'react';
 import { PoolPositionStat } from '../PoolPositionStat/PoolPositionStat';
-import type { LendPosition } from './LendPositionsList.types';
 import { AssetsTable } from './components/AssetsTable/AssetsTable';
 
 type LendPositionsListProps = {
   supplyBalance: number;
   supplyWeightedApy: number;
   collateralBalance: number;
-  lendPositions: LendPosition[];
+  lendPositions: MoneyMarketPoolReserve[];
   loading?: boolean;
 };
 

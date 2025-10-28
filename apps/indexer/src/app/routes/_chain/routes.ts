@@ -36,8 +36,44 @@ export default async function (fastify: FastifyInstance) {
     },
   );
 
+  fastify
+    .withTypeProvider<ZodTypeProvider>()
+    .get('/money-market', async (req, reply) => {
+      if (req.chain.key !== 'bob-sepolia') {
+        return reply.notFound(
+          'Money Market data is only available for BOB Sepolia',
+        );
+      }
+
+      const chain = chains.get('bob-sepolia');
+
+      const item = await queryFromSubgraph<{
+        pools: Array<{
+          id: string;
+          pool: string;
+        }>;
+      }>(
+        chain.aaveSubgraphUrl,
+        gql`
+          query {
+            pools {
+              id
+              pool
+            }
+          }
+        `,
+      ).then((data) => data.pools.flatMap((pool) => pool)[0]);
+
+      return {
+        data: {
+          pool: item.pool,
+          addressProvider: item.id,
+        },
+      };
+    });
+
   fastify.withTypeProvider<ZodTypeProvider>().get(
-    '/money-market',
+    '/money-market/reserves',
     {
       schema: {
         querystring: paginationSchema,

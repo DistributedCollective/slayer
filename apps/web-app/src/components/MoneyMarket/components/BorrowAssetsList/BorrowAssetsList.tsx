@@ -1,17 +1,17 @@
 import { Accordion } from '@/components/ui/accordion';
+import type { MoneyMarketPoolReserve } from '@sovryn/slayer-sdk';
 import { useState, type FC } from 'react';
-import type { BorrowAsset } from './BorrowAssetsList.types';
 import { AssetsTable } from './components/AssetsTable/AssetsTable';
 
 type BorrowAssetsListProps = {
-  borrowAssets: BorrowAsset[];
+  borrowAssets: MoneyMarketPoolReserve[];
   loading?: boolean;
 };
 
 export const BorrowAssetsList: FC<BorrowAssetsListProps> = ({
   borrowAssets,
 }) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
 
   return (
     <Accordion
