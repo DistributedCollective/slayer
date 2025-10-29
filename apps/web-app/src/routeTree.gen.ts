@@ -14,7 +14,6 @@ import { Route as MoneyMarketRouteImport } from './routes/money-market'
 import { Route as LendRouteImport } from './routes/lend'
 import { Route as ConvertRouteImport } from './routes/convert'
 import { Route as ComponentsRouteImport } from './routes/components'
-import { Route as BorrowRouteImport } from './routes/borrow'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as I18nIndexRouteImport } from './routes/i18n/index'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo.tanstack-query'
@@ -46,11 +45,6 @@ const ComponentsRoute = ComponentsRouteImport.update({
   path: '/components',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BorrowRoute = BorrowRouteImport.update({
-  id: '/borrow',
-  path: '/borrow',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -79,7 +73,6 @@ const DemoFormAddressRoute = DemoFormAddressRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/borrow': typeof BorrowRoute
   '/components': typeof ComponentsRoute
   '/convert': typeof ConvertRoute
   '/lend': typeof LendRoute
@@ -92,7 +85,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/borrow': typeof BorrowRoute
   '/components': typeof ComponentsRoute
   '/convert': typeof ConvertRoute
   '/lend': typeof LendRoute
@@ -106,7 +98,6 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/borrow': typeof BorrowRoute
   '/components': typeof ComponentsRoute
   '/convert': typeof ConvertRoute
   '/lend': typeof LendRoute
@@ -121,7 +112,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/borrow'
     | '/components'
     | '/convert'
     | '/lend'
@@ -134,7 +124,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/borrow'
     | '/components'
     | '/convert'
     | '/lend'
@@ -147,7 +136,6 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/borrow'
     | '/components'
     | '/convert'
     | '/lend'
@@ -161,7 +149,6 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  BorrowRoute: typeof BorrowRoute
   ComponentsRoute: typeof ComponentsRoute
   ConvertRoute: typeof ConvertRoute
   LendRoute: typeof LendRoute
@@ -210,13 +197,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ComponentsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/borrow': {
-      id: '/borrow'
-      path: '/borrow'
-      fullPath: '/borrow'
-      preLoaderRoute: typeof BorrowRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -257,7 +237,6 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  BorrowRoute: BorrowRoute,
   ComponentsRoute: ComponentsRoute,
   ConvertRoute: ConvertRoute,
   LendRoute: LendRoute,
