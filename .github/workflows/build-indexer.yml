@@ -1,10 +1,13 @@
 name: Build Indexer
 
+env:
+  BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+
 on:
   push:
     branches: [develop, staging, main]
     paths:
-      - 'apps/indexer/*'
+      - "apps/indexer/*"
   workflow_dispatch:
 
 concurrency:
@@ -41,7 +44,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install Dependencies
         run: pnpm install
@@ -75,5 +78,5 @@ jobs:
           context: .
           file: ${{ needs.call-workflow-init.outputs.dockerfile_path }}/Dockerfile.indexer
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ needs.call-workflow-init.outputs.registry }}/${{ needs.call-workflow-init.outputs.image_name }}:${{ needs.call-workflow-init.outputs.KUBE_NAMESPACE }}
+          tags: ${{ needs.call-workflow-init.outputs.registry }}/${{ needs.call-workflow-init.outputs.image_name }}:${{ ENV.BRANCH_NAME }}
           labels: ${{ steps.meta.outputs.labels }}
