@@ -1,3 +1,9 @@
+// env must be imported first
+import { ENV } from './env';
+// spawn background jobs, workers, crontab, etc
+import './crontab';
+import './workers/spawner';
+// rest of the imports
 import cors from '@fastify/cors';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import Fastify from 'fastify';
@@ -7,13 +13,10 @@ import {
 } from 'fastify-type-provider-zod';
 import path from 'node:path';
 import { app } from './app/app';
-import './crontab';
 import { client } from './database/client';
-import { ENV } from './env';
 import { logger } from './libs/logger';
 import { onShutdown } from './libs/shutdown';
 import { notifyReady, onReady } from './libs/startup';
-import './workers/spawner';
 
 // Instantiate Fastify with some config
 const server = Fastify({
