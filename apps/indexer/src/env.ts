@@ -1,6 +1,5 @@
 import 'dotenv/config';
 import { bool, cleanEnv, makeValidator, port, str, testOnly } from 'envalid';
-import { logger } from './libs/logger';
 
 export const ENV = cleanEnv(process.env, {
   PORT: port({ default: 8000 }),
@@ -26,5 +25,3 @@ export const ENV = cleanEnv(process.env, {
     }
   })({ default: [] }),
 });
-
-logger.info({ ENV }, 'Environment variables loaded');
