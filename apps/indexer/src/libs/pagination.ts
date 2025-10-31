@@ -1,5 +1,4 @@
 import z from 'zod';
-import { logger } from './logger';
 
 export const DEFAULT_LIMIT = 250;
 
@@ -33,8 +32,6 @@ export const paginationResponse = <T>(
     typeof key === 'function'
       ? key(data[data.length - 1])
       : data[data.length - 1]?.[key]?.toString() || '';
-
-  logger.info({ items: items.length, limit, cursorKey }, 'Pagination response');
 
   return {
     data: items,

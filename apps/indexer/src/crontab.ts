@@ -1,6 +1,7 @@
 import { CronJob } from 'cron';
 import { chains } from './configs/chains';
 import { ENV } from './env';
+import { logger } from './libs/logger';
 import { onReady } from './libs/startup';
 import { ingestSources } from './workers/ingest/sources';
 import { ingestQueue } from './workers/queues';
@@ -25,5 +26,6 @@ if (!ENV.READ_ONLY_MODE) {
         );
       },
     }).start();
+    logger.info('Crontab started');
   });
 }

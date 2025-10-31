@@ -29,12 +29,12 @@ export function onShutdown(callback?: () => void) {
 
     closeCallbacks(1);
 
-    // If a graceful shutdown is not achieved after 2 seconds,
+    // If a graceful shutdown is not achieved after 30 seconds,
     // shut down the process completely
     setTimeout(() => {
       logger.fatal('Unable to shut down gracefully, force shutting down...');
       process.abort();
-    }, 2000).unref();
+    }, 30_000).unref();
   });
 }
 

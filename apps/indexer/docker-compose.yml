@@ -16,7 +16,7 @@ services:
 
   slayer-redis:
     container_name: slayer-redis
-    image: redis:7.0.7-alpine
+    image: redis:8.2.2-alpine
     restart: unless-stopped
     networks:
       - slayer-network

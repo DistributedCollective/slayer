@@ -15,6 +15,7 @@ if (!ENV.READ_ONLY_MODE) {
     ENV.isDev ? fn : path.resolve(__dirname, `ingest/processor.js`),
     {
       connection: redisConnection,
+      prefix: '{slayer:ingest}',
       useWorkerThreads: true,
       removeOnComplete: {
         age: 3600, // keep for 1 hour
@@ -25,6 +26,7 @@ if (!ENV.READ_ONLY_MODE) {
         count: 1000,
       },
       concurrency: 4,
+      autorun: false,
     },
   );
 

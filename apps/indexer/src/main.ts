@@ -18,8 +18,6 @@ import { notifyReady, onReady } from './libs/startup';
 import './crontab';
 import './workers/spawner';
 
-logger.info({ ENV }, 'Starting slayer-indexer service');
-
 // Instantiate Fastify with some config
 const server = Fastify({
   loggerInstance: logger,

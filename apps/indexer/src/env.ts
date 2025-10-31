@@ -10,6 +10,7 @@ export const ENV = cleanEnv(process.env, {
     default: testOnly('postgres://postgres:secret@localhost:5432/db'),
   }),
   REDIS_URL: str({ default: testOnly('redis://localhost:6379/0') }),
+  REDIS_CLUSTER_MODE: bool({ default: true, devDefault: false }),
 
   CORS_ORIGINS: str({ default: '*' }),
 
