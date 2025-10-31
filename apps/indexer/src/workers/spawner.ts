@@ -28,14 +28,40 @@ if (!ENV.READ_ONLY_MODE) {
     },
   );
 
+  ingestWorker.on('ready', () => {
+    log.info('Ingest worker is ready to process jobs.');
+  });
+
+  ingestWorker.on('paused', () => {
+    log.info('Ingest worker has been paused.');
+  });
+
+  ingestWorker.on('resumed', () => {
+    log.info('Ingest worker has been resumed.');
+  });
+
   onShutdown(async () => {
     log.info('Shutting down ingest worker.');
-    await ingestWorker.close();
+    await ingestWorker
+      .close()
+      .then(() => {
+        log.info('Ingest worker shut down complete.');
+      })
+      .catch((err) => {
+        log.error({ err }, 'Error during ingest worker shutdown.');
+      });
   });
 
   onReady(async () => {
-    await ingestWorker.run();
-    log.info('Ingest worker is ready.');
+    log.info('Starting ingest worker.');
+    await ingestWorker
+      .run()
+      .then(() => {
+        log.info('Ingest worker is ready.');
+      })
+      .catch((err) => {
+        log.error({ err }, 'Ingest worker failed to start.');
+      });
   });
 } else {
   logger.info('READ-ONLY mode enabled, not starting workers.');

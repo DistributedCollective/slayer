@@ -15,6 +15,7 @@ const envLogger: Record<string, LoggerOptions> = {
   },
   production: {
     name: 'slayer-indexer',
+    timestamp: pino.stdTimeFunctions.isoTime,
   },
 };
 
