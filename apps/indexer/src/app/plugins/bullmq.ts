@@ -7,7 +7,7 @@ import { ENV } from '../../env';
 import { ingestQueue } from '../../workers/queues';
 
 export default fp(async function (fastify: FastifyInstance) {
-  if (ENV.isProd) {
+  if (ENV.isProd && !ENV.FLAGS.includes('ui')) {
     // only show UI in non-prod environments
     return;
   }

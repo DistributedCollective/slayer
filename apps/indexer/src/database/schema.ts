@@ -28,6 +28,7 @@ export const tTokens = pgTable(
     symbol: varchar('symbol', { length: 24 }),
     name: varchar('name', { length: 256 }),
     logoUrl: text('logo_url'),
+    isNative: boolean('is_native').default(false),
     decimals: integer('decimals').default(18),
     ignored: boolean('ignored').default(false),
     processed: boolean('processed').default(false),

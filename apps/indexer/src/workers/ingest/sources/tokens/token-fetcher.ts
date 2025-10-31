@@ -1,9 +1,9 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { uniqBy } from 'lodash';
 
+import { BASE_DEFINITIONS_URL } from '../../../../configs/constants';
 import { client } from '../../../../database/client';
 import { TNewToken, tTokens } from '../../../../database/schema';
-import { ENV } from '../../../../env';
 import { encode } from '../../../../libs/encode';
 import { logger } from '../../../../libs/logger';
 import { SourceAdapter } from '../../types';
@@ -16,6 +16,7 @@ type TokenData = {
   symbol: string;
   decimals: number;
   logoURI: string;
+  isNative?: boolean;
 };
 
 export const tokenFetcherSource: SourceAdapter<TokenData> = {
@@ -78,6 +79,7 @@ export const tokenFetcherSource: SourceAdapter<TokenData> = {
         name: token.name,
         decimals: token.decimals,
         logoUrl: token.logoURI,
+        isNative: token.isNative ?? false,
         processed: true,
       };
 
@@ -93,6 +95,7 @@ export const tokenFetcherSource: SourceAdapter<TokenData> = {
           dbToken.decimals !== token.decimals ||
           dbToken.logoUrl !== token.logoURI ||
           dbToken.processed === false ||
+          dbToken.isNative !== token.isNative ||
           !dbToken.identifier
         ) {
           tokensToUpsert.push({ ...tokenData, ignored: false });
@@ -120,6 +123,7 @@ export const tokenFetcherSource: SourceAdapter<TokenData> = {
             name: sql`EXCLUDED.name`,
             decimals: sql`EXCLUDED.decimals`,
             logoUrl: sql`EXCLUDED.logo_url`,
+            isNative: sql`EXCLUDED.is_native`,
             ignored: sql`EXCLUDED.ignored`,
             processed: sql`EXCLUDED.processed`,
           },
@@ -148,7 +152,7 @@ export const tokenFetcherSource: SourceAdapter<TokenData> = {
 };
 
 async function fetchTokensByChain(chainId: number) {
-  const tokensUrl = `${ENV.DATA_BASE_URL}/chains/${chainId}/tokens.json`;
+  const tokensUrl = `${BASE_DEFINITIONS_URL}/chains/${chainId}/tokens.json`;
   try {
     const response = await fetch(tokensUrl);
 
