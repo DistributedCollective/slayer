@@ -1,13 +1,28 @@
 import { HttpClient } from '@sovryn/slayer-shared';
-import { SdkPaginatedQuery } from 'src/types.js';
+import debug from 'debug';
 import { Chain, PublicClient, Transport, WalletClient } from 'viem';
+import { INDEXER_URL } from '../constants.js';
+import { SdkPaginatedQuery } from '../types.js';
+
+const logger = debug('slayer-sdk:context');
 
 export type FetchLike = typeof fetch;
+
+export enum Mode {
+  production = 'production',
+  staging = 'staging',
+  development = 'development',
+  custom = 'custom', // for custom indexer URL use
+}
 
 export interface SdkConfig<chain extends Chain> {
   publicClient: PublicClient<Transport, chain>;
   walletClient?: WalletClient<Transport, chain>; // maybe not needed / write calls should return only tx data for signing?
-  indexerBaseUrl: string;
+  mode?: Mode;
+  /**
+   * Override the base URL for the indexer API
+   */
+  indexerBaseUrl?: string;
   fetch?: FetchLike; // Optional custom fetch implementation
   apiKey?: string;
   userAgent?: string;
@@ -29,9 +44,7 @@ export interface SdkRequestOptions {
 }
 
 export class Context<chain extends Chain> {
-  readonly config: Required<
-    Pick<SdkConfig<chain>, 'indexerBaseUrl' | 'publicClient'>
-  > &
+  readonly config: Required<Pick<SdkConfig<chain>, 'publicClient'>> &
     SdkConfig<chain>;
 
   readonly http: HttpClient;
@@ -41,13 +54,19 @@ export class Context<chain extends Chain> {
   constructor(cfg: SdkConfig<chain>) {
     if (!cfg.publicClient)
       throw new Error('publicClient is required in SdkConfig');
-    if (!cfg.indexerBaseUrl)
-      throw new Error('indexerBaseUrl is required in SdkConfig');
+    if (cfg.indexerBaseUrl) {
+      cfg.mode = Mode.custom;
+      logger.log('Using custom indexer base URL:', cfg.indexerBaseUrl);
+    }
+    if (!cfg.mode) cfg.mode = Mode.production;
     this.config = cfg;
     this.publicClient = cfg.publicClient;
     this.chainId = this.publicClient.chain?.id ?? 0;
     this.http = new HttpClient({
-      baseUrl: this.config.indexerBaseUrl,
+      baseUrl:
+        this.config.mode === Mode.custom && this.config.indexerBaseUrl
+          ? this.config.indexerBaseUrl
+          : INDEXER_URL[this.config.mode as Exclude<Mode, Mode.custom>],
       fetch: this.config.fetch,
       apiKey: this.config.apiKey,
       userAgent: this.config.userAgent,
