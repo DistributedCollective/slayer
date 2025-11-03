@@ -95,7 +95,7 @@ describe('decimal', () => {
     });
   });
 
-  describe('artithmetics', () => {
+  describe('arithmetics', () => {
     it('adds two Decimals', () => {
       const a = Decimal.from('1.5');
       const b = Decimal.from('2.25');
