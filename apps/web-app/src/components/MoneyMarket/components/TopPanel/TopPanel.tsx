@@ -1,4 +1,5 @@
 import type { FC } from 'react';
+import { AmountRenderer } from '../../../ui/amount-renderer';
 import { StatisticsCard } from '../StatisticsCard/StatisticsCard';
 
 type TopPanelProps = {
@@ -17,17 +18,29 @@ export const TopPanel: FC<TopPanelProps> = ({
       <div className="flex flex-col gap-4 md:py-12 md:flex-row md:gap-9 flex-shrink-0">
         <StatisticsCard
           label="Net Worth"
-          value={<span className="text-2xl">${netWorth.toFixed(2)}</span>}
+          value={
+            <span className="text-2xl">
+              <AmountRenderer value={netWorth} decimals={2} prefix="$" />
+            </span>
+          }
         />
         <div className="flex gap-9">
           <StatisticsCard
             label="Net APY"
-            value={<span className="text-2xl">{netApy.toFixed(2)}%</span>}
+            value={
+              <span className="text-2xl">
+                <AmountRenderer value={netApy} decimals={2} suffix="%" />
+              </span>
+            }
             help="Net APY is the combined effect of all supply and borrow positions on net worth, including incentives. It is possible to have a negative net APY if debt APY is higher than supply APY."
           />
           <StatisticsCard
             label="Health Factor"
-            value={<span className="text-2xl">{healthFactor.toFixed(2)}</span>}
+            value={
+              <span className="text-2xl">
+                <AmountRenderer value={healthFactor} decimals={2} />
+              </span>
+            }
           />
         </div>
       </div>
