@@ -3,14 +3,14 @@
   "targetDefaults": {
     "dev": {
       "continuous": true,
-      "dependsOn": ["^watch-deps"]
+      "dependsOn": ["^watch-deps", "^dev"]
     },
     "serve": {
       "continuous": true,
-      "dependsOn": ["^watch-deps"]
+      "dependsOn": ["^watch-deps", "^serve"]
     },
     "build": {
-      "dependsOn": ["^build-deps"],
+      "dependsOn": ["^build-deps", "^build"],
       "outputs": ["{projectRoot}/dist"],
       "cache": true
     },
@@ -23,7 +23,7 @@
     },
     "@nx/esbuild:esbuild": {
       "cache": true,
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "^build-deps"],
       "inputs": ["default", "^default"]
     }
   },
