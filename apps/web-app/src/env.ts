@@ -3,12 +3,11 @@ import { cleanEnv, str, url } from 'envalid';
 export const ENV = cleanEnv(
   { ...process.env, ...import.meta.env },
   {
-    NODE_ENV: str(),
-
     VITE_APP_NAME: str({ default: 'Sovryn Layer' }),
 
     VITE_MODE: str({
       default: 'production',
+      devDefault: 'development',
       choices: ['production', 'staging', 'development', 'custom'],
     }),
 
