@@ -1,227 +1,174 @@
-import { formatUnits } from 'viem';
+import { Decimal as D } from 'decimal.js';
 
 export type BigNumberish = string | Numeric;
 
 export type Decimalish = Decimal | number | string | bigint;
 export type Numeric = number | bigint | Decimalish;
 
-// const getDigits = (numDigits: number) => TEN.pow(numDigits);
+D.set({
+  precision: 72,
+  rounding: D.ROUND_DOWN,
+});
 
+const DEFAULT_PRECISION = 18;
 const MAX_UINT_256 =
   '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
-const DEFAULT_PRECISION = 18;
-// const ONE = BigNumber.from(1);
-// const TEN = BigNumber.from(10);
-// const DIGITS = getDigits(PRECISION);
 
 const stringRepresentationFormat = /^(-)?[0-9]*(\.[0-9]*)?(e[-+]?[0-9]+)?$/;
-// const trailingZeros = /0*$/;
-// const magnitudes = ['', 'K', 'M', 'B', 'T'];
-
-// const roundedMul = (x: bigint, y: bigint) =>
-//   x.mul(y).add(Decimal.HALF.toHexString()).div(DIGITS);
-
 export class Decimal {
-  static readonly INFINITY = new Decimal(BigInt(MAX_UINT_256), 0);
+  readonly precision: number;
+  readonly d: D;
 
-  private readonly _bigInt: bigint;
-  private readonly _decimals: number;
+  static ZERO = new Decimal('0');
+  static ONE = new Decimal('1');
+  static INFINITY = new Decimal('Infinity', 0);
 
-  private constructor(value: bigint, decimals: number = DEFAULT_PRECISION) {
-    // this._bigInt = value / 10n ** BigInt(0 >= decimals ? 0 : decimals);
-    this._bigInt = value;
-    this._decimals = decimals;
-  }
-
-  toBigInt(): bigint {
-    return this._bigInt;
-  }
-
-  toString(): string {
-    return formatUnits(this._bigInt, this._decimals);
+  constructor(value: string, precision: number = DEFAULT_PRECISION) {
+    this.d = new D(value);
+    this.precision = precision;
   }
 
   static from(
     value: Decimalish,
-    decimals: number = DEFAULT_PRECISION,
+    precision: number = DEFAULT_PRECISION,
   ): Decimal {
     if (value instanceof Decimal) {
       return value;
     }
-    if (typeof value === 'bigint') {
-      return new Decimal(value, decimals);
-    }
+
     if (typeof value === 'number') {
-      return Decimal._fromString(value.toString(), decimals);
+      return new Decimal(value.toString(), precision);
     }
+
     if (typeof value === 'string') {
-      return Decimal._fromString(value, decimals);
-    }
-    throw new Error(`cannot convert to Decimal: ${value}`);
-  }
-
-  static _fromString(
-    representation: string,
-    decimals: number = DEFAULT_PRECISION,
-  ): Decimal {
-    if (representation === 'Infinity') {
-      return Decimal.INFINITY;
-    }
-
-    if (!representation || !representation.match(stringRepresentationFormat)) {
-      throw new Error(`bad decimal format: "${representation}"`);
-    }
-
-    if (representation.includes('e')) {
-      // eslint-disable-next-line prefer-const
-      let [coefficient, exponent] = representation.split('e');
-
-      if (exponent.startsWith('-')) {
-        return new Decimal(
-          BigInt(coefficient) / 10n ** BigInt(exponent.substr(1)),
-        );
+      if (value === 'Infinity') {
+        return new Decimal(MAX_UINT_256, 0);
       }
 
-      if (exponent.startsWith('+')) {
-        exponent = exponent.substr(1);
+      if (!stringRepresentationFormat.test(value)) {
+        throw new Error(`Invalid decimal string representation: ${value}`);
       }
-
-      return new Decimal(
-        BigInt(coefficient) * 10n ** BigInt(exponent),
-        decimals,
-      );
+      return new Decimal(value, precision);
     }
 
-    if (!representation.includes('.')) {
-      return new Decimal(
-        BigInt(representation) * 10n ** BigInt(decimals),
-        decimals,
-      );
+    if (typeof value === 'bigint') {
+      const v = new D(value.toString()).div(new D(10).pow(precision));
+      return new Decimal(v.toString(), precision);
     }
 
-    // eslint-disable-next-line prefer-const
-    let [characteristic, mantissa] = representation.split('.');
+    throw new Error(`Cannot convert to Decimal: ${value}`);
+  }
 
-    if (mantissa.length < decimals) {
-      mantissa += '0'.repeat(decimals - mantissa.length);
-    } else {
-      mantissa = mantissa.substr(0, decimals);
-    }
+  toBigInt(): bigint {
+    return BigInt(this.d.mul(new D(10).pow(this.precision)).toFixed(0));
+  }
 
-    return new Decimal(
-      BigInt(characteristic || '0') * 10n ** BigInt(decimals) +
-        BigInt(mantissa),
-      decimals,
+  toString(decimalPlaces?: number): string {
+    return this.d.toFixed(decimalPlaces);
+  }
+
+  toFixed(decimalPlaces: number): string {
+    return this.d.toFixed(decimalPlaces);
+  }
+
+  toHex(digits?: number): string {
+    return this.d.toHex(digits);
+  }
+
+  add(value: Decimalish, precision?: number): Decimal {
+    return Decimal.from(
+      this.d.add(Decimal.from(value, precision).d).toString(),
+      this.precision,
     );
   }
 
-  // math
-  add(other: Decimalish): Decimal {
-    const o = Decimal.from(other, this._decimals);
-    return new Decimal(this._bigInt + o._bigInt, this._decimals);
-  }
-
-  sub(other: Decimalish): Decimal {
-    const o = Decimal.from(other, this._decimals);
-    return new Decimal(this._bigInt - o._bigInt, this._decimals);
-  }
-
-  mul(other: Decimalish): Decimal {
-    const o = Decimal.from(other, this._decimals);
-    return new Decimal(
-      (this._bigInt * o._bigInt) / 10n ** BigInt(this._decimals),
-      this._decimals,
+  sub(value: Decimalish, precision?: number): Decimal {
+    return Decimal.from(
+      this.d.sub(Decimal.from(value, precision).d).toString(),
+      this.precision,
     );
   }
 
-  div(other: Decimalish): Decimal {
-    const o = Decimal.from(other, this._decimals);
-    return new Decimal(
-      (this._bigInt * 10n ** BigInt(this._decimals)) / o._bigInt,
-      this._decimals,
+  mul(value: Decimalish, precision?: number): Decimal {
+    return Decimal.from(
+      this.d.mul(Decimal.from(value, precision).d).toString(),
+      this.precision,
     );
   }
 
-  neg(): Decimal {
-    return new Decimal(-this._bigInt, this._decimals);
+  div(value: Decimalish, precision?: number): Decimal {
+    return Decimal.from(
+      this.d.div(Decimal.from(value, precision).d).toString(),
+      this.precision,
+    );
   }
 
-  abs(): Decimal {
-    return this._bigInt < 0n ? this.neg() : this;
+  lt(value: Decimalish, precision?: number): boolean {
+    return this.d.lt(Decimal.from(value, precision).d);
   }
 
-  // comparisons
-  eq(other: Decimalish): boolean {
-    const o = Decimal.from(other, this._decimals);
-    return this._bigInt === o._bigInt;
+  lte(value: Decimalish, precision?: number): boolean {
+    return this.d.lte(Decimal.from(value, precision).d);
   }
 
-  lt(other: Decimalish): boolean {
-    const o = Decimal.from(other, this._decimals);
-    return this._bigInt < o._bigInt;
+  gt(value: Decimalish, precision?: number): boolean {
+    return this.d.gt(Decimal.from(value, precision).d);
   }
 
-  lte(other: Decimalish): boolean {
-    const o = Decimal.from(other, this._decimals);
-    return this._bigInt <= o._bigInt;
+  gte(value: Decimalish, precision?: number): boolean {
+    return this.d.gte(Decimal.from(value, precision).d);
   }
 
-  gt(other: Decimalish): boolean {
-    const o = Decimal.from(other, this._decimals);
-    return this._bigInt > o._bigInt;
+  eq(value: Decimalish, precision?: number): boolean {
+    return this.d.eq(Decimal.from(value, precision).d);
   }
 
-  gte(other: Decimalish): boolean {
-    const o = Decimal.from(other, this._decimals);
-    return this._bigInt >= o._bigInt;
-  }
-
-  // utilities
   isZero(): boolean {
-    return this._bigInt === 0n;
+    return this.d.isZero();
   }
 
   isPositive(): boolean {
-    return this._bigInt > 0n;
+    return this.d.isPositive();
   }
 
   isNegative(): boolean {
-    return this._bigInt < 0n;
+    return this.d.isNegative();
   }
 
-  isInteger(): boolean {
-    return this._bigInt % 10n ** BigInt(this._decimals) === 0n;
+  abs(): Decimal {
+    return Decimal.from(this.d.abs().toString(), this.precision);
   }
 
-  getDecimals(): number {
-    return this._decimals;
+  neg(): Decimal {
+    return Decimal.from(this.d.neg().toString(), this.precision);
   }
 
-  static max(items: Decimalish[]): Decimal {
-    if (items.length === 0) {
-      throw new Error('cannot get max of empty array');
-    }
-    let max = Decimal.from(items[0]);
-    for (let i = 1; i < items.length; i++) {
-      const d = Decimal.from(items[i], max._decimals);
-      if (d.gt(max)) {
-        max = d;
-      }
-    }
-    return max;
+  sqrt(): Decimal {
+    return Decimal.from(this.d.sqrt().toString(), this.precision);
   }
 
-  static min(items: Decimalish[]): Decimal {
-    if (items.length === 0) {
-      throw new Error('cannot get min of empty array');
-    }
-    let min = Decimal.from(items[0]);
-    for (let i = 1; i < items.length; i++) {
-      const d = Decimal.from(items[i], min._decimals);
-      if (d.lt(min)) {
-        min = d;
-      }
-    }
-    return min;
+  pow(value: Decimalish, precision?: number): Decimal {
+    return Decimal.from(
+      this.d.pow(Decimal.from(value, precision).d).toString(),
+      this.precision,
+    );
+  }
+
+  static min(...values: Decimalish[]): Decimal {
+    return values
+      .map((v) => Decimal.from(v))
+      .reduce((min, curr) => (curr.lt(min) ? curr : min));
+  }
+
+  static max(...values: Decimalish[]): Decimal {
+    return values
+      .map((v) => Decimal.from(v))
+      .reduce((max, curr) => (curr.gt(max) ? curr : max));
+  }
+
+  static sum(...values: Decimalish[]): Decimal {
+    return values
+      .map((v) => Decimal.from(v))
+      .reduce((sum, curr) => sum.add(curr), Decimal.ZERO);
   }
 }
