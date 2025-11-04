@@ -1,5 +1,5 @@
 import { ENV } from '@/env';
-import { Mode, SDK } from '@sovryn/slayer-sdk';
+import { SDK, type Mode } from '@sovryn/slayer-sdk';
 import {
   createPublicClient,
   http,
