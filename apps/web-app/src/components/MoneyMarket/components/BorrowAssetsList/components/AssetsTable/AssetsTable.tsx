@@ -132,13 +132,15 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                 </div>
               </TableCell>
               <TableCell className="border-neutral-800 border-y">
-                <AmountRenderer
-                  value={
-                    Number(asset.totalLiquidity) /
-                    Math.pow(10, asset.token.decimals)
-                  }
-                />{' '}
-                {asset.token.symbol}
+                <span className="flex items-center gap-1">
+                  <AmountRenderer
+                    value={
+                      Number(asset.totalLiquidity) /
+                      Math.pow(10, asset.token.decimals)
+                    }
+                  />
+                  {asset.token.symbol}
+                </span>
                 <p className="text-neutral-500 font-medium text-xs">
                   <AmountRenderer
                     value={
