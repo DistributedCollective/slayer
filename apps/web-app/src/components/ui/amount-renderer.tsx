@@ -1,3 +1,4 @@
+import { Decimal } from '@sovryn/slayer-shared';
 import { CopyIcon } from 'lucide-react';
 import { type FC, useCallback } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
@@ -9,20 +10,18 @@ export type AmountRendererProps = {
   prefix?: string;
   className?: string;
   showTooltip?: boolean;
+  showApproxSign?: boolean;
 };
 
 function formatAmount(value: string | number | bigint, decimals = 4) {
-  let num: number;
-  if (typeof value === 'bigint') {
-    num = Number(value);
-  } else {
-    num = Number(value);
+  try {
+    const dec = Decimal.from(value);
+    let str = dec.d.toFixed(decimals);
+    str = str.replace(/\.?(0+)$/, '');
+    return str;
+  } catch {
+    return '-';
   }
-  if (isNaN(num)) return '-';
-  return num.toLocaleString(undefined, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: decimals,
-  });
 }
 
 export const AmountRenderer: FC<AmountRendererProps> = ({
@@ -32,6 +31,7 @@ export const AmountRenderer: FC<AmountRendererProps> = ({
   prefix = '',
   className = '',
   showTooltip = true,
+  showApproxSign = false,
 }) => {
   const formatted = formatAmount(value, decimals);
 
@@ -39,9 +39,20 @@ export const AmountRenderer: FC<AmountRendererProps> = ({
     navigator.clipboard.writeText(String(value));
   }, [value]);
 
+  const approxSign = showApproxSign ? (
+    <span
+      aria-label="approximate"
+      title="Approximate value"
+      style={{ marginRight: 2 }}
+    >
+      &#x223C;
+    </span>
+  ) : null;
+
   if (!showTooltip) {
     return (
       <span className={className}>
+        {approxSign}
         {prefix}
         {formatted}
         {suffix && <span> {suffix}</span>}
@@ -53,6 +64,7 @@ export const AmountRenderer: FC<AmountRendererProps> = ({
     <Tooltip>
       <TooltipTrigger asChild>
         <span className={className} style={{ cursor: 'pointer' }}>
+          {approxSign}
           {prefix}
           {formatted}
           {suffix && <span> {suffix}</span>}

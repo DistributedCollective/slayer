@@ -6,14 +6,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table/table';
-import React, { useCallback, useEffect, useState, type FC } from 'react';
+import React, { useEffect, useState, type FC } from 'react';
 
+import { AmountRenderer } from '@/components/ui/amount-renderer';
 import { Button } from '@/components/ui/button';
 import { InfoButton } from '@/components/ui/info-button';
-import {
-  OrderType,
-  type OrderSorting,
-} from '@/components/ui/table/table.types';
 import { sdk } from '@/lib/sdk';
 import {
   BorrowRateMode,
@@ -28,44 +25,11 @@ type AssetsTableProps = {
 };
 
 export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
-  const [sortDirection, setSortDirection] = useState<OrderSorting>(
-    OrderType.ASC,
-  );
   const [sortedAssets, setSortedAssets] =
     useState<MoneyMarketPoolReserve[]>(assets);
   useEffect(() => {
     setSortedAssets(assets);
   }, [assets]);
-
-  const sortAssets = useCallback(
-    (column: keyof MoneyMarketPoolReserve) => {
-      const newSortDirection =
-        sortDirection === OrderType.ASC ? OrderType.DESC : OrderType.ASC;
-      setSortDirection(newSortDirection);
-
-      // const sorted = [...sortedAssets].sort((a, b) => {
-      //   if (column === OrderColumn.SYMBOL) {
-      //     return newSortDirection === OrderType.ASC
-      //       ? a[column].localeCompare(b[column])
-      //       : b[column].localeCompare(a[column]);
-      //   } else if (column === OrderColumn.BALANCE) {
-      //     const balanceA = parseFloat(a.balance.replace(/,/g, ''));
-      //     const balanceB = parseFloat(b.balance.replace(/,/g, ''));
-      //     return newSortDirection === OrderType.ASC
-      //       ? balanceA - balanceB
-      //       : balanceB - balanceA;
-      //   } else if (column === OrderColumn.APY) {
-      //     const apyA = parseFloat(a.apy.replace('%', ''));
-      //     const apyB = parseFloat(b.apy.replace('%', ''));
-      //     return newSortDirection === OrderType.ASC ? apyA - apyB : apyB - apyA;
-      //   }
-      //   return 0;
-      // });
-
-      // setSortedAssets(sorted);
-    },
-    [sortDirection],
-  );
 
   const { address } = useAccount();
 
@@ -83,7 +47,8 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
     console.log('Transaction Request:', msg);
 
     if (msg.length) {
-      const data = await writeContractAsync<any>(msg[0]);
+      const { chain, ...contractParams } = msg[0];
+      const data = await writeContractAsync(contractParams);
       console.log('Transaction Response:', data);
     }
     // const d = await signMessageAsync(msg);
@@ -150,7 +115,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
       </TableHeader>
       <TableBody>
         {sortedAssets.map((asset, index) => (
-          <React.Fragment key={asset.token.address}>
+          <React.Fragment key={asset.id}>
             <TableRow className="hover:bg-transparent">
               <TableCell className="border-neutral-800 border-y border-l rounded-tl-[1.25rem] rounded-bl-[1.25rem]">
                 <div className="flex items-center min-w-24">
@@ -167,12 +132,23 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                 </div>
               </TableCell>
               <TableCell className="border-neutral-800 border-y">
-                <p className="text-gray-50 font-medium">
-                  {Decimal.from(asset.totalLiquidity).toString()}{' '}
-                  {asset.token.symbol}
-                </p>
+                <AmountRenderer
+                  value={
+                    Number(asset.totalLiquidity) /
+                    Math.pow(10, asset.token.decimals)
+                  }
+                />{' '}
+                {asset.token.symbol}
                 <p className="text-neutral-500 font-medium text-xs">
-                  ~${asset.totalLiquidity}
+                  <AmountRenderer
+                    value={
+                      Number(asset.totalLiquidity) /
+                      Math.pow(10, asset.token.decimals)
+                    }
+                    prefix="$"
+                    decimals={2}
+                    showApproxSign
+                  />
                 </p>
               </TableCell>
               <TableCell className="border-neutral-800 border-y">
