@@ -1,6 +1,3 @@
-function getTokenDecimals(symbol: string) {
-  return ['BTC', 'ETH', 'WETH', 'NTC'].includes(symbol) ? 8 : 4;
-}
 import {
   Table,
   TableBody,
@@ -153,15 +150,11 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                 </div>
               </TableCell>
               <TableCell className="border-neutral-800 border-y">
-                <AmountRenderer
-                  value={asset.balance}
-                  decimals={getTokenDecimals(asset.symbol)}
-                />
+                <AmountRenderer value={asset.balance} />
                 <p className="text-neutral-500 font-medium text-xs">
                   <AmountRenderer
                     value={asset.balanceUsd}
                     prefix="$"
-                    decimals={getTokenDecimals(asset.symbol)}
                     showApproxSign
                   />
                 </p>
