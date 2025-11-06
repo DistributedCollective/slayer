@@ -1,18 +1,9 @@
 import { Button } from '@/components/ui/button';
+import { useSlayerTx } from '@/lib/transactions';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useSetActiveWallet } from '@privy-io/wagmi';
 import { bobSepolia, rootstockTestnet } from 'viem/chains';
-import { parseEther } from 'viem/utils';
-import {
-  useAccount,
-  useDisconnect,
-  usePrepareTransactionRequest,
-  useSendTransaction,
-  useSignMessage,
-  useSwitchChain,
-  type Config,
-} from 'wagmi';
-import type { SendTransactionVariables } from 'wagmi/query';
+import { useAccount, useDisconnect, useSwitchChain } from 'wagmi';
 
 export const PrivyConnector = () => {
   // Privy hooks
@@ -133,60 +124,80 @@ export const PrivyConnector = () => {
 
 const SignMessage = () => {
   const { address } = useAccount();
-  const { data, isPending, isSuccess, isError, signMessage } = useSignMessage({
-    mutation: {
-      onSuccess: () => {
-        alert('Sign Message Success');
-      },
-    },
-  });
+
+  const { begin } = useSlayerTx();
+
+  const onClick = async () => {
+    begin(async () => {
+      return [
+        {
+          id: 'sign-message-1',
+          title: 'Sign Message 1',
+          description: 'Please sign message 1',
+          request: {
+            type: 'message',
+            data: {
+              message: 'This is message 1',
+              account: address!,
+            },
+          },
+        },
+      ];
+    });
+  };
+
   return (
     <>
       <h2 className="mt-6 text-2xl">useSignMessage</h2>
-      <Button
-        disabled={isPending}
-        onClick={() => {
-          signMessage({
-            message: `Signing with WAGMI\nWAGMI address: ${address}`,
-          });
-        }}
-      >
-        Sign!
-      </Button>
-      {isSuccess && <div>Signature: {data}</div>}
-      {isError && <div>Error signing message</div>}
+      <Button onClick={onClick}>Sign!</Button>
     </>
   );
 };
 
 const SendTransaction = () => {
-  const transactionRequest: SendTransactionVariables<Config, number> = {
-    to: '0x2bD2201BFE156A71EB0D02837172ffc237218505'.toLowerCase() as `0x${string}`,
-    value: parseEther('0.001'),
-    data: '0x',
-    // type: 'eip1559', // does not work for rootstock
+  const { address } = useAccount();
+
+  const { begin } = useSlayerTx();
+
+  const onClick = async () => {
+    begin(async () => {
+      return [
+        {
+          id: 'tx1',
+          title: 'Send on rootstock testnet',
+          description: 'Send transaction to self on rootstock testnet',
+          request: {
+            type: 'transaction',
+            data: {
+              to: address!,
+              value: 1n,
+              chain: rootstockTestnet,
+              account: address!,
+            },
+          },
+        },
+        {
+          id: 'tx2',
+          title: 'Send on bob sepolia testnet',
+          description: 'Send transaction to self on bob sepolia testnet',
+          request: {
+            type: 'transaction',
+            data: {
+              to: address!,
+              value: 1n,
+              chain: bobSepolia,
+              account: address!,
+            },
+          },
+        },
+      ];
+    });
   };
-
-  const { data, isPending, isSuccess, sendTransaction, error } =
-    useSendTransaction();
-
-  usePrepareTransactionRequest();
 
   return (
     <>
-      <h2 className="mt-6 text-2xl">useSendTransaction</h2>
-      <div className="rounded bg-red-400 px-2 py-1 text-sm text-white">
-        We recommend doing this on rootstock testnet (chainId 31).
-      </div>
-      <Button
-        onClick={() => sendTransaction(transactionRequest as any)}
-        disabled={!sendTransaction}
-      >
-        Send to victor
-      </Button>
-      {isPending && <div>Check wallet</div>}
-      {isSuccess && <div>Transaction: {JSON.stringify(data)}</div>}
-      {error && <div>Error: {error.message}</div>}
+      <h2 className="mt-6 text-2xl">Send Transactions</h2>
+      <Button onClick={onClick}>Send to self</Button>
     </>
   );
 };
