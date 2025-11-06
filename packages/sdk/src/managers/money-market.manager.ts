@@ -1,8 +1,13 @@
 import { Decimal } from '@sovryn/slayer-shared';
-import { Account, zeroAddress, type Chain } from 'viem';
+import { Account, encodeFunctionData, zeroAddress, type Chain } from 'viem';
 import { BaseClient, type SdkRequestOptions } from '../lib/context.js';
-import { buildQuery } from '../lib/helpers.js';
-import { SdkRequest, SdkTransactionRequest } from '../lib/transaction.js';
+import { buildQuery, toAddress } from '../lib/helpers.js';
+import {
+  makeMessageRequest,
+  makeTransactionRequest,
+  makeTypedDataRequest,
+  SdkTransactionRequest,
+} from '../lib/transaction.js';
 import {
   BorrowRateMode,
   MoneyMarketPool,
@@ -66,8 +71,6 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
   ): Promise<SdkTransactionRequest<chain, account>[]> {
     const pool = await this.getPoolInfo();
 
-    console.log('Borrowing from pool:', pool);
-
     if (asset.isNative || asset.address.toLowerCase() === zeroAddress) {
       return [
         //
@@ -75,35 +78,77 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
     }
 
     return [
+      // testing purpose signatures
+      {
+        id: 'sign-message',
+        title: 'Agree to Terms',
+        description: `Agree to the money market borrowing terms and conditions`,
+        request: makeMessageRequest({
+          message: `I agree to borrow ${amount.toString()} ${asset.symbol} from the Money Market according to the terms and conditions.`,
+          account: opts.account,
+        }),
+      },
+      // testing purpose signatures
+      {
+        id: 'sign-typed-data',
+        title: 'Accept Interest Rate',
+        description: `Accept the current interest rate for borrowing ${asset.symbol}`,
+        request: makeTypedDataRequest({
+          domain: {
+            name: 'Ether Mail',
+            version: '1',
+            chainId: this.ctx.publicClient.chain.id,
+            verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC',
+          },
+          types: {
+            Person: [
+              { name: 'name', type: 'string' },
+              { name: 'wallet', type: 'address' },
+            ],
+            Mail: [
+              { name: 'from', type: 'Person' },
+              { name: 'to', type: 'Person' },
+              { name: 'contents', type: 'string' },
+            ],
+          },
+          primaryType: 'Mail',
+          message: {
+            from: {
+              name: 'Cow',
+              wallet: '0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826',
+            },
+            to: {
+              name: 'Bob',
+              wallet: '0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB',
+            },
+            contents: 'Hello, Bob!',
+          },
+          account: opts.account,
+        }),
+      },
+      // todo: doesn't actually works
       {
         id: 'borrow',
         title: 'Borrow Asset',
         description: `Borrowing ${amount.toString()} ${asset.symbol} from Money Market`,
-        request: {
-          type: 'transaction',
-          data: {
-            to: pool.data.pool,
-            value: 0n,
-            chain: this.ctx.publicClient.chain,
-            chainId: this.ctx.publicClient.chain.id,
-            data: '0x',
-          },
-        } as unknown as SdkRequest<chain, account>,
-
-        // account: opts.account,
-        // abi: poolAbi,
-        // address: pool.data.pool,
-        // functionName: 'borrow',
-        // value: 0n,
-        // chain: this.ctx.publicClient.chain,
-        // args: [
-        //   asset.address,
-        //   amount.toBigInt(),
-        //   rateMode,
-        //   0, // referralCode
-        //   String(opts.account).toLowerCase(),
-        // ],
+        request: makeTransactionRequest({
+          to: pool.data.pool,
+          value: 0n,
+          chain: this.ctx.publicClient.chain,
+          account: opts.account,
+          data: encodeFunctionData({
+            abi: poolAbi,
+            functionName: 'borrow',
+            args: [
+              asset.address,
+              amount.toBigInt(),
+              rateMode,
+              0, // referralCode
+              toAddress(opts.account),
+            ],
+          }),
+        }),
       },
-    ] satisfies SdkTransactionRequest<chain, account>[];
+    ];
   }
 }

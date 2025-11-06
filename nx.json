@@ -3,7 +3,7 @@
   "targetDefaults": {
     "dev": {
       "continuous": true,
-      "dependsOn": ["^watch-deps", "^dev"]
+      "dependsOn": ["^watch-deps", "^build-deps", "^dev"]
     },
     "serve": {
       "continuous": true,
