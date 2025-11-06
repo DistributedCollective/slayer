@@ -1,10 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useSetActiveWallet } from '@privy-io/wagmi';
+import { bobSepolia, rootstockTestnet } from 'viem/chains';
 import { parseEther } from 'viem/utils';
 import {
   useAccount,
   useDisconnect,
+  usePrepareTransactionRequest,
   useSendTransaction,
   useSignMessage,
   useSwitchChain,
@@ -26,7 +28,8 @@ export const PrivyConnector = () => {
   const { wallets, ready: walletsReady } = useWallets();
 
   // WAGMI hooks
-  const { address, isConnected, isConnecting, isDisconnected } = useAccount();
+  const { address, isConnected, isConnecting, isDisconnected, chainId } =
+    useAccount();
   const { disconnect } = useDisconnect();
   const { setActiveWallet } = useSetActiveWallet();
   const { switchChain } = useSwitchChain();
@@ -55,7 +58,7 @@ export const PrivyConnector = () => {
             return (
               <div
                 key={wallet.address}
-                className="flex min-w-full flex-row flex-wrap items-center justify-between gap-2 bg-slate-50 p-4"
+                className="flex min-w-full flex-row flex-wrap items-center justify-between gap-2 p-4"
               >
                 <div>{wallet.address}</div>
                 <Button
@@ -109,8 +112,16 @@ export const PrivyConnector = () => {
             <SendTransaction />
 
             <div className="mt-4">
-              <Button onClick={() => switchChain({ chainId: 31 })}>
+              <p>Switch to another network: {chainId}</p>
+
+              <Button
+                onClick={() => switchChain({ chainId: rootstockTestnet.id })}
+              >
                 Switch to rootstock testnet
+              </Button>
+
+              <Button onClick={() => switchChain({ chainId: bobSepolia.id })}>
+                Switch to bobSepolia
               </Button>
             </div>
           </>
@@ -152,11 +163,14 @@ const SendTransaction = () => {
   const transactionRequest: SendTransactionVariables<Config, number> = {
     to: '0x2bD2201BFE156A71EB0D02837172ffc237218505'.toLowerCase() as `0x${string}`,
     value: parseEther('0.001'),
+    data: '0x',
     // type: 'eip1559', // does not work for rootstock
   };
 
   const { data, isPending, isSuccess, sendTransaction, error } =
     useSendTransaction();
+
+  usePrepareTransactionRequest();
 
   return (
     <>

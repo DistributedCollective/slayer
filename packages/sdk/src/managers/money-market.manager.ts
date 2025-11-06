@@ -1,7 +1,8 @@
 import { Decimal } from '@sovryn/slayer-shared';
-import { zeroAddress, type Chain, type WriteContractParameters } from 'viem';
+import { Account, zeroAddress, type Chain } from 'viem';
 import { BaseClient, type SdkRequestOptions } from '../lib/context.js';
 import { buildQuery } from '../lib/helpers.js';
+import { SdkRequest, SdkTransactionRequest } from '../lib/transaction.js';
 import {
   BorrowRateMode,
   MoneyMarketPool,
@@ -57,12 +58,12 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
     return this.#poolInfo;
   }
 
-  async borrow(
+  async borrow<account extends Account>(
     asset: Token,
     amount: Decimal,
     rateMode: BorrowRateMode,
-    opts: TransactionOpts,
-  ): Promise<WriteContractParameters[]> {
+    opts: TransactionOpts<account>,
+  ): Promise<SdkTransactionRequest<chain, account>[]> {
     const pool = await this.getPoolInfo();
 
     console.log('Borrowing from pool:', pool);
@@ -75,20 +76,34 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
 
     return [
       {
-        account: opts.account,
-        abi: poolAbi,
-        address: pool.data.pool,
-        functionName: 'borrow',
-        value: 0n,
-        chain: this.ctx.publicClient.chain,
-        args: [
-          asset.address,
-          amount.toBigInt(),
-          rateMode,
-          0, // referralCode
-          String(opts.account).toLowerCase(),
-        ],
+        id: 'borrow',
+        title: 'Borrow Asset',
+        description: `Borrowing ${amount.toString()} ${asset.symbol} from Money Market`,
+        request: {
+          type: 'transaction',
+          data: {
+            to: pool.data.pool,
+            value: 0n,
+            chain: this.ctx.publicClient.chain,
+            chainId: this.ctx.publicClient.chain.id,
+            data: '0x',
+          },
+        } as unknown as SdkRequest<chain, account>,
+
+        // account: opts.account,
+        // abi: poolAbi,
+        // address: pool.data.pool,
+        // functionName: 'borrow',
+        // value: 0n,
+        // chain: this.ctx.publicClient.chain,
+        // args: [
+        //   asset.address,
+        //   amount.toBigInt(),
+        //   rateMode,
+        //   0, // referralCode
+        //   String(opts.account).toLowerCase(),
+        // ],
       },
-    ];
+    ] satisfies SdkTransactionRequest<chain, account>[];
   }
 }

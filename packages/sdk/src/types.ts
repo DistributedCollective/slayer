@@ -16,8 +16,8 @@ export interface SdkPaginatedQuery {
   search?: string;
 }
 
-export type TransactionOpts = {
-  account: Account | Address;
+export type TransactionOpts<account extends Account> = {
+  account: account | Address;
 };
 
 export interface Token {
