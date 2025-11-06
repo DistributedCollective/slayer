@@ -15,7 +15,7 @@ export type TxState = (typeof txStates)[keyof typeof txStates];
 export type SlayerTx = SdkTransactionRequest & {
   state: TxState;
   res: Partial<TransactionReceipt> | undefined;
-  error?: Error;
+  error?: string;
 };
 
 type State = {
@@ -33,6 +33,7 @@ type Actions = {
     state: TxState,
     res: Partial<TransactionReceipt> | undefined,
   ) => void;
+  setItemError: (id: string, error: string) => void;
   reset: () => void;
 };
 
@@ -69,6 +70,12 @@ export const txStore = createStore<Store>(
             item.id === id
               ? { ...item, state: status, res, error: undefined }
               : item,
+          ),
+        })),
+      setItemError: (id: string, error: string) =>
+        set((state) => ({
+          items: state.items.map((item) =>
+            item.id === id ? { ...item, state: txStates.error, error } : item,
           ),
         })),
       reset: () =>

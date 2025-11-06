@@ -1,5 +1,5 @@
 import { Decimal } from '@sovryn/slayer-shared';
-import { Account, encodeFunctionData, zeroAddress, type Chain } from 'viem';
+import { Account, zeroAddress, type Chain } from 'viem';
 import { BaseClient, type SdkRequestOptions } from '../lib/context.js';
 import { buildQuery, toAddress } from '../lib/helpers.js';
 import {
@@ -18,31 +18,31 @@ import {
   TransactionOpts,
 } from '../types.js';
 
-const poolAbi = [
-  {
-    type: 'function',
-    name: 'borrow',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { type: 'address', name: 'asset' },
-      { type: 'uint256', name: 'amount' },
-      { type: 'uint256', name: 'interestRateMode' },
-      { type: 'uint16', name: 'referralCode' },
-      { type: 'address', name: 'onBehalfOf' },
-    ],
-    outputs: [],
-  },
-  {
-    type: 'function',
-    name: 'swapBorrowRateMode',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { type: 'address', name: 'asset' },
-      { type: 'uint256', name: 'rateMode' },
-    ],
-    outputs: [],
-  },
-] as const;
+// const poolAbi = [
+//   {
+//     type: 'function',
+//     name: 'borrow',
+//     stateMutability: 'nonpayable',
+//     inputs: [
+//       { type: 'address', name: 'asset' },
+//       { type: 'uint256', name: 'amount' },
+//       { type: 'uint256', name: 'interestRateMode' },
+//       { type: 'uint16', name: 'referralCode' },
+//       { type: 'address', name: 'onBehalfOf' },
+//     ],
+//     outputs: [],
+//   },
+//   {
+//     type: 'function',
+//     name: 'swapBorrowRateMode',
+//     stateMutability: 'nonpayable',
+//     inputs: [
+//       { type: 'address', name: 'asset' },
+//       { type: 'uint256', name: 'rateMode' },
+//     ],
+//     outputs: [],
+//   },
+// ] as const;
 
 export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
   listReserves(opts: SdkRequestOptions = {}) {
@@ -69,7 +69,7 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
     rateMode: BorrowRateMode,
     opts: TransactionOpts<account>,
   ): Promise<SdkTransactionRequest<chain, account>[]> {
-    const pool = await this.getPoolInfo();
+    // const pool = await this.getPoolInfo();
 
     if (asset.isNative || asset.address.toLowerCase() === zeroAddress) {
       return [
@@ -126,29 +126,40 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
           account: opts.account,
         }),
       },
-      // todo: doesn't actually works
+      // todo: test tx
       {
-        id: 'borrow',
-        title: 'Borrow Asset',
-        description: `Borrowing ${amount.toString()} ${asset.symbol} from Money Market`,
+        id: 'borrow-1',
+        title: 'TEST: send 1 wei',
+        description: `Sending 1 wei to self as a test transaction`,
         request: makeTransactionRequest({
-          to: pool.data.pool,
-          value: 0n,
+          to: toAddress(opts.account),
+          value: 1n,
           chain: this.ctx.publicClient.chain,
           account: opts.account,
-          data: encodeFunctionData({
-            abi: poolAbi,
-            functionName: 'borrow',
-            args: [
-              asset.address,
-              amount.toBigInt(),
-              rateMode,
-              0, // referralCode
-              toAddress(opts.account),
-            ],
-          }),
         }),
       },
+      // {
+      //   id: 'borrow-2',
+      //   title: 'Borrow Asset',
+      //   description: `Borrowing ${amount.toString()} ${asset.symbol} from Money Market`,
+      //   request: makeTransactionRequest({
+      //     to: pool.data.pool,
+      //     value: 0n,
+      //     chain: this.ctx.publicClient.chain,
+      //     account: opts.account,
+      //     data: encodeFunctionData({
+      //       abi: poolAbi,
+      //       functionName: 'borrow',
+      //       args: [
+      //         asset.address,
+      //         amount.toBigInt(),
+      //         rateMode,
+      //         0, // referralCode
+      //         toAddress(opts.account),
+      //       ],
+      //     }),
+      //   }),
+      // },
     ];
   }
 }

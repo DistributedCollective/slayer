@@ -1,0 +1,10 @@
+{
+  "title": "Transaction Confirmation",
+  "description": "Please review and confirm transactions in your wallet",
+  "preparing": "Preparing transaction...",
+  "connectWallet": "Connect your wallet to proceed.",
+  "switchNetwork": "Switch to {{name}} network",
+  "signMessage": "Sign Message",
+  "signTypedData": "Sign Typed Data",
+  "sendTransaction": "Send Transaction"
+}

@@ -1,5 +1,9 @@
 {
   "accept": "Accept",
   "cancel": "Cancel",
-  "close": "Close"
+  "close": "Close",
+  "confirm": "Confirm",
+  "continue": "Continue",
+  "abort": "Abort",
+  "loading": "Loading..."
 }
