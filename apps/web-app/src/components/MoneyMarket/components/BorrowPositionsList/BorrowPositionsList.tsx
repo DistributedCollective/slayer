@@ -1,6 +1,7 @@
 import { Accordion } from '@/components/ui/accordion';
 import { Settings, Zap } from 'lucide-react';
 import { useState, type FC } from 'react';
+import { AmountRenderer } from '../../../ui/amount-renderer';
 import { PoolPositionStat } from '../PoolPositionStat/PoolPositionStat';
 import type { BorrowPosition } from './BorrowPositionsList.types';
 import { AssetsTable } from './components/AssetsTable/AssetsTable';
@@ -46,17 +47,21 @@ export const BorrowPositionsList: FC<BorrowPositionsListProps> = ({
       <div className="flex flex-col gap-2 mb-2 lg:flex-row lg:gap-6 lg:mb-6">
         <PoolPositionStat
           label="Balance"
-          value={`$${supplyBalance.toFixed(2)}`}
+          value={
+            <AmountRenderer value={supplyBalance} decimals={2} prefix="$" />
+          }
         />
         <PoolPositionStat
           label="APY"
           labelInfo="Compounding interest accrued by deposit or borrowing on the lending pool"
-          value={`${supplyWeightedApy.toFixed(2)}%`}
+          value={
+            <AmountRenderer value={supplyWeightedApy} decimals={2} suffix="%" />
+          }
         />
         <PoolPositionStat
           label="Borrow power used"
           labelInfo="The percentage of your borrow power that is currently being used."
-          value={`${borrowPower.toFixed(2)}%`}
+          value={<AmountRenderer value={borrowPower} decimals={2} suffix="%" />}
         />
       </div>
 

@@ -1,6 +1,7 @@
 import { Accordion } from '@/components/ui/accordion';
 import type { MoneyMarketPoolReserve } from '@sovryn/slayer-sdk';
 import { useState, type FC } from 'react';
+import { AmountRenderer } from '../../../ui/amount-renderer';
 import { PoolPositionStat } from '../PoolPositionStat/PoolPositionStat';
 import { AssetsTable } from './components/AssetsTable/AssetsTable';
 
@@ -33,17 +34,23 @@ export const LendPositionsList: FC<LendPositionsListProps> = ({
       <div className="flex flex-col gap-2 mb-2 lg:flex-row lg:gap-6 lg:mb-6">
         <PoolPositionStat
           label="Balance"
-          value={`$${supplyBalance.toFixed(2)}`}
+          value={
+            <AmountRenderer value={supplyBalance} decimals={2} prefix="$" />
+          }
         />
         <PoolPositionStat
           label="APY"
           labelInfo="Compounding interest accrued by deposit or borrowing on the lending pool"
-          value={`${supplyWeightedApy.toFixed(2)}%`}
+          value={
+            <AmountRenderer value={supplyWeightedApy} decimals={2} suffix="%" />
+          }
         />
         <PoolPositionStat
           label="Collateral"
           labelInfo="The total amount of your assets denominated in USD that can be used as collateral for borrowing assets."
-          value={`$${collateralBalance.toFixed(2)}`}
+          value={
+            <AmountRenderer value={collateralBalance} decimals={2} prefix="$" />
+          }
         />
       </div>
 

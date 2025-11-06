@@ -1,13 +1,13 @@
 import { cn } from '@/lib/utils';
 
 import { InfoButton } from '@/components/ui/info-button';
-import type { FC } from 'react';
+import type { FC, ReactNode } from 'react';
 
 type PoolPositionStatProps = {
   label: string;
   labelInfo?: string;
   className?: string;
-  value: string | number;
+  value: ReactNode;
 };
 
 export const PoolPositionStat: FC<PoolPositionStatProps> = ({

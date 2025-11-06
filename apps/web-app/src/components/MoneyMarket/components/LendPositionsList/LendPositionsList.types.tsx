@@ -2,7 +2,7 @@ export type LendPosition = {
   icon: string;
   symbol: string;
   balance: string;
-  balanceUsd: string;
+  balanceUsd: number;
   apy: string;
   collateral: boolean;
   canToggleCollateral: boolean;
