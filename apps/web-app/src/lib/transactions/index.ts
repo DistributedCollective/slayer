@@ -1,4 +1,4 @@
-import type { SdkTransactionRequest } from 'node_modules/@sovryn/slayer-sdk/src/lib/transaction';
+import type { SdkTransactionRequest } from '@sovryn/slayer-sdk';
 import type { Account, Chain } from 'viem';
 import { useStore } from 'zustand';
 import { txStore } from './store';

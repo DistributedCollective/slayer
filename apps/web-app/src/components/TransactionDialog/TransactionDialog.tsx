@@ -64,7 +64,7 @@ export const TransactionDialogProvider = () => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className={clsx(!isReady && 'w-62 h-62')}
+        className={clsx(!isReady && 'w-64 h-64')}
         onInteractOutside={handleEscapes}
         onEscapeKeyDown={handleEscapes}
       >
