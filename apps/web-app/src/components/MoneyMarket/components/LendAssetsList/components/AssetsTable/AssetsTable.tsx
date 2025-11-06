@@ -9,6 +9,7 @@ import {
 import { Fragment, useCallback, useEffect, useState, type FC } from 'react';
 
 import iconSort from '@/assets/lend/icon-sort.svg';
+import { AmountRenderer } from '@/components/ui/amount-renderer';
 import { Button } from '@/components/ui/button';
 import { InfoButton } from '@/components/ui/info-button';
 import {
@@ -139,11 +140,11 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                 </div>
               </TableCell>
               <TableCell className="border-neutral-800 border-y">
-                <p className="text-gray-50 font-medium">{asset.balance}</p>
+                <AmountRenderer value={asset.balance} />
               </TableCell>
               <TableCell className="border-neutral-800 border-y">
                 <div className="flex items-center">
-                  <p className="text-gray-50 font-medium">{asset.apy}%</p>
+                  <AmountRenderer value={asset.apy} suffix="%" />
                 </div>
               </TableCell>
               <TableCell className="border-neutral-800 border-y">

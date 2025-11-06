@@ -5,7 +5,7 @@ export const LEND_POSITIONS: LendPosition[] = [
   {
     symbol: 'USDC',
     balance: '1.01234566',
-    balanceUsd: '159,489.70',
+    balanceUsd: 159489.7,
     apy: '15.34',
     icon: iconUsdc,
     isSortable: true,
