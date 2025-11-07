@@ -29,8 +29,16 @@ export default [
         },
       ],
       '@typescript-eslint/no-non-null-assertion': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn',
       'no-constant-binary-expression': 'off',
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'TSEnumDeclaration',
+          message:
+            'Avoid using TypeScript enums. Use `as const` objects instead.',
+        },
+      ],
     },
   },
 ];

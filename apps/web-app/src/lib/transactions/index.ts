@@ -3,10 +3,7 @@ import type { Account, Chain } from 'viem';
 import { useStore } from 'zustand';
 import { txStore } from './store';
 
-export const useSlayerTx = <
-  chain extends Chain = AnyValue,
-  account extends Account = AnyValue,
->() => {
+export const useSlayerTx = <chain extends Chain, account extends Account>() => {
   const { setItems, setIsFetching, reset } = useStore(txStore);
 
   const begin = async (

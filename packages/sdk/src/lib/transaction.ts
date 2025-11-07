@@ -26,7 +26,7 @@ export type SdkRequest<
 > =
   | {
       type: 'message';
-      data: SignMessageParameters;
+      data: SignMessageParameters<account>;
     }
   | {
       type: 'typed_data';
@@ -59,7 +59,7 @@ export function isMessageRequest<
 ): tx is SdkTransactionRequest<chain, account> & {
   request: {
     type: 'message';
-    data: SignMessageParameters;
+    data: SignMessageParameters<account>;
   };
 } {
   return tx.request.type === 'message';

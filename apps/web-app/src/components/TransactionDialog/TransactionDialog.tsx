@@ -1,4 +1,8 @@
-import { txStates, txStore, type SlayerTx } from '@/lib/transactions/store';
+import {
+  TRANSACTION_STATE,
+  txStore,
+  type SlayerTx,
+} from '@/lib/transactions/store';
 import {
   isMessageRequest,
   isTransactionRequest,
@@ -12,7 +16,7 @@ import {
   ExternalLink,
   Loader2Icon,
 } from 'lucide-react';
-import { useEffect, useMemo, useState, type FC } from 'react';
+import { useCallback, useEffect, useMemo, useState, type FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { prepareTransactionRequest } from 'viem/actions';
@@ -28,6 +32,7 @@ import {
 } from 'wagmi';
 import { useStore } from 'zustand';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
+import { LinkToExplorer } from '../LinkToExplorer/LinkToExplorer';
 import { Button } from '../ui/button';
 import {
   Dialog,
@@ -77,7 +82,7 @@ export const TransactionDialogProvider = () => {
               <DialogDescription>{t(($) => $.description)}</DialogDescription>
             </DialogHeader>
             <div className="flex flex-col justify-center items-center gap-4">
-              <Loader2Icon className="animate-spin mr-2" size={48} />
+              <Loader2Icon className="mr-2 animate-spin" size={48} />
               <p className="text-sm">{t(($) => $.preparing)}</p>
             </div>
           </>
@@ -100,7 +105,7 @@ const TxList = () => {
   const setItemError = useStore(txStore, (state) => state.setItemError);
 
   const currentTx = useMemo(
-    () => items.find((t) => t.state !== txStates.success),
+    () => items.find((t) => t.state !== TRANSACTION_STATE.success),
     [items],
   );
 
@@ -136,7 +141,7 @@ const TxList = () => {
       },
       onSuccess(data) {
         if (!currentTx) return;
-        updateItem(currentTx.id, txStates.success, {
+        updateItem(currentTx.id, TRANSACTION_STATE.success, {
           transactionHash: data,
         });
         toast.success('Message signed successfully');
@@ -155,7 +160,7 @@ const TxList = () => {
       },
       onSuccess(data) {
         if (!currentTx) return;
-        updateItem(currentTx?.id || '', txStates.success, {
+        updateItem(currentTx?.id || '', TRANSACTION_STATE.success, {
           transactionHash: data,
         });
         toast.success('Typed Data signed successfully');
@@ -172,7 +177,7 @@ const TxList = () => {
       onSettled(data, error) {
         if (!currentTx) return;
         if (data) {
-          updateItem(currentTx.id, txStates.pending, {
+          updateItem(currentTx.id, TRANSACTION_STATE.pending, {
             transactionHash: data,
           });
           toast.success('Transaction is broadcasted');
@@ -199,7 +204,8 @@ const TxList = () => {
   } = useWaitForTransactionReceipt({
     chainId:
       currentTx && isTransactionRequest(currentTx)
-        ? (currentTx.request.data.chain?.id as any)
+        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (currentTx.request.data.chain?.id as any)
         : undefined,
     hash:
       currentTx && isTransactionRequest(currentTx)
@@ -208,15 +214,15 @@ const TxList = () => {
     onReplaced: (tx) => {
       if (!currentTx) return;
       if (tx.reason === 'cancelled') {
-        updateItemState(currentTx.id, txStates.idle);
+        updateItemState(currentTx.id, TRANSACTION_STATE.idle);
         toast.error('Transaction was cancelled');
         return;
       }
       updateItem(
         currentTx.id,
         tx.transactionReceipt.status === 'success'
-          ? txStates.success
-          : txStates.error,
+          ? TRANSACTION_STATE.success
+          : TRANSACTION_STATE.error,
         tx.transactionReceipt,
       );
     },
@@ -225,9 +231,9 @@ const TxList = () => {
   useEffect(() => {
     if (!currentTx || !receipt) return;
     if (receiptStatus === 'success') {
-      updateItem(currentTx.id, txStates.success, receipt);
+      updateItem(currentTx.id, TRANSACTION_STATE.success, receipt);
     } else if (receiptStatus === 'error') {
-      updateItem(currentTx.id, txStates.error, receipt);
+      updateItem(currentTx.id, TRANSACTION_STATE.error, receipt);
       setItemError(
         currentTx.id,
         `Transaction failed with status: ${receipt.status}`,
@@ -240,18 +246,21 @@ const TxList = () => {
     if (!tx) return;
     try {
       setIsPreparing(true);
-      updateItemState(tx.id, txStates.pending);
+      updateItemState(tx.id, TRANSACTION_STATE.pending);
 
       if (isMessageRequest(tx)) {
-        signMessage(tx.request.data);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        signMessage(tx.request.data as any);
       } else if (isTypedDataRequest(tx)) {
-        signTypedData(tx.request.data);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        signTypedData(tx.request.data as any);
       } else if (isTransactionRequest(tx)) {
         const prepared = await prepareTransactionRequest(
           config.getClient(),
-          tx.request.data,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          tx.request.data as any,
         );
-        sendTransaction<any>(prepared);
+        sendTransaction(prepared);
       } else {
         throw new Error('Unknown transaction request type');
       }
@@ -270,20 +279,32 @@ const TxList = () => {
     isSigning ||
     isSigningTypedData ||
     (pendingTxHash && isReceiptPending) ||
-    currentTx?.state === txStates.pending;
+    currentTx?.state === TRANSACTION_STATE.pending;
 
   const confirmLabel = useMemo(() => {
     if (currentTx) {
-      if (isMessageRequest(currentTx!)) {
+      if (isMessageRequest(currentTx)) {
         return t(($) => $.signMessage, { ns: 'tx' });
-      } else if (isTransactionRequest(currentTx!)) {
+      } else if (isTransactionRequest(currentTx)) {
         return t(($) => $.sendTransaction, { ns: 'tx' });
-      } else if (isTypedDataRequest(currentTx!)) {
+      } else if (isTypedDataRequest(currentTx)) {
         return t(($) => $.signTypedData, { ns: 'tx' });
       }
     }
     return t(($) => $.confirm, { ns: 'common' });
   }, [currentTx]);
+
+  const handleSwitchChain = useCallback(() => {
+    if (!requiredChain) return;
+    switchChain({
+      chainId: requiredChain.id,
+      addEthereumChainParameter: {
+        nativeCurrency: requiredChain.nativeCurrency,
+        rpcUrls: requiredChain.rpcUrls.default.http,
+        chainName: requiredChain.name,
+      },
+    });
+  }, [requiredChain, switchChain]);
 
   return (
     <>
@@ -311,18 +332,7 @@ const TxList = () => {
             {chainId &&
             requiredChain !== undefined &&
             currentChain?.id !== requiredChain?.id ? (
-              <Button
-                onClick={() =>
-                  switchChain({
-                    chainId: requiredChain.id,
-                    addEthereumChainParameter: {
-                      nativeCurrency: requiredChain.nativeCurrency,
-                      rpcUrls: requiredChain.rpcUrls.default.http,
-                      chainName: requiredChain.name,
-                    },
-                  })
-                }
-              >
+              <Button onClick={handleSwitchChain}>
                 {t(($) => $.switchNetwork, {
                   ns: 'tx',
                   name: requiredChain.name,
@@ -362,14 +372,14 @@ const TransactionItem: FC<{ item: SlayerTx; index: number }> = ({
     <div className="flex flex-row justify-start items-start gap-4 mb-3">
       <div className="w-8 shrink-0 grow-0 text-center">
         <div className="flex flex-col items-center gap-1">
-          {item.state === txStates.idle && <CircleDashed size={24} />}
-          {item.state === txStates.pending && (
+          {item.state === TRANSACTION_STATE.idle && <CircleDashed size={24} />}
+          {item.state === TRANSACTION_STATE.pending && (
             <Loader2Icon className="animate-spin" size={24} />
           )}
-          {item.state === txStates.success && (
+          {item.state === TRANSACTION_STATE.success && (
             <CircleCheckBig size={24} className="text-green-500" />
           )}
-          {item.state === txStates.error && (
+          {item.state === TRANSACTION_STATE.error && (
             <CircleX size={24} className="text-red-500" />
           )}
           <div className="text-xs">#{index + 1}</div>
@@ -379,16 +389,9 @@ const TransactionItem: FC<{ item: SlayerTx; index: number }> = ({
         <p>{item.title}</p>
         <p className="text-sm">{item.description}</p>
         {isTx && chain && item.res?.transactionHash && (
-          <p className="text-sm">
-            <a
-              target="_blank"
-              href={`${chain?.blockExplorers?.default?.url}/tx/${item.res.transactionHash}`}
-              rel="noopener noreferrer"
-              className="flex flex-row justify-start gap-2 items-center mt-2"
-            >
-              <ExternalLink size={16} /> {item.res.transactionHash.slice(0, 6)}
-              ...{item.res.transactionHash.slice(-4)}
-            </a>
+          <p className="text-sm flex flex-row justify-start gap-2 items-center mt-2">
+            <ExternalLink size={16} />
+            <LinkToExplorer chain={chain} txHash={item.res.transactionHash} />
           </p>
         )}
 
@@ -403,6 +406,7 @@ const TransactionItem: FC<{ item: SlayerTx; index: number }> = ({
 function handleErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     if (error.cause) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const cause: any = error.cause;
       return (
         cause.details?.detail ??

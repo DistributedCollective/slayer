@@ -3,14 +3,15 @@ import type { TransactionReceipt } from 'viem';
 import { createStore } from 'zustand';
 import { combine } from 'zustand/middleware';
 
-export const txStates = {
+export const TRANSACTION_STATE = {
   idle: 'idle',
   pending: 'pending',
   success: 'success',
   error: 'error',
 } as const;
 
-export type TxState = (typeof txStates)[keyof typeof txStates];
+export type TxState =
+  (typeof TRANSACTION_STATE)[keyof typeof TRANSACTION_STATE];
 
 export type SlayerTx = SdkTransactionRequest & {
   state: TxState;
@@ -26,7 +27,8 @@ type State = {
 
 type Actions = {
   setIsFetching: (isFetching: boolean) => void;
-  setItems: (items: SdkTransactionRequest<AnyValue, AnyValue>[]) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setItems: (items: SdkTransactionRequest<any, any>[]) => void;
   updateItemState: (id: string, state: TxState) => void;
   updateItem: (
     id: string,
@@ -48,7 +50,8 @@ export const txStore = createStore<Store>(
     },
     (set) => ({
       setIsFetching: (isFetching: boolean) => set({ isFetching }),
-      setItems: (items: SdkTransactionRequest<AnyValue, AnyValue>[]) =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setItems: (items: SdkTransactionRequest<any, any>[]) =>
         set({
           items: items.map(toTx),
           isFetching: false,
@@ -75,7 +78,9 @@ export const txStore = createStore<Store>(
       setItemError: (id: string, error: string) =>
         set((state) => ({
           items: state.items.map((item) =>
-            item.id === id ? { ...item, state: txStates.error, error } : item,
+            item.id === id
+              ? { ...item, state: TRANSACTION_STATE.error, error }
+              : item,
           ),
         })),
       reset: () =>
@@ -90,6 +95,6 @@ export const txStore = createStore<Store>(
 
 const toTx = (item: SdkTransactionRequest): SlayerTx => ({
   ...item,
-  state: txStates.idle,
+  state: TRANSACTION_STATE.idle,
   res: undefined,
 });
