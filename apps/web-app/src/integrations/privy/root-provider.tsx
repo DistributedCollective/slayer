@@ -1,7 +1,13 @@
 'use client';
 
 import { PrivyProvider, type PrivyClientConfig } from '@privy-io/react-auth';
-import { rootstockTestnet } from 'viem/chains';
+import {
+  bobSepolia,
+  mainnet,
+  rootstock,
+  rootstockTestnet,
+  sepolia,
+} from 'viem/chains';
 
 const privyConfig: PrivyClientConfig = {
   embeddedWallets: {
@@ -13,7 +19,7 @@ const privyConfig: PrivyClientConfig = {
   appearance: {
     showWalletLoginFirst: true,
   },
-  supportedChains: [rootstockTestnet],
+  supportedChains: [mainnet, bobSepolia, sepolia, rootstock, rootstockTestnet],
 };
 
 export function Provider({ children }: { children: React.ReactNode }) {

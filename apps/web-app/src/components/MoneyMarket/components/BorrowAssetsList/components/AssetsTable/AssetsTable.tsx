@@ -12,11 +12,8 @@ import { AmountRenderer } from '@/components/ui/amount-renderer';
 import { Button } from '@/components/ui/button';
 import { InfoButton } from '@/components/ui/info-button';
 import { sdk } from '@/lib/sdk';
-import {
-  BorrowRateMode,
-  type MoneyMarketPoolReserve,
-  type Token,
-} from '@sovryn/slayer-sdk';
+import { useSlayerTx } from '@/lib/transactions';
+import { type MoneyMarketPoolReserve, type Token } from '@sovryn/slayer-sdk';
 import { Decimal } from '@sovryn/slayer-shared';
 import { useAccount, useWriteContract } from 'wagmi';
 
@@ -35,22 +32,31 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
 
   const { writeContractAsync } = useWriteContract();
 
-  const handleBorrow = async (token: Token) => {
-    const msg = await sdk.moneyMarket.borrow(
-      token,
-      Decimal.from(1),
-      BorrowRateMode.stable,
-      {
-        account: address!,
-      },
-    );
-    console.log('Transaction Request:', msg);
+  const { begin } = useSlayerTx();
 
-    if (msg.length) {
-      const { chain, ...contractParams } = msg[0];
-      const data = await writeContractAsync(contractParams);
-      console.log('Transaction Response:', data);
-    }
+  const handleBorrow = async (token: Token) => {
+    begin(async () => {
+      const s = await sdk.moneyMarket.borrow(token, Decimal.from(1), 1, {
+        account: address!,
+      });
+      console.log('Transaction Request:', s);
+      return s;
+    });
+
+    // const msg = await sdk.moneyMarket.borrow(
+    //   token,
+    //   Decimal.from(1),
+    //   BorrowRateMode.stable,
+    //   {
+    //     account: address!,
+    //   },
+    // );
+    // console.log('Transaction Request:', msg);
+
+    // if (msg.length) {
+    //   // const data = await writeContractAsync<any>(msg[0]);
+    //   // console.log('Transaction Response:', data);
+    // }
     // const d = await signMessageAsync(msg);
     // console.warn('Signature:', { data, d });
   };

@@ -16,8 +16,8 @@ export interface SdkPaginatedQuery {
   search?: string;
 }
 
-export type TransactionOpts = {
-  account: Account | Address;
+export type TransactionOpts<account extends Account> = {
+  account: account | Address;
 };
 
 export interface Token {
@@ -43,7 +43,10 @@ export interface MoneyMarketPool {
   addressProvider: Address;
 }
 
-export enum BorrowRateMode {
-  stable = 1,
-  variable = 2,
-}
+export const borrowRateModes = {
+  stable: 1n,
+  variable: 2n,
+} as const;
+
+export type BorrowRateMode =
+  (typeof borrowRateModes)[keyof typeof borrowRateModes];

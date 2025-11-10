@@ -1,3 +1,4 @@
+import { Account, Address } from 'viem';
 import { DEFAULT_PAGE_LIMIT } from '../constants.js';
 import { SdkPaginatedQuery } from '../types.js';
 
@@ -14,3 +15,9 @@ export const buildQuery = (params: QueryParams = {}) => {
     search: params.search ?? undefined,
   };
 };
+
+export const toAddress = (address: Address | Account): Address =>
+  (typeof address === 'string'
+    ? address
+    : address.address
+  ).toLowerCase() as Address;
