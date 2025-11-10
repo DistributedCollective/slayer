@@ -21,7 +21,9 @@ import { useStore } from 'zustand';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
 import { handleErrorMessage } from '../utils';
 
-export function useInternalTxHandler(props: TxHandlers = {}) {
+export function useInternalTxHandler(
+  props: Pick<TxHandlers, 'onError' | 'onCompleted'> = {},
+) {
   const [isPreparing, setIsPreparing] = useState(false);
 
   const currentTx = useStoreWithEqualityFn(txStore, (state) =>
@@ -52,13 +54,11 @@ export function useInternalTxHandler(props: TxHandlers = {}) {
         updateItem(currentTx.id, TRANSACTION_STATE.success, {
           transactionHash: data,
         });
-        props.onAfterSign?.(currentTx, { transactionHash: data }, pendingTxs);
         handlers.onAfterSign?.(
           currentTx,
           { transactionHash: data },
           pendingTxs,
         );
-        props.onSuccess?.(currentTx, { transactionHash: data });
         handlers.onSuccess?.(currentTx, { transactionHash: data });
       },
     },
@@ -78,13 +78,11 @@ export function useInternalTxHandler(props: TxHandlers = {}) {
         updateItem(currentTx?.id || '', TRANSACTION_STATE.success, {
           transactionHash: data,
         });
-        props.onAfterSign?.(currentTx, { transactionHash: data }, pendingTxs);
         handlers.onAfterSign?.(
           currentTx,
           { transactionHash: data },
           pendingTxs,
         );
-        props.onSuccess?.(currentTx, { transactionHash: data });
         handlers.onSuccess?.(currentTx, { transactionHash: data });
       },
     },
@@ -102,7 +100,6 @@ export function useInternalTxHandler(props: TxHandlers = {}) {
           updateItem(currentTx.id, TRANSACTION_STATE.pending, {
             transactionHash: data,
           });
-          props.onAfterSign?.(currentTx, { transactionHash: data }, pendingTxs);
           handlers.onAfterSign?.(
             currentTx,
             { transactionHash: data },
@@ -163,7 +160,6 @@ export function useInternalTxHandler(props: TxHandlers = {}) {
     if (!currentTx || !receipt) return;
     if (receiptStatus === 'success') {
       updateItem(currentTx.id, TRANSACTION_STATE.success, receipt);
-      props.onSuccess?.(currentTx, receipt);
       handlers.onSuccess?.(currentTx, receipt);
     } else if (receiptStatus === 'error') {
       updateItem(currentTx.id, TRANSACTION_STATE.error, receipt);
@@ -192,7 +188,7 @@ export function useInternalTxHandler(props: TxHandlers = {}) {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const modifiedData: any =
-        (await props.onBeforeSign?.(currentTx, txStore.getState().items)) ??
+        (await handlers.onBeforeSign?.(currentTx, txStore.getState().items)) ??
         currentTx.request.data;
 
       if (isMessageRequest(currentTx)) {
