@@ -125,7 +125,24 @@ export const PrivyConnector = () => {
 const SignMessage = () => {
   const { address } = useAccount();
 
-  const { begin } = useSlayerTx();
+  const { begin } = useSlayerTx({
+    async onBeforeSign(tx) {
+      console.log('onBeforeSign', tx);
+      return tx.request.data;
+    },
+    onAfterSign(tx, res, next) {
+      console.log('onAfterSign', tx, res, next);
+    },
+    onError(tx, error) {
+      console.error('onError', tx, error);
+    },
+    onSuccess(tx, res) {
+      console.log('onSuccess', tx, res);
+    },
+    onCompleted(count) {
+      console.log('onCompleted', count);
+    },
+  });
 
   const onClick = async () => {
     begin(async () => {

@@ -14,7 +14,7 @@ const sdks = new Map<Chain['id'], SDK<Chain>>();
 export function makeSdkClient<chain extends Chain>(
   client: PublicClient<Transport, chain>,
 ): SDK<chain> {
-  let sdk = sdks.get(client.chain.id) as SDK<chain>;
+  let sdk = sdks.get(client.chain.id) as unknown as SDK<chain>;
   if (sdk) {
     return sdk as SDK<chain>;
   }
@@ -24,7 +24,7 @@ export function makeSdkClient<chain extends Chain>(
       ENV.VITE_MODE === 'custom' ? ENV.VITE_INDEXER_BASE_URL : undefined,
     publicClient: client,
   });
-  sdks.set(client.chain.id, sdk as SDK<Chain>);
+  sdks.set(client.chain.id, sdk as unknown as SDK<Chain>);
   return sdk as SDK<chain>;
 }
 

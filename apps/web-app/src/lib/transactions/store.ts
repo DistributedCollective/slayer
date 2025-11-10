@@ -19,10 +19,28 @@ export type SlayerTx = SdkTransactionRequest & {
   error?: string;
 };
 
+export type TxHandlers = {
+  // can be used to modify the tx request before signing/sending
+  onBeforeSign?: (
+    tx: SlayerTx,
+    /** All transactions in the queue */
+    items: SlayerTx[],
+  ) => Promise<SlayerTx['request']['data']>;
+  // can be used to handle the response after signing/sending of the particular tx
+  onAfterSign?: (tx: SlayerTx, res: SlayerTx['res'], next: SlayerTx[]) => void;
+  // called when a transaction is successfully processed
+  onSuccess?: (tx: SlayerTx, res: SlayerTx['res']) => void;
+  // called when an error occurs during processing of a tx
+  onError?: (tx: SlayerTx, message: string, error: unknown) => void;
+  // called when all transactions are completed
+  onCompleted?: (count: number) => void;
+};
+
 type State = {
   isFetching: boolean;
   isReady: boolean;
   items: SlayerTx[];
+  handlers: TxHandlers;
 };
 
 type Actions = {
@@ -36,6 +54,7 @@ type Actions = {
     res: Partial<TransactionReceipt> | undefined,
   ) => void;
   setItemError: (id: string, error: string) => void;
+  setHandlers: (handlers: TxHandlers) => void;
   reset: () => void;
 };
 
@@ -47,6 +66,7 @@ export const txStore = createStore<Store>(
       isFetching: false,
       isReady: false,
       items: [] as SlayerTx[],
+      handlers: {},
     },
     (set) => ({
       setIsFetching: (isFetching: boolean) => set({ isFetching }),
@@ -77,6 +97,7 @@ export const txStore = createStore<Store>(
         })),
       setItemError: (id: string, error: string) =>
         set((state) => ({
+          ...state,
           items: state.items.map((item) =>
             item.id === id
               ? { ...item, state: TRANSACTION_STATE.error, error }
@@ -88,6 +109,11 @@ export const txStore = createStore<Store>(
           isFetching: false,
           isReady: false,
           items: [],
+          handlers: {},
+        }),
+      setHandlers: (handlers: TxHandlers) =>
+        set({
+          handlers,
         }),
     }),
   ),
