@@ -75,6 +75,7 @@ export default defineConfig(() => ({
     port: 3000,
     host: 'localhost',
     open: true,
+    allowedHosts: ['.ngrok.app'],
   },
   preview: {
     port: 3000,
