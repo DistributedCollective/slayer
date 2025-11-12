@@ -2,6 +2,7 @@ import { and, asc, eq, gte, inArray } from 'drizzle-orm';
 import { FastifyInstance } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import gql from 'graphql-tag';
+import z from 'zod';
 import { chains } from '../../../configs/chains';
 import { client } from '../../../database/client';
 import { tTokens } from '../../../database/schema';
@@ -36,44 +37,8 @@ export default async function (fastify: FastifyInstance) {
     },
   );
 
-  fastify
-    .withTypeProvider<ZodTypeProvider>()
-    .get('/money-market', async (req, reply) => {
-      if (req.chain.key !== 'bob-sepolia') {
-        return reply.notFound(
-          'Money Market data is only available for BOB Sepolia',
-        );
-      }
-
-      const chain = chains.get('bob-sepolia');
-
-      const item = await queryFromSubgraph<{
-        pools: Array<{
-          id: string;
-          pool: string;
-        }>;
-      }>(
-        chain.aaveSubgraphUrl,
-        gql`
-          query {
-            pools {
-              id
-              pool
-            }
-          }
-        `,
-      ).then((data) => data.pools.flatMap((pool) => pool)[0]);
-
-      return {
-        data: {
-          pool: item.pool,
-          addressProvider: item.id,
-        },
-      };
-    });
-
   fastify.withTypeProvider<ZodTypeProvider>().get(
-    '/money-market/reserves',
+    '/money-market',
     {
       schema: {
         querystring: paginationSchema,
@@ -87,35 +52,116 @@ export default async function (fastify: FastifyInstance) {
       }
 
       const chain = chains.get('bob-sepolia');
+      const { cursor, limit } = req.query;
 
-      const items = await queryFromSubgraph<{
+      const data = await queryFromSubgraph<{
         pools: Array<{
           id: string;
-          reserves: {
-            id: string;
-            totalLiquidity: string;
-            underlyingAsset: string;
-            usageAsCollateralEnabled: boolean;
-            borrowingEnabled: boolean;
-          }[];
+          pool: string;
         }>;
       }>(
         chain.aaveSubgraphUrl,
         gql`
-          query {
-            pools {
+          query ($first: Int!, $cursor: String) {
+            pools(first: $first, where: { id_gt: $cursor }) {
               id
-              reserves {
-                id
-                totalLiquidity
-                underlyingAsset
-                usageAsCollateralEnabled
-                borrowingEnabled
-              }
+              pool
+              addressProviderId
+              poolCollateralManager
+              poolImpl
+              poolDataProviderImpl
+              poolConfigurator
+              proxyPriceProvider
+              lastUpdateTimestamp
+              bridgeProtocolFee
+              flashloanPremiumTotal
+              flashloanPremiumToProtocol
             }
           }
         `,
-      ).then((data) => data.pools.flatMap((pool) => pool.reserves));
+        {
+          first: limit,
+          cursor: cursor ?? '',
+        },
+      );
+
+      const items = data.pools.map((p) => ({
+        pool: p.pool,
+        addressProvider: p.id,
+      }));
+
+      return paginationResponse(items, limit, 'addressProvider');
+    },
+  );
+
+  fastify.withTypeProvider<ZodTypeProvider>().get(
+    '/money-market/:pool',
+    {
+      schema: {
+        querystring: paginationSchema,
+        params: z.object({
+          pool: z.string(),
+        }),
+      },
+    },
+    async (req, reply) => {
+      if (req.chain.key !== 'bob-sepolia') {
+        return reply.notFound(
+          'Money Market data is only available for BOB Sepolia',
+        );
+      }
+
+      const chain = chains.get('bob-sepolia');
+      const { pool } = req.params;
+      const { cursor, limit } = req.query;
+
+      const data = await queryFromSubgraph<{
+        reserves: Array<{
+          id: string;
+          totalLiquidity: string;
+          underlyingAsset: string;
+          usageAsCollateralEnabled: boolean;
+          borrowingEnabled: boolean;
+          pool: {
+            id: string;
+            pool: string;
+          };
+        }>;
+      }>(
+        chain.aaveSubgraphUrl,
+        gql`
+          query ($pool: String!, $first: Int!, $cursor: String) {
+            reserves(
+              first: $first
+              where: { pool_: { id: $pool }, id_gt: $cursor }
+            ) {
+              underlyingAsset
+              pool {
+                id
+                pool
+              }
+              symbol
+              name
+              decimals
+              usageAsCollateralEnabled
+              borrowingEnabled
+              totalLiquidity
+              totalATokenSupply
+              totalLiquidityAsCollateral
+              availableLiquidity
+              totalSupplies
+              liquidityRate
+            }
+          }
+        `,
+        {
+          pool,
+          first: limit,
+          cursor: cursor ?? '',
+        },
+      );
+
+      const items = data.reserves;
 
       const tokens = await client.query.tTokens.findMany({
         columns: tTokensSelectors.columns,
@@ -128,16 +174,14 @@ export default async function (fastify: FastifyInstance) {
         ),
       });
 
-      return {
-        data: items
-          .map((item) => ({
-            ...item,
-            token: tokens.find((t) => t.address === item.underlyingAsset),
-          }))
-          .filter((i) => i.token),
-        nextCursor: null,
-        count: items.length,
-      };
+      const merged = items
+        .map((item) => ({
+          ...item,
+          token: tokens.find((t) => t.address === item.underlyingAsset),
+        }))
+        .filter((i) => i.token);
+
+      return paginationResponse(merged, limit, 'id');
     },
   );
 }
