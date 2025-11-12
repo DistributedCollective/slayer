@@ -20,7 +20,7 @@ export type TransactionOpts<account extends Account> = {
   account: account | Address;
 };
 
-export interface Token {
+export interface SdkToken {
   address: Address;
   symbol: string;
   name: string;
@@ -29,11 +29,14 @@ export interface Token {
   isNative?: boolean;
 }
 
+export type Token = Pick<SdkToken, 'address' | 'decimals'> &
+  Partial<Pick<SdkToken, 'symbol' | 'name' | 'logoUrl' | 'isNative'>>;
+
 export interface MoneyMarketPoolReserve {
   id: string;
   totalLiquidity: string;
   underlyingAsset: string;
-  token: Token;
+  token: SdkToken;
   usageAsCollateralEnabled: boolean;
   borrowingEnabled: boolean;
 }
@@ -43,10 +46,10 @@ export interface MoneyMarketPool {
   addressProvider: Address;
 }
 
-export const borrowRateModes = {
+export const BORROW_RATE_MODES = {
   stable: 1n,
   variable: 2n,
 } as const;
 
 export type BorrowRateMode =
-  (typeof borrowRateModes)[keyof typeof borrowRateModes];
+  (typeof BORROW_RATE_MODES)[keyof typeof BORROW_RATE_MODES];

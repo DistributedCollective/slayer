@@ -34,10 +34,14 @@ export type TxHandlers = {
   onError?: (tx: SlayerTx, message: string, error: unknown) => void;
   // called when all transactions are completed
   onCompleted?: (count: number) => void;
+  // called when tx modals are closed by user. Returns true if all transactions were successful, false when txes were aborted.
+  onClosed?: (withSuccess: boolean) => void;
 };
 
 type State = {
+  isCompleted: boolean;
   isFetching: boolean;
+  isClosing: boolean;
   isReady: boolean;
   items: SlayerTx[];
   handlers: TxHandlers;
@@ -45,6 +49,7 @@ type State = {
 
 type Actions = {
   setIsFetching: (isFetching: boolean) => void;
+  setIsCompleted: (isCompleted: boolean) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setItems: (items: SdkTransactionRequest<any, any>[]) => void;
   updateItemState: (id: string, state: TxState) => void;
@@ -63,19 +68,25 @@ type Store = State & Actions;
 export const txStore = createStore<Store>(
   combine(
     {
+      isCompleted: false,
       isFetching: false,
+      isClosing: false,
       isReady: false,
       items: [] as SlayerTx[],
       handlers: {},
     },
     (set) => ({
-      setIsFetching: (isFetching: boolean) => set({ isFetching }),
+      setIsFetching: (isFetching: boolean) =>
+        set({ isFetching, isClosing: false, isReady: false }),
+      setIsCompleted: (isCompleted: boolean) => set({ isCompleted }),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setItems: (items: SdkTransactionRequest<any, any>[]) =>
         set({
           items: items.map(toTx),
+          isCompleted: false,
           isFetching: false,
           isReady: true,
+          isClosing: false,
         }),
       updateItemState: (id: string, state: TxState) =>
         set((store) => ({
@@ -107,7 +118,7 @@ export const txStore = createStore<Store>(
       reset: () =>
         set({
           isFetching: false,
-          isReady: false,
+          isClosing: true,
           items: [],
           handlers: {},
         }),

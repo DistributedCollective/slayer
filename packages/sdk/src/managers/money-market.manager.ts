@@ -1,11 +1,10 @@
-import { Decimal } from '@sovryn/slayer-shared';
-import { Account, zeroAddress, type Chain } from 'viem';
+import { Decimal, Decimalish } from '@sovryn/slayer-shared';
+import { Account, encodeFunctionData, type Chain } from 'viem';
+import { bobSepolia } from 'viem/chains';
 import { BaseClient, type SdkRequestOptions } from '../lib/context.js';
 import { buildQuery, toAddress } from '../lib/helpers.js';
 import {
-  makeMessageRequest,
   makeTransactionRequest,
-  makeTypedDataRequest,
   SdkTransactionRequest,
 } from '../lib/transaction.js';
 import {
@@ -14,35 +13,71 @@ import {
   MoneyMarketPoolReserve,
   SdkPaginatedResponse,
   SdkResponse,
-  Token,
   TransactionOpts,
 } from '../types.js';
 
-// const poolAbi = [
-//   {
-//     type: 'function',
-//     name: 'borrow',
-//     stateMutability: 'nonpayable',
-//     inputs: [
-//       { type: 'address', name: 'asset' },
-//       { type: 'uint256', name: 'amount' },
-//       { type: 'uint256', name: 'interestRateMode' },
-//       { type: 'uint16', name: 'referralCode' },
-//       { type: 'address', name: 'onBehalfOf' },
-//     ],
-//     outputs: [],
-//   },
-//   {
-//     type: 'function',
-//     name: 'swapBorrowRateMode',
-//     stateMutability: 'nonpayable',
-//     inputs: [
-//       { type: 'address', name: 'asset' },
-//       { type: 'uint256', name: 'rateMode' },
-//     ],
-//     outputs: [],
-//   },
-// ] as const;
+const poolAbi = [
+  {
+    type: 'function',
+    name: 'borrow',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { type: 'address', name: 'asset' },
+      { type: 'uint256', name: 'amount' },
+      { type: 'uint256', name: 'interestRateMode' },
+      { type: 'uint16', name: 'referralCode' },
+      { type: 'address', name: 'onBehalfOf' },
+    ],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'swapBorrowRateMode',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { type: 'address', name: 'asset' },
+      { type: 'uint256', name: 'rateMode' },
+    ],
+    outputs: [],
+  },
+] as const;
+
+const debtWethApi = [
+  {
+    type: 'function',
+    name: 'approveDelegation',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { type: 'address', name: 'delegatee' },
+      { type: 'uint256', name: 'amount' },
+    ],
+    outputs: [],
+  },
+] as const;
+
+const wethGatewayAbi = [
+  {
+    type: 'function',
+    name: 'borrowETH',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { type: 'address', name: 'pool' },
+      { type: 'uint256', name: 'amount' },
+      { type: 'uint256', name: 'interestRateMode' },
+      { type: 'uint16', name: 'referralCode' },
+    ],
+    outputs: [],
+  },
+] as const;
+
+const addresses = {
+  [bobSepolia.id]: {
+    weth: '0x327E7E4A9e054ecC67dFa9E3Af158347116321Bf',
+    wethGateway: '0x247074C89f5559c18ba34552D0C6C8995c763a0F',
+    variableDebtEth: '0xd83f668055d983B2dD5B0338b713bc51dD4a55fF',
+    pool: '0xd7308f0626a8e35b645Af0b7fA26Aba9CbD7e6A7',
+  },
+} as const;
 
 export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
   listReserves(opts: SdkRequestOptions = {}) {
@@ -64,102 +99,93 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
   }
 
   async borrow<account extends Account>(
-    asset: Token,
-    amount: Decimal,
+    reserve: MoneyMarketPoolReserve,
+    amount: Decimalish,
     rateMode: BorrowRateMode,
     opts: TransactionOpts<account>,
   ): Promise<SdkTransactionRequest<chain, account>[]> {
-    // const pool = await this.getPoolInfo();
+    console.log('Preparing borrow transaction for:', {
+      reserve,
+      amount,
+      rateMode,
+      opts,
+    });
 
-    if (asset.isNative || asset.address.toLowerCase() === zeroAddress) {
+    if (this.ctx.chainId !== bobSepolia.id || !addresses[this.ctx.chainId]) {
+      throw new Error(
+        `Money Market addresses not configured for chain ${this.ctx.chainId}`,
+      );
+    }
+
+    const asset = reserve.token;
+    const pool = addresses[this.ctx.chainId];
+    const value = Decimal.from(amount);
+
+    if (
+      asset.isNative ||
+      asset.address.toLowerCase() === pool.weth.toLowerCase()
+    ) {
       return [
-        //
+        {
+          id: 'approve_borrow_native_delegation',
+          title: 'Approve Borrow Delegation',
+          description: `Approve borrow delegation for ${value.toString()} native asset`,
+          request: makeTransactionRequest({
+            to: pool.variableDebtEth,
+            value: 0n,
+            chain: this.ctx.publicClient.chain,
+            account: opts.account,
+            data: encodeFunctionData({
+              abi: debtWethApi,
+              functionName: 'approveDelegation',
+              args: [pool.wethGateway, value.toBigInt()],
+            }),
+          }),
+        },
+        {
+          id: 'borrow_native',
+          title: 'Borrow Native',
+          description: `Borrow ${value.toString()} native asset from Money Market`,
+          request: makeTransactionRequest({
+            to: pool.wethGateway,
+            value: 0n,
+            chain: this.ctx.publicClient.chain,
+            account: opts.account,
+            data: encodeFunctionData({
+              abi: wethGatewayAbi,
+              functionName: 'borrowETH',
+              args: [pool.pool, value.toBigInt(), rateMode, 0],
+            }),
+          }),
+        },
       ];
     }
 
     return [
-      // testing purpose signatures
       {
-        id: 'sign-message',
-        title: 'Agree to Terms',
-        description: `Agree to the money market borrowing terms and conditions`,
-        request: makeMessageRequest({
-          message: `I agree to borrow ${amount.toString()} ${asset.symbol} from the Money Market according to the terms and conditions.`,
-          account: opts.account,
-        }),
-      },
-      // testing purpose signatures
-      {
-        id: 'sign-typed-data',
-        title: 'Accept Interest Rate',
-        description: `Accept the current interest rate for borrowing ${asset.symbol}`,
-        request: makeTypedDataRequest({
-          domain: {
-            name: 'Ether Mail',
-            version: '1',
-            chainId: this.ctx.publicClient.chain.id,
-            verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC',
-          },
-          types: {
-            Person: [
-              { name: 'name', type: 'string' },
-              { name: 'wallet', type: 'address' },
-            ],
-            Mail: [
-              { name: 'from', type: 'Person' },
-              { name: 'to', type: 'Person' },
-              { name: 'contents', type: 'string' },
-            ],
-          },
-          primaryType: 'Mail',
-          message: {
-            from: {
-              name: 'Cow',
-              wallet: '0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826',
-            },
-            to: {
-              name: 'Bob',
-              wallet: '0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB',
-            },
-            contents: 'Hello, Bob!',
-          },
-          account: opts.account,
-        }),
-      },
-      // todo: test tx
-      {
-        id: 'borrow-1',
-        title: 'TEST: send 1 wei',
-        description: `Sending 1 wei to self as a test transaction`,
+        id: 'borrow_asset',
+        title: 'Borrow Asset',
+        description: `Borrow ${value.toString()} of asset ${toAddress(
+          asset.address,
+        )} from Money Market`,
         request: makeTransactionRequest({
-          to: toAddress(opts.account),
-          value: 1n,
+          to: pool.pool,
+          value: 0n,
           chain: this.ctx.publicClient.chain,
           account: opts.account,
+          data: encodeFunctionData({
+            abi: poolAbi,
+            functionName: 'borrow',
+            args: [
+              toAddress(asset.address),
+              value.toBigInt(),
+              rateMode,
+              0,
+              toAddress(opts.account),
+            ],
+          }),
         }),
       },
-      // {
-      //   id: 'borrow-2',
-      //   title: 'Borrow Asset',
-      //   description: `Borrowing ${amount.toString()} ${asset.symbol} from Money Market`,
-      //   request: makeTransactionRequest({
-      //     to: pool.data.pool,
-      //     value: 0n,
-      //     chain: this.ctx.publicClient.chain,
-      //     account: opts.account,
-      //     data: encodeFunctionData({
-      //       abi: poolAbi,
-      //       functionName: 'borrow',
-      //       args: [
-      //         asset.address,
-      //         amount.toBigInt(),
-      //         rateMode,
-      //         0, // referralCode
-      //         toAddress(opts.account),
-      //       ],
-      //     }),
-      //   }),
-      // },
     ];
   }
 }

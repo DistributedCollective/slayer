@@ -15,19 +15,26 @@ import { TxList } from './TxList';
 export const TransactionDialogProvider = () => {
   const { t } = useTranslation('tx');
 
-  const [isOpen, isReady] = useStoreWithEqualityFn(
+  const [isOpen, isReady, isClosing] = useStoreWithEqualityFn(
     txStore,
-    (state) => [state.isFetching || state.isReady, state.isReady] as const,
+    (state) =>
+      [
+        (state.isFetching || state.isReady) && !state.isClosing,
+        state.isReady,
+        state.isClosing,
+      ] as const,
   );
 
   const onClose = (open: boolean) => {
-    if (!open) {
+    if (!open && !isClosing) {
+      txStore.getState().handlers.onClosed?.(txStore.getState().isCompleted);
       txStore.getState().reset();
     }
   };
 
   const handleEscapes = (e: Event) => {
-    if (!isReady) {
+    if (!isReady && !isClosing) {
+      txStore.getState().handlers.onClosed?.(false);
       txStore.getState().reset();
       return;
     }
