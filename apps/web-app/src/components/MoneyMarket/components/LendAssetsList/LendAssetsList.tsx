@@ -1,12 +1,12 @@
 import { Accordion } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import type { MoneyMarketPoolReserve } from '@sovryn/slayer-sdk';
 import { useCallback, useMemo, useState, type FC } from 'react';
-import type { LendAsset } from './LendAssetsList.types';
 import { AssetsTable } from './components/AssetsTable/AssetsTable';
 
 type LendPAssetsListProps = {
-  lendAssets: LendAsset[];
+  lendAssets: MoneyMarketPoolReserve[];
   loading?: boolean;
 };
 
@@ -20,12 +20,7 @@ export const LendAssetsList: FC<LendPAssetsListProps> = ({ lendAssets }) => {
   );
 
   const filteredAssets = useMemo(
-    () =>
-      showZeroBalances
-        ? lendAssets
-        : lendAssets.filter(
-            ({ balance }) => parseFloat(balance.replace(/,/g, '')) > 0,
-          ),
+    () => lendAssets,
     [lendAssets, showZeroBalances],
   );
 

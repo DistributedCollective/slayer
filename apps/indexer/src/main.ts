@@ -1,5 +1,6 @@
 // env must be imported first
 import { ENV } from './env';
+import './libs/shims';
 // other imports
 import cors from '@fastify/cors';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';

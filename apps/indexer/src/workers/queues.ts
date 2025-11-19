@@ -1,8 +1,8 @@
 import { Queue } from 'bullmq';
 import { IngestWorkerType } from './ingest/types';
-import { INGEST_QUEUE_NAME, redisConnection } from './shared';
+import { INGEST_QUEUE_NAME, queueRedisConnection } from './shared';
 
 export const ingestQueue = new Queue<IngestWorkerType>(INGEST_QUEUE_NAME, {
-  connection: redisConnection,
+  connection: queueRedisConnection,
   prefix: '{slayer:ingest}',
 });
