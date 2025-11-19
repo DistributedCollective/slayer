@@ -64,7 +64,7 @@ function RouteComponent() {
         <div className="grid grid-cols-1 2xl:grid-cols-2 2xl:gap-4 space-y-4">
           <div className="space-y-4">
             <LendPositionsList
-              lendPositions={pools?.data ?? []}
+              lendPositions={(pools?.data ?? []).map((r) => r.data)}
               supplyBalance={100}
               collateralBalance={50}
               supplyWeightedApy={2.5}
@@ -78,7 +78,9 @@ function RouteComponent() {
               borrowPower={1.29}
               supplyWeightedApy={0.05}
             />
-            <BorrowAssetsList borrowAssets={pools?.data ?? []} />
+            <BorrowAssetsList
+              borrowAssets={(pools?.data ?? []).map((r) => r.data)}
+            />
           </div>
         </div>
       </div>

@@ -28,4 +28,9 @@ export async function app(fastify: FastifyInstance, opts: AppOptions) {
     indexPattern: /^routes\.js$/,
     options: { ...opts },
   });
+
+  fastify.addHook('onError', async (request, _reply, error) => {
+    request.log.error({ err: error }, 'unhandled error');
+    // push to Sentry, Prometheus, etc.
+  });
 }
