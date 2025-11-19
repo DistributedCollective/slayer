@@ -1,8 +1,11 @@
-import { Decimal, Decimalish } from '@sovryn/slayer-shared';
+import { areAddressesEqual, Decimal, Decimalish } from '@sovryn/slayer-shared';
 import { Account, encodeFunctionData, type Chain } from 'viem';
 import { BaseClient, type SdkRequestOptions } from '../../lib/context.js';
 import { buildQuery, toAddress } from '../../lib/helpers.js';
-import { makeTransactionRequest } from '../../lib/transaction.js';
+import {
+  makeApprovalTransaction,
+  makeTransactionRequest,
+} from '../../lib/transaction.js';
 import {
   BorrowRateMode,
   MoneyMarketPool,
@@ -35,6 +38,28 @@ const poolAbi = [
     ],
     outputs: [],
   },
+  {
+    type: 'function',
+    name: 'supply',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { type: 'address', name: 'asset' },
+      { type: 'uint256', name: 'amount' },
+      { type: 'address', name: 'onBehalfOf' },
+      { type: 'uint16', name: 'referralCode' },
+    ],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'setUserUseReserveAsCollateral',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { type: 'address', name: 'asset' },
+      { type: 'bool', name: 'useAsCollateral' },
+    ],
+    outputs: [],
+  },
 ] as const;
 
 const debtWethApi = [
@@ -59,6 +84,17 @@ const wethGatewayAbi = [
       { type: 'address', name: 'pool' },
       { type: 'uint256', name: 'amount' },
       { type: 'uint256', name: 'interestRateMode' },
+      { type: 'uint16', name: 'referralCode' },
+    ],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'depositETH',
+    stateMutability: 'payable',
+    inputs: [
+      { type: 'address', name: 'pool' },
+      { type: 'address', name: 'onBehalfOf' },
       { type: 'uint16', name: 'referralCode' },
     ],
     outputs: [],
@@ -99,10 +135,7 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
     const pool = reserve.pool;
     const value = Decimal.from(amount);
 
-    if (
-      asset.isNative ||
-      asset.address.toLowerCase() === pool.weth.toLowerCase()
-    ) {
+    if (asset.isNative || areAddressesEqual(asset.address, pool.weth)) {
       return [
         {
           id: 'approve_borrow_native_delegation',
@@ -158,6 +191,79 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
               rateMode,
               0,
               toAddress(opts.account),
+            ],
+          }),
+        }),
+      },
+    ];
+  }
+
+  async supply<account extends Account>(
+    reserve: MoneyMarketPoolReserve,
+    amount: Decimalish,
+    opts: TransactionOpts<account>,
+  ) {
+    const asset = reserve.token;
+    const pool = reserve.pool;
+    const value = Decimal.from(amount);
+
+    if (asset.isNative || areAddressesEqual(asset.address, pool.weth)) {
+      return [
+        {
+          id: 'supply_native',
+          title: `Supply ${asset.symbol}`,
+          description: `Supply ${value.toString()} ${asset.symbol}`,
+          request: makeTransactionRequest({
+            to: pool.wethGateway,
+            value: value.toBigInt(),
+            chain: this.ctx.publicClient.chain,
+            account: opts.account,
+            data: encodeFunctionData({
+              abi: wethGatewayAbi,
+              functionName: 'depositETH',
+              args: [pool.address, toAddress(opts.account), 0],
+            }),
+          }),
+        },
+      ];
+    }
+
+    const approval = await makeApprovalTransaction({
+      token: asset.address,
+      spender: pool.address,
+      amount: value.toBigInt(),
+      account: toAddress(opts.account),
+      client: this.ctx.publicClient,
+    });
+
+    return [
+      ...(approval
+        ? [
+            {
+              id: 'approve_supply_asset',
+              title: `Approve ${asset.symbol}`,
+              description: `Approve ${value.toString()} ${asset.symbol} for supply`,
+              request: approval,
+            },
+          ]
+        : []),
+      {
+        id: 'supply_asset',
+        title: `Supply ${asset.symbol}`,
+        description: `Supply ${value.toString()} ${asset.symbol}`,
+        request: makeTransactionRequest({
+          to: pool.address,
+          value: 0n,
+          chain: this.ctx.publicClient.chain,
+          account: opts.account,
+          data: encodeFunctionData({
+            abi: poolAbi,
+            functionName: 'supply',
+            args: [
+              toAddress(asset.address),
+              value.toBigInt(),
+              toAddress(opts.account),
+              0,
             ],
           }),
         }),

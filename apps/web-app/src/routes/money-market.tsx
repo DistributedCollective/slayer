@@ -7,8 +7,9 @@ import { BorrowAssetsList } from '@/components/MoneyMarket/components/BorrowAsse
 import { BorrowDialog } from '@/components/MoneyMarket/components/BorrowDialog/BorrowDialog';
 import { BorrowPositionsList } from '@/components/MoneyMarket/components/BorrowPositionsList/BorrowPositionsList';
 import { BORROW_POSITIONS } from '@/components/MoneyMarket/components/BorrowPositionsList/components/AssetsTable/AssetsTable.constants';
-import { LEND_ASSETS } from '@/components/MoneyMarket/components/LendAssetsList/components/AssetsTable/AssetsTable.constants';
 import { LendAssetsList } from '@/components/MoneyMarket/components/LendAssetsList/LendAssetsList';
+import { LendDialog } from '@/components/MoneyMarket/components/LendDialog/LendDialog';
+import { LEND_POSITIONS } from '@/components/MoneyMarket/components/LendPositionsList/components/AssetsTable/AssetsTable.constants';
 import {
   healthFactor,
   netApy,
@@ -18,6 +19,7 @@ import { Heading } from '@/components/ui/heading/heading';
 import { getContext } from '@/integrations/tanstack-query/root-provider';
 import { sdk } from '@/lib/sdk';
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import z from 'zod';
 
 const poolSearchSchema = z.object({
@@ -67,6 +69,11 @@ function RouteComponent() {
     staleTime: 1000 * 60 * 60, // 1 hour
   });
 
+  const borrowAssets = useMemo(
+    () => (reserves?.data ?? []).filter((r) => r.borrowingEnabled),
+    [reserves],
+  );
+
   return (
     <>
       <div className="container mx-auto p-6 space-y-6">
@@ -86,12 +93,12 @@ function RouteComponent() {
         <div className="grid grid-cols-1 2xl:grid-cols-2 2xl:gap-4 space-y-4">
           <div className="space-y-4">
             <LendPositionsList
-              lendPositions={reserves?.data ?? []}
+              lendPositions={LEND_POSITIONS}
               supplyBalance={100}
               collateralBalance={50}
               supplyWeightedApy={2.5}
             />
-            <LendAssetsList lendAssets={LEND_ASSETS} />
+            <LendAssetsList lendAssets={reserves?.data ?? []} />
           </div>
           <div className="space-y-4">
             <BorrowPositionsList
@@ -100,11 +107,12 @@ function RouteComponent() {
               borrowPower={1.29}
               supplyWeightedApy={0.05}
             />
-            <BorrowAssetsList borrowAssets={reserves?.data ?? []} />
+            <BorrowAssetsList borrowAssets={borrowAssets} />
           </div>
         </div>
       </div>
       <BorrowDialog />
+      <LendDialog />
     </>
   );
 }

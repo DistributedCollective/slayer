@@ -15,6 +15,9 @@ const MAX_UINT_256 =
   '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
 
 const stringRepresentationFormat = /^(-)?[0-9]*(\.[0-9]*)?(e[-+]?[0-9]+)?$/;
+
+const magnitudes = ['', 'K', 'M', 'B', 'T'];
+
 export class Decimal {
   readonly precision: number;
   readonly d: D;
@@ -65,6 +68,37 @@ export class Decimal {
 
   toString(decimalPlaces?: number): string {
     return this.d.toFixed(decimalPlaces);
+  }
+
+  toFormatted(decimalPlaces?: number): string {
+    const [characteristic, mantissa] = parseFloat(
+      this.toString(decimalPlaces ?? this.precision),
+    )
+      .toString()
+      .split('.');
+    const prettyCharacteristic = characteristic.replace(
+      /(\d)(?=(\d{3})+(?!\d))/g,
+      '$1 ',
+    );
+
+    return mantissa !== undefined
+      ? prettyCharacteristic + '.' + mantissa
+      : prettyCharacteristic;
+  }
+
+  shorten(): string {
+    const characteristicLength = this.toString(0).length;
+    const magnitude = Math.min(
+      Math.floor((characteristicLength - 1) / 3),
+      magnitudes.length - 1,
+    );
+
+    const precision = Math.max(3 * (magnitude + 1) - characteristicLength, 0);
+    const normalized = this.div(
+      Decimal.from(DEFAULT_PRECISION + 3 * magnitude).pow(10),
+    );
+
+    return normalized.toFormatted(precision) + magnitudes[magnitude];
   }
 
   toFixed(decimalPlaces: number): string {

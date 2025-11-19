@@ -106,6 +106,7 @@ export function useInternalTxHandler(
             pendingTxs,
           );
         } else if (error) {
+          console.log('Send transaction error:', error);
           const msg = handleErrorMessage(error);
           setItemError(currentTx.id, msg);
           props.onError?.(currentTx, msg, error);
@@ -200,6 +201,7 @@ export function useInternalTxHandler(
           config.getClient(),
           modifiedData,
         );
+
         sendTransaction(prepared);
       } else {
         throw new Error('Unknown transaction request type');

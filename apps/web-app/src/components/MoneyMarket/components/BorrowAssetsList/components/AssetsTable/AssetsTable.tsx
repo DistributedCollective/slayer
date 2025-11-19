@@ -6,12 +6,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table/table';
-import React, { useEffect, useState, type FC } from 'react';
+import React, { type FC } from 'react';
 
 import { borrowRequestStore } from '@/components/MoneyMarket/stores/borrow-request.store';
 import { AmountRenderer } from '@/components/ui/amount-renderer';
 import { Button } from '@/components/ui/button';
-import { Dialog } from '@/components/ui/dialog';
 import { InfoButton } from '@/components/ui/info-button';
 import type { MoneyMarketPoolReserve } from '@sovryn/slayer-sdk';
 
@@ -20,11 +19,11 @@ type AssetsTableProps = {
 };
 
 export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
-  const [sortedAssets, setSortedAssets] =
-    useState<MoneyMarketPoolReserve[]>(assets);
-  useEffect(() => {
-    setSortedAssets(assets);
-  }, [assets]);
+  // const [sortedAssets, setSortedAssets] =
+  //   useState<MoneyMarketPoolReserve[]>(assets);
+  // useEffect(() => {
+  //   setSortedAssets(assets);
+  // }, [assets]);
 
   const handleBorrow = (reserve: MoneyMarketPoolReserve) =>
     borrowRequestStore.getState().setReserve(reserve);
@@ -89,7 +88,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedAssets.map((asset, index) => (
+          {assets.map((asset, index) => (
             <React.Fragment key={asset.id}>
               <TableRow className="hover:bg-transparent">
                 <TableCell className="border-neutral-800 border-y border-l rounded-tl-[1.25rem] rounded-bl-[1.25rem]">
@@ -144,14 +143,14 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                 </TableCell>
               </TableRow>
 
-              {index !== sortedAssets.length - 1 && (
+              {index !== assets.length - 1 && (
                 <TableRow className="h-1 hover:bg-transparent border-none">
                   <TableCell className="p-0.5" colSpan={4}></TableCell>
                 </TableRow>
               )}
             </React.Fragment>
           ))}
-          {sortedAssets.length === 0 && (
+          {assets.length === 0 && (
             <TableRow>
               <TableCell colSpan={4} className="text-center py-4">
                 No assets found.
@@ -160,7 +159,6 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
           )}
         </TableBody>
       </Table>
-      <Dialog></Dialog>
     </>
   );
 };

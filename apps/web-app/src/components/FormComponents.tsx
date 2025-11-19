@@ -11,6 +11,7 @@ import { Textarea as ShadcnTextarea } from '@/components/ui/textarea';
 import { Decimal } from '@sovryn/slayer-shared';
 import { Loader2Icon } from 'lucide-react';
 import { useState } from 'react';
+import type { GetBalanceData } from 'wagmi/query';
 import { Field, FieldDescription, FieldError, FieldLabel } from './ui/field';
 
 export function SubscribeButton({ label }: { label: string }) {
@@ -219,10 +220,12 @@ export function AmountField({
   label,
   placeholder,
   description,
+  balance,
 }: {
   label: string;
   placeholder?: string;
   description?: string;
+  balance?: GetBalanceData;
 }) {
   const field = useFieldContext<string>();
   const errors = useStore(field.store, (state) => state.meta.errors);
@@ -238,7 +241,17 @@ export function AmountField({
 
   return (
     <Field>
-      <FieldLabel htmlFor={label}>{label}</FieldLabel>
+      <FieldLabel htmlFor={label}>
+        {label}
+
+        {balance && (
+          <span className="ml-2 text-sm font-normal text-gray-400">
+            (Balance:{' '}
+            {Decimal.from(balance.value, balance.decimals).toFormatted(88)}{' '}
+            {balance.symbol})
+          </span>
+        )}
+      </FieldLabel>
       <Input
         value={renderedValue}
         placeholder={placeholder}

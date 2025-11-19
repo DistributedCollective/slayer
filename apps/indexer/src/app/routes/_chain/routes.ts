@@ -1,4 +1,4 @@
-import { Decimal } from '@sovryn/slayer-shared';
+import { areAddressesEqual, Decimal } from '@sovryn/slayer-shared';
 import { and, asc, eq, gte, inArray } from 'drizzle-orm';
 import { FastifyInstance, FastifyRequest } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
@@ -12,7 +12,6 @@ import {
   selectPoolById,
 } from '../../../libs/loaders/money-market';
 import { paginationResponse, paginationSchema } from '../../../libs/pagination';
-import { areAddressesEqual } from '../../../libs/utils/helpers';
 
 interface ReserveDataHumanized {
   originalId: number;
