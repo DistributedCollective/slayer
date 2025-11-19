@@ -104,13 +104,6 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
     rateMode: BorrowRateMode,
     opts: TransactionOpts<account>,
   ): Promise<SdkTransactionRequest<chain, account>[]> {
-    console.log('Preparing borrow transaction for:', {
-      reserve,
-      amount,
-      rateMode,
-      opts,
-    });
-
     if (this.ctx.chainId !== bobSepolia.id || !addresses[this.ctx.chainId]) {
       throw new Error(
         `Money Market addresses not configured for chain ${this.ctx.chainId}`,
@@ -128,8 +121,8 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
       return [
         {
           id: 'approve_borrow_native_delegation',
-          title: 'Approve Borrow Delegation',
-          description: `Approve borrow delegation for ${value.toString()} native asset`,
+          title: `Approve ${asset.symbol}`,
+          description: `Approve borrow delegation for ${value.toString()} ${asset.symbol}`,
           request: makeTransactionRequest({
             to: pool.variableDebtEth,
             value: 0n,
@@ -144,8 +137,8 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
         },
         {
           id: 'borrow_native',
-          title: 'Borrow Native',
-          description: `Borrow ${value.toString()} native asset from Money Market`,
+          title: `Borrow ${asset.symbol}`,
+          description: `Borrow ${value.toString()} ${asset.symbol}`,
           request: makeTransactionRequest({
             to: pool.wethGateway,
             value: 0n,
@@ -164,10 +157,8 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
     return [
       {
         id: 'borrow_asset',
-        title: 'Borrow Asset',
-        description: `Borrow ${value.toString()} of asset ${toAddress(
-          asset.address,
-        )} from Money Market`,
+        title: `Borrow ${asset.symbol}`,
+        description: `Borrow ${value.toString()} ${asset.symbol}`,
         request: makeTransactionRequest({
           to: pool.pool,
           value: 0n,

@@ -138,6 +138,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                     <Button
                       className="rounded-full min-w-24 h-10 hover:cursor-pointer"
                       onClick={() => handleBorrow(asset)}
+                      disabled={!asset.borrowingEnabled}
                     >
                       Borrow
                     </Button>
