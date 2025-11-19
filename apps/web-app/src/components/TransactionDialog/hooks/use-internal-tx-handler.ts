@@ -8,7 +8,7 @@ import {
   isTransactionRequest,
   isTypedDataRequest,
 } from '@sovryn/slayer-sdk';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { prepareTransactionRequest } from 'viem/actions';
 import {
   useConfig,
@@ -230,9 +230,14 @@ export function useInternalTxHandler(
     (pendingTxHash && isReceiptPending) ||
     currentTx?.state === TRANSACTION_STATE.pending;
 
+  const marketAsCompleted$ = useRef(false);
+
   useEffect(() => {
+    if (marketAsCompleted$.current) return;
     const count = txStore.getState().items.length;
     if (!isPending && !currentTx && count > 0) {
+      marketAsCompleted$.current = true;
+      txStore.getState().setIsCompleted(true);
       props.onCompleted?.(count);
       handlers.onCompleted?.(count);
     }
