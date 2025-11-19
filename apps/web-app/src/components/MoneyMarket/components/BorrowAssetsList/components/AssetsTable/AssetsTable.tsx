@@ -13,7 +13,7 @@ import { AmountRenderer } from '@/components/ui/amount-renderer';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { InfoButton } from '@/components/ui/info-button';
-import { type MoneyMarketPoolReserve } from '@sovryn/slayer-sdk';
+import type { MoneyMarketPoolReserve } from '@sovryn/slayer-sdk';
 
 type AssetsTableProps = {
   assets: MoneyMarketPoolReserve[];
@@ -108,20 +108,12 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                 </TableCell>
                 <TableCell className="border-neutral-800 border-y">
                   <span className="flex items-center gap-1">
-                    <AmountRenderer
-                      value={
-                        Number(asset.totalLiquidity) /
-                        Math.pow(10, asset.token.decimals)
-                      }
-                    />
+                    <AmountRenderer value={asset.availableLiquidity} />
                     {asset.token.symbol}
                   </span>
                   <p className="text-neutral-500 font-medium text-xs">
                     <AmountRenderer
-                      value={
-                        Number(asset.totalLiquidity) /
-                        Math.pow(10, asset.token.decimals)
-                      }
+                      value={asset.availableLiquidity}
                       prefix="$"
                       decimals={2}
                       showApproxSign

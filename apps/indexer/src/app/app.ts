@@ -30,7 +30,9 @@ export async function app(fastify: FastifyInstance, opts: AppOptions) {
   });
 
   fastify.addHook('onError', async (request, _reply, error) => {
-    request.log.error({ err: error }, 'unhandled error');
-    // push to Sentry, Prometheus, etc.
+    if (error?.statusCode === 500) {
+      // push to Sentry, Prometheus, etc.
+      request.log.error({ err: error }, 'unhandled error');
+    }
   });
 }

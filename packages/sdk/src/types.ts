@@ -34,16 +34,40 @@ export type Token = Pick<SdkToken, 'address' | 'decimals'> &
 
 export interface MoneyMarketPoolReserve {
   id: string;
-  totalLiquidity: string;
-  underlyingAsset: string;
+  originalId: number;
   token: SdkToken;
-  usageAsCollateralEnabled: boolean;
+  pool: MoneyMarketPool;
+
+  availableLiquidity: string;
+  baseLTVasCollateral: string;
+
   borrowingEnabled: boolean;
+  usageAsCollateralEnabled: boolean;
+
+  isActive: boolean;
+  isFrozen: boolean;
+
+  liquidityRate: string;
+  variableBorrowRate: string;
+
+  reserveFactor: string;
+  reserveLiquidationBonus: string;
+  reserveLiquidationThreshold: string;
 }
 
 export interface MoneyMarketPool {
-  pool: Address;
-  addressProvider: Address;
+  id: string | 'default';
+  name: string;
+  logoURI: string;
+  address: Address;
+  wethGateway: Address;
+  uiPoolDataProvider: Address;
+  poolAddressesProvider: Address;
+  variableDebtEth: Address;
+  weth: Address;
+  treasury: Address;
+  subgraphURI: string;
+  priceFeedURI: string;
 }
 
 export const BORROW_RATE_MODES = {

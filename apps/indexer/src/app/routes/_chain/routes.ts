@@ -9,6 +9,7 @@ import { TTokenSelected, tTokensSelectors } from '../../../database/selectors';
 import {
   fetchPoolList,
   fetchPoolReserves,
+  selectPoolById,
 } from '../../../libs/loaders/money-market';
 import { paginationResponse, paginationSchema } from '../../../libs/pagination';
 import { areAddressesEqual } from '../../../libs/utils/helpers';
@@ -128,7 +129,7 @@ export default async function (fastify: FastifyInstance) {
   );
 
   fastify.withTypeProvider<ZodTypeProvider>().get(
-    '/money-market/:pool',
+    '/money-market/:pool/reserves',
     {
       schema: {
         querystring: paginationSchema,
@@ -136,15 +137,13 @@ export default async function (fastify: FastifyInstance) {
           pool: z.string(),
         }),
       },
-      // config: {
-      //   cache: true,
-      // },
+      config: {
+        cache: true,
+      },
     },
     async (req: FastifyRequest<{ Params: { pool: string } }>, reply) => {
       const pools = await fetchPoolList(req.chain.chainId);
-      const pool = pools.find(
-        (p) => p.address.toLowerCase() === req.params.pool.toLowerCase(),
-      );
+      const pool = selectPoolById(req.params.pool, pools);
 
       if (!pool) {
         return reply.notFound('Pool not found');
@@ -171,18 +170,19 @@ export default async function (fastify: FastifyInstance) {
           // const { virtualAccActive } = reserveRaw;
           return {
             originalId: index,
-            id: `!!${req.chain.chainId}-${reserveRaw.underlyingAsset}-${pool.address}`.toLowerCase(),
-            underlyingAsset: reserveRaw.underlyingAsset.toLowerCase(),
+            id: `${req.chain.chainId}-${reserveRaw.underlyingAsset}-${pool.address}`.toLowerCase(),
+            // underlyingAsset: reserveRaw.underlyingAsset.toLowerCase(),
 
             token: tokens.find((t) =>
               areAddressesEqual(t.address, reserveRaw.underlyingAsset),
             ),
+            pool,
 
-            name: reserveRaw.name,
+            // name: reserveRaw.name,
             // symbol: ammSymbolMap[reserveRaw.underlyingAsset.toLowerCase()]
             //   ? ammSymbolMap[reserveRaw.underlyingAsset.toLowerCase()]
             //   : reserveRaw.symbol,
-            decimals: reserveRaw.decimals.toNumber(),
+            // decimals: reserveRaw.decimals.toNumber(),
             baseLTVasCollateral: reserveRaw.baseLTVasCollateral.toString(),
             reserveLiquidationThreshold:
               reserveRaw.reserveLiquidationThreshold.toString(),

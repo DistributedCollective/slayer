@@ -354,6 +354,7 @@ const uiPoolDataProviderAbi = [
 ] as const;
 
 type PoolDefinition = {
+  id: string | 'default';
   name: string;
   logoURI: string;
   address: Address;
@@ -364,7 +365,7 @@ type PoolDefinition = {
   weth: Address;
   treasury: Address;
   subgraphURI: string;
-  priceFeedUrl: string;
+  priceFeedURI: string;
 };
 
 export async function fetchPoolList(chainId: ChainId) {
@@ -381,6 +382,13 @@ export async function fetchPoolList(chainId: ChainId) {
   const data = (await response.json()) as { items: PoolDefinition[] };
 
   return data.items;
+}
+
+export function selectPoolById(
+  id: PoolDefinition['id'],
+  pools: PoolDefinition[],
+) {
+  return pools.find((pool) => pool.id === id);
 }
 
 export async function fetchPoolReserves(

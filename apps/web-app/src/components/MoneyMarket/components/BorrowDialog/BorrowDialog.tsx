@@ -13,7 +13,6 @@ import { sdk } from '@/lib/sdk';
 import { useSlayerTx } from '@/lib/transactions';
 import { validateDecimal } from '@/lib/validations';
 import { BORROW_RATE_MODES } from '@sovryn/slayer-sdk';
-import { useQuery } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
 import z from 'zod';
 import { useStore } from 'zustand';
@@ -38,21 +37,6 @@ const BorrowDialogForm = () => {
   });
   const { address } = useAccount();
 
-  useQuery({
-    queryKey: ['reserve-data', reserve.id],
-    queryFn: async () => {
-      console.log('Fetching reserve data for:', reserve.id);
-      const data = await sdk.moneyMarket.useReserve(reserve).getReservesData();
-      console.log('Reserve data:', data);
-      return data;
-    },
-    enabled: !!reserve,
-    throwOnError(error, query) {
-      console.error('Error fetching reserve data:', error, query);
-      return true;
-    },
-  });
-
   const form = useAppForm({
     defaultValues: {
       amount: '',
@@ -63,11 +47,14 @@ const BorrowDialogForm = () => {
     },
     onSubmit: ({ value }) => {
       begin(() =>
-        sdk.moneyMarket
-          .useReserve(reserve)
-          .borrow(value.amount, BORROW_RATE_MODES.variable, {
+        sdk.moneyMarket.borrow(
+          reserve,
+          value.amount,
+          BORROW_RATE_MODES.variable,
+          {
             account: address!,
-          }),
+          },
+        ),
       );
     },
     onSubmitInvalid(props) {
