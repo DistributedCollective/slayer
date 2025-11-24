@@ -8,7 +8,7 @@ import {
   isTransactionRequest,
   isTypedDataRequest,
 } from '@sovryn/slayer-sdk';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { prepareTransactionRequest } from 'viem/actions';
 import {
   useConfig,
@@ -106,6 +106,7 @@ export function useInternalTxHandler(
             pendingTxs,
           );
         } else if (error) {
+          console.log('Send transaction error:', error);
           const msg = handleErrorMessage(error);
           setItemError(currentTx.id, msg);
           props.onError?.(currentTx, msg, error);
@@ -200,6 +201,7 @@ export function useInternalTxHandler(
           config.getClient(),
           modifiedData,
         );
+
         sendTransaction(prepared);
       } else {
         throw new Error('Unknown transaction request type');
@@ -230,9 +232,14 @@ export function useInternalTxHandler(
     (pendingTxHash && isReceiptPending) ||
     currentTx?.state === TRANSACTION_STATE.pending;
 
+  const marketAsCompleted$ = useRef(false);
+
   useEffect(() => {
+    if (marketAsCompleted$.current) return;
     const count = txStore.getState().items.length;
     if (!isPending && !currentTx && count > 0) {
+      marketAsCompleted$.current = true;
+      txStore.getState().setIsCompleted(true);
       props.onCompleted?.(count);
       handlers.onCompleted?.(count);
     }

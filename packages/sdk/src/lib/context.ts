@@ -4,7 +4,7 @@ import { Chain, PublicClient, Transport, WalletClient } from 'viem';
 import { INDEXER_URL, Mode, modes } from '../constants.js';
 import { SdkPaginatedQuery } from '../types.js';
 
-const logger = debug('slayer-sdk:context');
+const log = debug('slayer-sdk:context');
 
 export type FetchLike = typeof fetch;
 
@@ -49,7 +49,7 @@ export class Context<chain extends Chain> {
       throw new Error('publicClient is required in SdkConfig');
     if (cfg.indexerBaseUrl) {
       cfg.mode = modes.custom;
-      logger.log('Using custom indexer base URL:', cfg.indexerBaseUrl);
+      log('Using custom indexer base URL:', cfg.indexerBaseUrl);
     }
     if (!cfg.mode) cfg.mode = modes.production;
     this.config = cfg;

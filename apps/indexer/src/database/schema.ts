@@ -40,10 +40,13 @@ export const tTokens = pgTable(
 export type TToken = typeof tTokens.$inferSelect;
 export type TNewToken = typeof tTokens.$inferInsert;
 
-export enum TIngestionSourceMode {
-  backfill = 'backfill',
-  live = 'live',
-}
+export const TIngestionSourceMode = {
+  backfill: 'backfill',
+  live: 'live',
+} as const;
+
+export type TIngestionSourceMode =
+  (typeof TIngestionSourceMode)[keyof typeof TIngestionSourceMode];
 
 export const tIngestionSources = pgTable('ingestion_sources', {
   id: serial('id'),
@@ -71,3 +74,18 @@ export const tIngestionSources = pgTable('ingestion_sources', {
 
 export type TIngestionSource = typeof tIngestionSources.$inferSelect;
 export type TNewIngestionSource = typeof tIngestionSources.$inferInsert;
+
+export const tPools = pgTable('pools', {
+  id: serial('id'),
+  chainId: integer('chain_id').notNull(),
+  // pool address
+  address: char('address', { length: 42 }).notNull().primaryKey(),
+
+  wethGateway: char('weth_gateway', { length: 42 }).notNull(),
+  uiPoolDataProvider: char('ui_pool_data_provider', { length: 42 }).notNull(),
+  poolAddressesProvider: char('address_provider', { length: 42 }).notNull(),
+  variableDebtEth: char('variable_debt_eth', { length: 42 }).notNull(),
+  weth: char('weth', { length: 42 }).notNull(),
+  treasury: char('treasury', { length: 42 }).notNull(),
+  ...timestamps,
+});

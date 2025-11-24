@@ -1,14 +1,74 @@
+import { areAddressesEqual, Decimal } from '@sovryn/slayer-shared';
 import { and, asc, eq, gte, inArray } from 'drizzle-orm';
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, FastifyRequest } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
-import gql from 'graphql-tag';
 import z from 'zod';
-import { chains } from '../../../configs/chains';
 import { client } from '../../../database/client';
 import { tTokens } from '../../../database/schema';
-import { tTokensSelectors } from '../../../database/selectors';
-import { queryFromSubgraph } from '../../../libs/loaders/subgraph';
+import { TTokenSelected, tTokensSelectors } from '../../../database/selectors';
+import {
+  fetchPoolList,
+  fetchPoolReserves,
+  selectPoolById,
+} from '../../../libs/loaders/money-market';
 import { paginationResponse, paginationSchema } from '../../../libs/pagination';
+
+interface ReserveDataHumanized {
+  originalId: number;
+  id: string;
+  underlyingAsset: string;
+
+  token: TTokenSelected;
+
+  name: string;
+  symbol: string;
+  decimals: number;
+  baseLTVasCollateral: string;
+  reserveLiquidationThreshold: string;
+  reserveLiquidationBonus: string;
+  reserveFactor: string;
+  usageAsCollateralEnabled: boolean;
+  borrowingEnabled: boolean;
+  isActive: boolean;
+  isFrozen: boolean;
+  liquidityIndex: string;
+  variableBorrowIndex: string;
+  liquidityRate: string;
+  variableBorrowRate: string;
+  lastUpdateTimestamp: number;
+  aTokenAddress: string;
+  variableDebtTokenAddress: string;
+  interestRateStrategyAddress: string;
+  availableLiquidity: string;
+  totalScaledVariableDebt: string;
+  priceInMarketReferenceCurrency: string;
+  priceOracle: string;
+  variableRateSlope1: string;
+  variableRateSlope2: string;
+  baseVariableBorrowRate: string;
+  optimalUsageRatio: string;
+  // v3 only
+  isPaused: boolean;
+  isSiloedBorrowing: boolean;
+  accruedToTreasury: string;
+  unbacked: string;
+  isolationModeTotalDebt: string;
+  flashLoanEnabled: boolean;
+  debtCeiling: string;
+  debtCeilingDecimals: number;
+  borrowCap: string;
+  supplyCap: string;
+  borrowableInIsolation: boolean;
+  virtualAccActive: boolean;
+  virtualUnderlyingBalance: string;
+}
+
+interface PoolBaseCurrencyHumanized {
+  marketReferenceCurrencyDecimals: number;
+  marketReferenceCurrencyPriceInUsd: string;
+  networkBaseTokenPriceInUsd: string;
+  networkBaseTokenPriceDecimals: number;
+}
 
 export default async function (fastify: FastifyInstance) {
   fastify.get('/', async (req) => {
@@ -20,6 +80,13 @@ export default async function (fastify: FastifyInstance) {
     {
       schema: {
         querystring: paginationSchema,
+      },
+      config: {
+        cache: {
+          key: (req) => `chain:${req.chain.chainId}:tokens`,
+          ttlSeconds: 30,
+          enabled: true,
+        },
       },
     },
     async (req) => {
@@ -40,62 +107,28 @@ export default async function (fastify: FastifyInstance) {
   fastify.withTypeProvider<ZodTypeProvider>().get(
     '/money-market',
     {
-      schema: {
-        querystring: paginationSchema,
+      config: {
+        cache: true,
       },
     },
     async (req, reply) => {
-      if (req.chain.key !== 'bob-sepolia') {
+      try {
+        const data = await fetchPoolList(req.chain.chainId);
+        return { data };
+      } catch (err) {
+        fastify.log.error(
+          { err, chainId: req.chain.chainId },
+          `error: fetchMoneyMarketByChain`,
+        );
         return reply.notFound(
-          'Money Market data is only available for BOB Sepolia',
+          'Money Market data is not available for this chain',
         );
       }
-
-      const chain = chains.get('bob-sepolia');
-      const { cursor, limit } = req.query;
-
-      const data = await queryFromSubgraph<{
-        pools: Array<{
-          id: string;
-          pool: string;
-        }>;
-      }>(
-        chain.aaveSubgraphUrl,
-        gql`
-          query ($first: Int!, $cursor: String) {
-            pools(first: $first, where: { id_gt: $cursor }) {
-              id
-              pool
-              addressProviderId
-              poolCollateralManager
-              poolImpl
-              poolDataProviderImpl
-              poolConfigurator
-              proxyPriceProvider
-              lastUpdateTimestamp
-              bridgeProtocolFee
-              flashloanPremiumTotal
-              flashloanPremiumToProtocol
-            }
-          }
-        `,
-        {
-          first: limit,
-          cursor: cursor ?? '',
-        },
-      );
-
-      const items = data.pools.map((p) => ({
-        pool: p.pool,
-        addressProvider: p.id,
-      }));
-
-      return paginationResponse(items, limit, 'addressProvider');
     },
   );
 
   fastify.withTypeProvider<ZodTypeProvider>().get(
-    '/money-market/:pool',
+    '/money-market/:pool/reserves',
     {
       schema: {
         querystring: paginationSchema,
@@ -103,65 +136,20 @@ export default async function (fastify: FastifyInstance) {
           pool: z.string(),
         }),
       },
+      config: {
+        cache: true,
+      },
     },
-    async (req, reply) => {
-      if (req.chain.key !== 'bob-sepolia') {
-        return reply.notFound(
-          'Money Market data is only available for BOB Sepolia',
-        );
+    async (req: FastifyRequest<{ Params: { pool: string } }>, reply) => {
+      const pools = await fetchPoolList(req.chain.chainId);
+      const pool = selectPoolById(req.params.pool, pools);
+
+      if (!pool) {
+        return reply.notFound('Pool not found');
       }
 
-      const chain = chains.get('bob-sepolia');
-      const { pool } = req.params;
-      const { cursor, limit } = req.query;
-
-      const data = await queryFromSubgraph<{
-        reserves: Array<{
-          id: string;
-          totalLiquidity: string;
-          underlyingAsset: string;
-          usageAsCollateralEnabled: boolean;
-          borrowingEnabled: boolean;
-          pool: {
-            id: string;
-            pool: string;
-          };
-        }>;
-      }>(
-        chain.aaveSubgraphUrl,
-        gql`
-          query ($pool: String!, $first: Int!, $cursor: String) {
-            reserves(
-              first: $first
-              where: { pool_: { id: $pool }, id_gt: $cursor }
-            ) {
-              underlyingAsset
-              pool {
-                id
-                pool
-              }
-              symbol
-              name
-              decimals
-              usageAsCollateralEnabled
-              borrowingEnabled
-              totalLiquidity
-              totalATokenSupply
-              totalLiquidityAsCollateral
-              availableLiquidity
-              totalSupplies
-              liquidityRate
-            }
-          }
-        `,
-        {
-          pool,
-          first: limit,
-          cursor: cursor ?? '',
-        },
-      );
-
-      const items = data.reserves;
+      const { 0: reservesRaw, 1: poolBaseCurrencyRaw } =
+        await fetchPoolReserves(req.chain.chainId, pool);
 
       const tokens = await client.query.tTokens.findMany({
         columns: tTokensSelectors.columns,
@@ -169,19 +157,109 @@ export default async function (fastify: FastifyInstance) {
           eq(tTokens.chainId, req.chain.chainId),
           inArray(
             tTokens.address,
-            items.map((i) => i.underlyingAsset),
+            reservesRaw.map((i) => i.underlyingAsset.toLowerCase()),
           ),
         ),
       });
 
-      const merged = items
-        .map((item) => ({
-          ...item,
-          token: tokens.find((t) => t.address === item.underlyingAsset),
-        }))
-        .filter((i) => i.token);
+      const reservesData: Partial<ReserveDataHumanized>[] = reservesRaw.map(
+        (reserveRaw, index) => {
+          // const virtualUnderlyingBalance =
+          //   reserveRaw.virtualUnderlyingBalance.toString();
+          // const { virtualAccActive } = reserveRaw;
+          return {
+            originalId: index,
+            id: `${req.chain.chainId}-${reserveRaw.underlyingAsset}-${pool.address}`.toLowerCase(),
+            // underlyingAsset: reserveRaw.underlyingAsset.toLowerCase(),
 
-      return paginationResponse(merged, limit, 'id');
+            token: tokens.find((t) =>
+              areAddressesEqual(t.address, reserveRaw.underlyingAsset),
+            ),
+            pool,
+
+            // name: reserveRaw.name,
+            // symbol: ammSymbolMap[reserveRaw.underlyingAsset.toLowerCase()]
+            //   ? ammSymbolMap[reserveRaw.underlyingAsset.toLowerCase()]
+            //   : reserveRaw.symbol,
+            // decimals: reserveRaw.decimals.toNumber(),
+            baseLTVasCollateral: reserveRaw.baseLTVasCollateral.toString(),
+            reserveLiquidationThreshold:
+              reserveRaw.reserveLiquidationThreshold.toString(),
+            reserveLiquidationBonus:
+              reserveRaw.reserveLiquidationBonus.toString(),
+            reserveFactor: reserveRaw.reserveFactor.toString(),
+            usageAsCollateralEnabled: reserveRaw.usageAsCollateralEnabled,
+            borrowingEnabled: reserveRaw.borrowingEnabled,
+            isActive: reserveRaw.isActive,
+            isFrozen: reserveRaw.isFrozen,
+            liquidityIndex: reserveRaw.liquidityIndex.toString(),
+            variableBorrowIndex: reserveRaw.variableBorrowIndex.toString(),
+            liquidityRate: reserveRaw.liquidityRate.toString(),
+            variableBorrowRate: reserveRaw.variableBorrowRate.toString(),
+            lastUpdateTimestamp: reserveRaw.lastUpdateTimestamp,
+            aTokenAddress: reserveRaw.aTokenAddress.toString(),
+            variableDebtTokenAddress:
+              reserveRaw.variableDebtTokenAddress.toString(),
+            interestRateStrategyAddress:
+              reserveRaw.interestRateStrategyAddress.toString(),
+            availableLiquidity: Decimal.from(
+              reserveRaw.availableLiquidity,
+              reserveRaw.decimals.toNumber(),
+            ).toString(),
+            // availableLiquidity: reserveRaw.availableLiquidity.toString(),
+            totalScaledVariableDebt:
+              reserveRaw.totalScaledVariableDebt.toString(),
+            priceInMarketReferenceCurrency:
+              reserveRaw.priceInMarketReferenceCurrency.toString(),
+            // priceOracle: reserveRaw.priceOracle,
+            variableRateSlope1: reserveRaw.variableRateSlope1.toString(),
+            variableRateSlope2: reserveRaw.variableRateSlope2.toString(),
+            // baseVariableBorrowRate:
+            //   reserveRaw.baseVariableBorrowRate.toString(),
+            // optimalUsageRatio: reserveRaw.optimalUsageRatio.toString(),
+            // new fields
+            // isPaused: reserveRaw.isPaused,
+            // debtCeiling: reserveRaw.debtCeiling.toString(),
+            // borrowCap: reserveRaw.borrowCap.toString(),
+            // supplyCap: reserveRaw.supplyCap.toString(),
+            // borrowableInIsolation: reserveRaw.borrowableInIsolation,
+            // accruedToTreasury: reserveRaw.accruedToTreasury.toString(),
+            // unbacked: reserveRaw.unbacked.toString(),
+            // isolationModeTotalDebt:
+            //   reserveRaw.isolationModeTotalDebt.toString(),
+            // debtCeilingDecimals: reserveRaw.debtCeilingDecimals.toNumber(),
+            // isSiloedBorrowing: reserveRaw.isSiloedBorrowing,
+            // flashLoanEnabled: reserveRaw.flashLoanEnabled,
+            // virtualAccActive,
+            // virtualUnderlyingBalance,
+          };
+        },
+      );
+
+      const baseCurrencyData: PoolBaseCurrencyHumanized = {
+        // this is to get the decimals from the unit so 1e18 = string length of 19 - 1 to get the number of 0
+        marketReferenceCurrencyDecimals:
+          poolBaseCurrencyRaw.marketReferenceCurrencyUnit.toString().length - 1,
+        marketReferenceCurrencyPriceInUsd:
+          poolBaseCurrencyRaw.marketReferenceCurrencyPriceInUsd.toString(),
+        networkBaseTokenPriceInUsd:
+          poolBaseCurrencyRaw.networkBaseTokenPriceInUsd.toString(),
+        networkBaseTokenPriceDecimals:
+          poolBaseCurrencyRaw.networkBaseTokenPriceDecimals,
+      };
+
+      return { data: { reservesData, baseCurrencyData } };
+
+      // return {
+      //   data: items
+      //     .map((item) => ({
+      //       ...item,
+      //       token: tokens.find((t) => t.address === item.underlyingAsset),
+      //     }))
+      //     .filter((i) => i.token),
+      //   nextCursor: null,
+      //   count: items.length,
+      // };
     },
   );
 }

@@ -1,5 +1,5 @@
 import { Chain } from 'viem';
-import { MoneyMarketManager } from '../managers/money-market.manager.js';
+import { MoneyMarketManager } from '../managers/money-market/money-market.manager.js';
 import { TokensManager } from '../managers/tokens.manager.js';
 import { Context, SdkConfig } from './context.js';
 

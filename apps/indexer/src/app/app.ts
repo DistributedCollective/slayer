@@ -28,4 +28,11 @@ export async function app(fastify: FastifyInstance, opts: AppOptions) {
     indexPattern: /^routes\.js$/,
     options: { ...opts },
   });
+
+  fastify.addHook('onError', async (request, _reply, error) => {
+    if (error?.statusCode === 500) {
+      // push to Sentry, Prometheus, etc.
+      request.log.error({ err: error }, 'unhandled error');
+    }
+  });
 }

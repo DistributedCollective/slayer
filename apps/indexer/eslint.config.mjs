@@ -20,6 +20,7 @@ export default [
           ],
         },
       ],
+      '@typescript-eslint/no-unused-vars': 'warn',
     },
     languageOptions: {
       parser: await import('jsonc-eslint-parser'),

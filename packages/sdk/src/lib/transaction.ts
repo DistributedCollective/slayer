@@ -1,10 +1,15 @@
-import type {
-  Account,
-  Chain,
-  SignMessageParameters,
-  SignTransactionParameters,
-  SignTypedDataParameters,
+import {
+  encodeFunctionData,
+  PublicClient,
+  Transport,
+  type Account,
+  type Address,
+  type Chain,
+  type SignMessageParameters,
+  type SignTransactionParameters,
+  type SignTypedDataParameters,
 } from 'viem';
+import { toAddress } from './helpers.js';
 
 export interface SdkTransactionRequest<
   chain extends Chain = any,
@@ -106,5 +111,67 @@ export function makeTypedDataRequest<
   return {
     type: 'typed_data',
     data: typedData,
+  };
+}
+
+type ApprovalTransaction<chain extends Chain> = {
+  token: Address;
+  spender: Address;
+  amount: bigint;
+  account: Address;
+  client: PublicClient<Transport, chain>;
+};
+
+export async function makeApprovalTransaction<
+  chain extends Chain = any,
+  account extends Account = any,
+>(opt: ApprovalTransaction<chain>): Promise<SdkRequest<chain, account> | null> {
+  const approvedAmount = await opt.client.readContract({
+    address: opt.token,
+    abi: [
+      {
+        type: 'function',
+        name: 'allowance',
+        stateMutability: 'view',
+        inputs: [
+          { type: 'address', name: 'owner' },
+          { type: 'address', name: 'spender' },
+        ],
+        outputs: [{ type: 'uint256' }],
+      },
+    ],
+    functionName: 'allowance',
+    args: [opt.account, opt.spender],
+    account: toAddress(opt.account),
+  });
+
+  if (approvedAmount >= opt.amount) {
+    return null;
+  }
+
+  return {
+    type: 'transaction',
+    data: {
+      to: opt.token as Address,
+      value: 0n,
+      chain: opt.client.chain,
+      account: toAddress(opt.account),
+      data: encodeFunctionData({
+        abi: [
+          {
+            type: 'function',
+            name: 'approve',
+            stateMutability: 'nonpayable',
+            inputs: [
+              { type: 'address', name: 'spender' },
+              { type: 'uint256', name: 'amount' },
+            ],
+            outputs: [{ type: 'bool' }],
+          },
+        ],
+        functionName: 'approve',
+        args: [opt.spender, opt.amount],
+      }),
+    },
   };
 }

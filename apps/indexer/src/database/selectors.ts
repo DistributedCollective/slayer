@@ -1,4 +1,4 @@
-import { tTokens } from './schema';
+import { TToken, tTokens } from './schema';
 
 export const tTokensSelectors = {
   columns: {
@@ -16,3 +16,8 @@ export const tTokensSelectors = {
     logoUrl: tTokens.logoUrl,
   },
 } as const;
+
+export type TTokenSelected = Pick<
+  TToken,
+  keyof typeof tTokensSelectors.columns
+>;

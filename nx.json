@@ -3,7 +3,7 @@
   "targetDefaults": {
     "dev": {
       "continuous": true,
-      "dependsOn": ["^watch-deps", "^build-deps", "^dev"]
+      "dependsOn": ["^watch-deps", "^build-deps", "^dev", "^build"]
     },
     "serve": {
       "continuous": true,
@@ -53,6 +53,12 @@
         },
         "build": {
           "targetName": "build",
+          "configName": "tsconfig.lib.json",
+          "buildDepsName": "build-deps",
+          "watchDepsName": "watch-deps"
+        },
+        "dev": {
+          "targetName": "tsc:dev",
           "configName": "tsconfig.lib.json",
           "buildDepsName": "build-deps",
           "watchDepsName": "watch-deps"

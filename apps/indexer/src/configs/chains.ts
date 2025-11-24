@@ -1,7 +1,17 @@
+import {
+  createPublicClient,
+  http,
+  PublicClient,
+  Transport,
+  Chain as ViemChain,
+} from 'viem';
+import { bobSepolia, rootstock, rootstockTestnet } from 'viem/chains';
 type ChainConfig = {
   key: string;
   chainId: number;
   name: string;
+
+  rpc: PublicClient;
 
   // Aave subgraph URL
   aaveSubgraphUrl?: string;
@@ -11,18 +21,30 @@ type ChainConfig = {
 const items = [
   {
     key: 'rootstock',
-    chainId: 30,
+    chainId: rootstock.id,
     name: 'Rootstock',
+    rpc: createPublicClient({
+      chain: rootstock,
+      transport: http(rootstock.rpcUrls.default.http[0]),
+    }),
   },
   {
     key: 'rsk-testnet',
-    chainId: 31,
+    chainId: rootstockTestnet.id,
     name: 'Rootstock Testnet',
+    rpc: createPublicClient({
+      chain: rootstockTestnet,
+      transport: http(rootstockTestnet.rpcUrls.default.http[0]),
+    }),
   },
   {
     key: 'bob-sepolia',
-    chainId: 808813,
+    chainId: bobSepolia.id,
     name: 'BOB Sepolia',
+    rpc: createPublicClient({
+      chain: bobSepolia,
+      transport: http(bobSepolia.rpcUrls.default.http[0]),
+    }) as PublicClient<Transport, ViemChain>,
     aaveSubgraphUrl:
       'https://bob-mm.test.sovryn.app/subgraphs/name/DistributedCollective/sov-protocol-subgraphs',
     aavePriceFeedUrl: 'https://bob-mm-cache.test.sovryn.app/data/rates-history',

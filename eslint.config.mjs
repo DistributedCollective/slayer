@@ -30,6 +30,7 @@ export default [
       ],
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': 'warn',
       'no-constant-binary-expression': 'off',
       'no-restricted-syntax': [
         'error',

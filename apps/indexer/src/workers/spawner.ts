@@ -5,7 +5,7 @@ import { logger } from '../libs/logger';
 import { onShutdown } from '../libs/shutdown';
 import { onReady } from '../libs/startup';
 import fn from './ingest/processor';
-import { INGEST_QUEUE_NAME, redisConnection } from './shared';
+import { INGEST_QUEUE_NAME, queueRedisConnection } from './shared';
 
 if (!ENV.READ_ONLY_MODE) {
   const log = logger.child({ module: 'worker-spawner' });
@@ -14,7 +14,7 @@ if (!ENV.READ_ONLY_MODE) {
     INGEST_QUEUE_NAME,
     ENV.isDev ? fn : path.resolve(__dirname, `ingest/processor.js`),
     {
-      connection: redisConnection,
+      connection: queueRedisConnection,
       prefix: '{slayer:ingest}',
       useWorkerThreads: true,
       removeOnComplete: {
