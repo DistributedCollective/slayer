@@ -22,6 +22,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import z from 'zod';
 
+const STALE_TIME = 1000 * 60 * 60; // 1 hour
+
 const poolSearchSchema = z.object({
   offset: z.number().min(0).default(0),
   limit: z.number().min(1).max(100).default(20),
@@ -43,13 +45,13 @@ export const Route = createFileRoute('/money-market')({
     client.prefetchQuery({
       queryKey: ['money-market:pools'],
       queryFn: () => sdk.moneyMarket.listPools(),
-      staleTime: 1000 * 60 * 60, // 1 hour
+      staleTime: STALE_TIME,
     });
 
     client.prefetchQuery({
       queryKey: ['money-market:reserve', pool || 'default'],
       queryFn: () => sdk.moneyMarket.listReserves(pool || 'default'),
-      staleTime: 1000 * 60 * 60, // 1 hour
+      staleTime: STALE_TIME,
     });
   },
 });
@@ -66,7 +68,7 @@ function RouteComponent() {
   const { data: reserves } = useQuery({
     queryKey: ['money-market:reserve', pool || 'default'],
     queryFn: () => sdk.moneyMarket.listReserves(pool || 'default'),
-    staleTime: 1000 * 60 * 60, // 1 hour
+    staleTime: STALE_TIME,
   });
 
   const borrowAssets = useMemo(

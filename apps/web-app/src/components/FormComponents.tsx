@@ -247,7 +247,7 @@ export function AmountField({
         {balance && (
           <span className="ml-2 text-sm font-normal text-gray-400">
             (Balance:{' '}
-            {Decimal.from(balance.value, balance.decimals).toFormatted(88)}{' '}
+            {Decimal.from(balance.value, balance.decimals).toFormatted()}{' '}
             {balance.symbol})
           </span>
         )}

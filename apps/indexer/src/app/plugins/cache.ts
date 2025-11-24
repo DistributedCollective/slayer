@@ -238,8 +238,8 @@ const redisCachePlugin: FastifyPluginAsync<RedisCachePluginOptions> = async (
 
       if (!key) return payload;
 
-      // By default, don't cache error responses
-      if (reply.statusCode >= 400) return payload;
+      // By default, don't cache server error responses (5xx)
+      if (reply.statusCode >= 500) return payload;
 
       const ttl = cfg.ttlSeconds ?? defaultTtl;
 
