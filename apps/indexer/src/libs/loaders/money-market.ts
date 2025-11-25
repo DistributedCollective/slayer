@@ -353,7 +353,7 @@ const uiPoolDataProviderAbi = [
   },
 ] as const;
 
-type PoolDefinition = {
+export type PoolDefinition = {
   id: string | 'default';
   name: string;
   logoURI: string;
@@ -405,5 +405,23 @@ export async function fetchPoolReserves(
     abi: uiPoolDataProviderAbi,
     functionName: 'getReservesData',
     args: [pool.poolAddressesProvider],
+  });
+}
+
+export async function fetchUserReserves(
+  chainId: ChainSelector,
+  pool: PoolDefinition,
+  user: string,
+) {
+  const chain = chains.get(chainId);
+  if (!chain) {
+    throw new Error(`Unsupported chain: ${chainId}`);
+  }
+
+  return chain.rpc.readContract({
+    address: pool.uiPoolDataProvider,
+    abi: uiPoolDataProviderAbi,
+    functionName: 'getUserReservesData',
+    args: [pool.poolAddressesProvider, user as Address],
   });
 }
