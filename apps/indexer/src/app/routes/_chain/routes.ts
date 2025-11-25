@@ -9,9 +9,11 @@ import { TTokenSelected, tTokensSelectors } from '../../../database/selectors';
 import {
   fetchPoolList,
   fetchPoolReserves,
+  fetchUserReserves,
   selectPoolById,
 } from '../../../libs/loaders/money-market';
 import { paginationResponse, paginationSchema } from '../../../libs/pagination';
+import { transformUserReservesData } from '../../../libs/utils/user-reserves';
 
 interface ReserveDataHumanized {
   originalId: number;
@@ -260,6 +262,90 @@ export default async function (fastify: FastifyInstance) {
       //   nextCursor: null,
       //   count: items.length,
       // };
+    },
+  );
+
+  fastify.withTypeProvider<ZodTypeProvider>().get(
+    '/money-market/:pool/user/:address/lendings',
+    {
+      schema: {
+        querystring: paginationSchema,
+        params: z.object({
+          pool: z.string(),
+          address: z.string(),
+        }),
+      },
+      config: {
+        cache: true,
+      },
+    },
+    async (
+      req: FastifyRequest<{ Params: { pool: string; address: string } }>,
+      reply,
+    ) => {
+      const pools = await fetchPoolList(req.chain.chainId);
+      const pool = selectPoolById(req.params.pool, pools);
+
+      if (!pool) return reply.notFound('Pool not found');
+
+      const userReservesRaw = await fetchUserReserves(
+        req.chain.chainId,
+        pool,
+        req.params.address,
+      );
+
+      const activePositions = userReservesRaw.filter(
+        (r) => r.scaledATokenBalance > 0n,
+      );
+
+      return transformUserReservesData({
+        chainId: req.chain.chainId,
+        userAddress: req.params.address,
+        pool,
+        reserves: activePositions,
+      });
+    },
+  );
+
+  fastify.withTypeProvider<ZodTypeProvider>().get(
+    '/money-market/:pool/user/:address/borrowings',
+    {
+      schema: {
+        querystring: paginationSchema,
+        params: z.object({
+          pool: z.string(),
+          address: z.string(),
+        }),
+      },
+      config: {
+        cache: true,
+      },
+    },
+    async (
+      req: FastifyRequest<{ Params: { pool: string; address: string } }>,
+      reply,
+    ) => {
+      const pools = await fetchPoolList(req.chain.chainId);
+      const pool = selectPoolById(req.params.pool, pools);
+
+      if (!pool) return reply.notFound('Pool not found');
+
+      const userReservesRaw = await fetchUserReserves(
+        req.chain.chainId,
+        pool,
+        req.params.address,
+      );
+
+      const activeBorrows = userReservesRaw.filter(
+        (r) => r.scaledVariableDebt > 0n || r.principalStableDebt > 0n,
+      );
+
+      return transformUserReservesData({
+        chainId: req.chain.chainId,
+        userAddress: req.params.address,
+        pool,
+        reserves: activeBorrows,
+      });
     },
   );
 }
