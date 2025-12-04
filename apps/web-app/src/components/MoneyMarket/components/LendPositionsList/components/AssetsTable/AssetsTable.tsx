@@ -6,71 +6,72 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table/table';
-import { Fragment, useCallback, useEffect, useState, type FC } from 'react';
+import { Fragment, useCallback, useMemo, type FC } from 'react';
 
-import iconSort from '@/assets/lend/icon-sort.svg';
 import { AmountRenderer } from '@/components/ui/amount-renderer';
 import { Button } from '@/components/ui/button';
 import { InfoButton } from '@/components/ui/info-button';
 import { Switch } from '@/components/ui/switch';
-import {
-  OrderColumn,
-  OrderType,
-  type OrderSorting,
-} from '@/components/ui/table/table.types';
-import type { LendPosition } from '../../LendPositionsList.types';
+import type { MoneyMarketPoolPosition } from '@sovryn/slayer-sdk';
+import { Decimal } from '@sovryn/slayer-shared';
 
 type AssetsTableProps = {
-  assets: LendPosition[];
+  assets: MoneyMarketPoolPosition[];
 };
 
 export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
-  const [sortDirection, setSortDirection] = useState<OrderSorting>(
-    OrderType.ASC,
+  const items = useMemo(
+    () => assets.filter((asset) => Decimal.from(asset.suppliedBalance).gt(0)),
+    [assets],
   );
-  const [sortedAssets, setSortedAssets] = useState<LendPosition[]>(assets);
-  useEffect(() => {
-    setSortedAssets(assets);
-  }, [assets]);
 
-  const sortAssets = useCallback(
-    (column: keyof LendPosition) => {
-      const newSortDirection =
-        sortDirection === OrderType.ASC ? OrderType.DESC : OrderType.ASC;
-      setSortDirection(newSortDirection);
+  // const [sortDirection, setSortDirection] = useState<OrderSorting>(
+  //   OrderType.ASC,
+  // );
+  // const [sortedAssets, setSortedAssets] =
+  //   useState<MoneyMarketPoolPosition[]>(assets);
+  // useEffect(() => {
+  //   setSortedAssets(assets);
+  // }, [assets]);
 
-      const sorted = [...sortedAssets].sort((a, b) => {
-        if (column === OrderColumn.SYMBOL) {
-          return newSortDirection === OrderType.ASC
-            ? a[column].localeCompare(b[column])
-            : b[column].localeCompare(a[column]);
-        } else if (column === OrderColumn.BALANCE) {
-          const balanceA = parseFloat(a.balance.replace(/,/g, ''));
-          const balanceB = parseFloat(b.balance.replace(/,/g, ''));
-          return newSortDirection === OrderType.ASC
-            ? balanceA - balanceB
-            : balanceB - balanceA;
-        } else if (column === OrderColumn.APY) {
-          const apyA = parseFloat(a.apy.replace('%', ''));
-          const apyB = parseFloat(b.apy.replace('%', ''));
-          return newSortDirection === OrderType.ASC ? apyA - apyB : apyB - apyA;
-        }
-        return 0;
-      });
+  // const sortAssets = useCallback(
+  //   (column: keyof MoneyMarketPoolPosition) => {
+  //     const newSortDirection =
+  //       sortDirection === OrderType.ASC ? OrderType.DESC : OrderType.ASC;
+  //     setSortDirection(newSortDirection);
 
-      setSortedAssets(sorted);
-    },
-    [sortDirection],
-  );
+  //     const sorted = [...sortedAssets].sort((a, b) => {
+  //       if (column === OrderColumn.SYMBOL) {
+  //         return newSortDirection === OrderType.ASC
+  //           ? a[column].localeCompare(b[column])
+  //           : b[column].localeCompare(a[column]);
+  //       } else if (column === OrderColumn.BALANCE) {
+  //         const balanceA = parseFloat(a.balance.replace(/,/g, ''));
+  //         const balanceB = parseFloat(b.balance.replace(/,/g, ''));
+  //         return newSortDirection === OrderType.ASC
+  //           ? balanceA - balanceB
+  //           : balanceB - balanceA;
+  //       } else if (column === OrderColumn.APY) {
+  //         const apyA = parseFloat(a.apy.replace('%', ''));
+  //         const apyB = parseFloat(b.apy.replace('%', ''));
+  //         return newSortDirection === OrderType.ASC ? apyA - apyB : apyB - apyA;
+  //       }
+  //       return 0;
+  //     });
+
+  //     setSortedAssets(sorted);
+  //   },
+  //   [sortDirection],
+  // );
 
   const toggleCollateral = useCallback((symbol: string) => {
-    setSortedAssets((prevAssets) =>
-      prevAssets.map((asset) =>
-        asset.symbol === symbol
-          ? { ...asset, collateral: !asset.collateral }
-          : asset,
-      ),
-    );
+    // setSortedAssets((prevAssets) =>
+    //   prevAssets.map((asset) =>
+    //     asset.symbol === symbol
+    //       ? { ...asset, collateral: !asset.collateral }
+    //       : asset,
+    //   ),
+    // );
   }, []);
 
   return (
@@ -80,7 +81,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
           <TableHead>
             <div className="flex items-center gap-2">
               <span>Asset</span>
-              {assets.some((asset) => asset.isSortable) && (
+              {/* {assets.some((asset) => asset.isSortable) && (
                 <Button
                   variant="ghost"
                   className="p-0 cursor-pointer hover:opacity-80 dark:hover:bg-transparent"
@@ -89,13 +90,13 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                 >
                   <img src={iconSort} alt="Sort Icon" className="w-2 h-2.5" />
                 </Button>
-              )}
+              )} */}
             </div>
           </TableHead>
           <TableHead>
             <div className="flex items-center gap-2">
               <span>Balance</span>
-              {assets.some((asset) => asset.isSortable) && (
+              {/* {assets.some((asset) => asset.isSortable) && (
                 <Button
                   variant="ghost"
                   className="p-0 cursor-pointer hover:opacity-80 dark:hover:bg-transparent"
@@ -104,7 +105,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                 >
                   <img src={iconSort} alt="Sort Icon" className="w-2 h-2.5" />
                 </Button>
-              )}
+              )} */}
             </div>
           </TableHead>
           <TableHead>
@@ -113,7 +114,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                 APY
                 <InfoButton content="APY - The annual percentage yield (APY) is the real rate of return earned on an investment, taking into account the effect of compounding interest." />
               </div>
-              {assets.some((asset) => asset.isSortable) && (
+              {/* {assets.some((asset) => asset.isSortable) && (
                 <Button
                   variant="ghost"
                   className="p-0 cursor-pointer hover:opacity-80 dark:hover:bg-transparent"
@@ -122,7 +123,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                 >
                   <img src={iconSort} alt="Sort Icon" className="w-2 h-2.5" />
                 </Button>
-              )}
+              )} */}
             </div>
           </TableHead>
           <TableHead>
@@ -134,44 +135,48 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {sortedAssets.map((asset, index) => (
-          <Fragment key={asset.symbol}>
+        {items.map((asset, index) => (
+          <Fragment key={asset.token.address}>
             <TableRow className="hover:bg-transparent">
               <TableCell className="border-neutral-800 border-y border-l rounded-tl-[1.25rem] rounded-bl-[1.25rem]">
                 <div className="flex items-center min-w-24">
                   <img
-                    src={asset.icon}
-                    alt={asset.symbol}
+                    src={asset.token.logoUrl}
+                    alt={asset.token.name}
                     className="w-8 h-8"
                   />
                   <div className="ml-2">
-                    <p className="text-gray-50 font-medium">{asset.symbol}</p>
+                    <p className="text-gray-50 font-medium">
+                      {asset.token.symbol}
+                    </p>
                   </div>
                 </div>
               </TableCell>
               <TableCell className="border-neutral-800 border-y">
-                <AmountRenderer value={asset.balance} />
-                <p className="text-neutral-500 font-medium text-xs">
+                <AmountRenderer value={asset.suppliedBalance} />
+                {/* <p className="text-neutral-500 font-medium text-xs">
                   <AmountRenderer
-                    value={asset.balanceUsd}
+                    value={asset.suppliedBalance}
                     prefix="$"
                     showApproxSign
                   />
-                </p>
+                </p> */}
               </TableCell>
               <TableCell className="border-neutral-800 border-y">
                 <div className="flex items-center">
-                  <p className="text-gray-50 font-medium">{asset.apy}</p>
+                  <p className="text-gray-50 font-medium">
+                    {asset.stableBorrowRate}
+                  </p>
                 </div>
               </TableCell>
               <TableCell className="border-neutral-800 border-y">
                 <div className="flex items-center">
                   <Switch
                     className="cursor-pointer data-[state=checked]:bg-primary"
-                    checked={asset.collateral}
-                    id={`collateral-${asset.symbol}`}
-                    onClick={() => toggleCollateral(asset.symbol)}
-                    disabled={!asset.canToggleCollateral}
+                    checked={asset.usageAsCollateralEnabledOnUser}
+                    id={`collateral-${asset.token.address}`}
+                    onClick={() => toggleCollateral(asset.id)}
+                    // disabled={!asset}
                   />
                 </div>
               </TableCell>
@@ -187,14 +192,14 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
               </TableCell>
             </TableRow>
 
-            {index !== sortedAssets.length - 1 && (
+            {index !== items.length - 1 && (
               <TableRow className="h-1 hover:bg-transparent border-none">
                 <TableCell className="p-0.5" colSpan={5}></TableCell>
               </TableRow>
             )}
           </Fragment>
         ))}
-        {sortedAssets.length === 0 && (
+        {items.length === 0 && (
           <TableRow>
             <TableCell colSpan={5} className="text-center py-4">
               No assets found.

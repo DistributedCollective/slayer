@@ -6,20 +6,18 @@ import { TopPanel } from '@/components/MoneyMarket/components/TopPanel/TopPanel'
 import { BorrowAssetsList } from '@/components/MoneyMarket/components/BorrowAssetsList/BorrowAssetsList';
 import { BorrowDialog } from '@/components/MoneyMarket/components/BorrowDialog/BorrowDialog';
 import { BorrowPositionsList } from '@/components/MoneyMarket/components/BorrowPositionsList/BorrowPositionsList';
-import { BORROW_POSITIONS } from '@/components/MoneyMarket/components/BorrowPositionsList/components/AssetsTable/AssetsTable.constants';
 import { LendAssetsList } from '@/components/MoneyMarket/components/LendAssetsList/LendAssetsList';
 import { LendDialog } from '@/components/MoneyMarket/components/LendDialog/LendDialog';
-import { LEND_POSITIONS } from '@/components/MoneyMarket/components/LendPositionsList/components/AssetsTable/AssetsTable.constants';
 import {
   healthFactor,
   netApy,
   netWorth,
 } from '@/components/MoneyMarket/MoneyMarket.constants';
 import { Heading } from '@/components/ui/heading/heading';
-import { getContext } from '@/integrations/tanstack-query/root-provider';
 import { sdk } from '@/lib/sdk';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
+import { useAccount } from 'wagmi';
 import z from 'zod';
 
 const STALE_TIME = 1000 * 60 * 60; // 1 hour
@@ -40,8 +38,8 @@ export const Route = createFileRoute('/money-market')({
     search,
     pool,
   }),
-  loader: ({ deps: { pool } }) => {
-    const client = getContext().queryClient;
+  loader: ({ deps: { pool }, context }) => {
+    const client = context.queryClient;
     client.prefetchQuery({
       queryKey: ['money-market:pools'],
       queryFn: () => sdk.moneyMarket.listPools(),
@@ -53,11 +51,29 @@ export const Route = createFileRoute('/money-market')({
       queryFn: () => sdk.moneyMarket.listReserves(pool || 'default'),
       staleTime: STALE_TIME,
     });
+
+    const owner = context.connection().address;
+    if (owner) {
+      client.prefetchQuery({
+        queryKey: ['money-market:borrows', pool || 'default', owner],
+        queryFn: () =>
+          sdk.moneyMarket.listUserPositions(pool || 'default', owner),
+        staleTime: STALE_TIME,
+      });
+
+      client.prefetchQuery({
+        queryKey: ['money-market:lendings', pool || 'default', owner],
+        queryFn: () =>
+          sdk.moneyMarket.listUserLendings(pool || 'default', owner),
+        staleTime: STALE_TIME,
+      });
+    }
   },
 });
 
 function RouteComponent() {
   const { pool } = Route.useLoaderDeps();
+  const { address } = useAccount();
 
   // const { data: pools } = useQuery({
   //   queryKey: ['money-market:pools'],
@@ -69,6 +85,14 @@ function RouteComponent() {
     queryKey: ['money-market:reserve', pool || 'default'],
     queryFn: () => sdk.moneyMarket.listReserves(pool || 'default'),
     staleTime: STALE_TIME,
+  });
+
+  const { data: positions } = useQuery({
+    queryKey: ['money-market:positions', pool || 'default', address],
+    queryFn: () =>
+      sdk.moneyMarket.listUserPositions(pool || 'default', address!),
+    staleTime: STALE_TIME,
+    enabled: !!address,
   });
 
   const borrowAssets = useMemo(
@@ -95,7 +119,7 @@ function RouteComponent() {
         <div className="grid grid-cols-1 2xl:grid-cols-2 2xl:gap-4 space-y-4">
           <div className="space-y-4">
             <LendPositionsList
-              lendPositions={LEND_POSITIONS}
+              lendPositions={positions?.data ?? []}
               supplyBalance={100}
               collateralBalance={50}
               supplyWeightedApy={2.5}
@@ -104,7 +128,7 @@ function RouteComponent() {
           </div>
           <div className="space-y-4">
             <BorrowPositionsList
-              borrowPositions={BORROW_POSITIONS}
+              borrowPositions={positions?.data ?? []}
               supplyBalance={10}
               borrowPower={1.29}
               supplyWeightedApy={0.05}

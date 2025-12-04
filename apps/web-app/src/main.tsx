@@ -9,6 +9,7 @@ import * as Wagmi from './integrations/wagmi/root-provider.tsx';
 // Import the generated route tree
 import { routeTree } from './routeTree.gen';
 
+import { getConnection } from './integrations/wagmi/config.ts';
 import reportWebVitals from './reportWebVitals.ts';
 import './styles.css';
 
@@ -19,6 +20,7 @@ const router = createRouter({
   routeTree,
   context: {
     ...TanStackQueryProviderContext,
+    connection: getConnection,
   },
   defaultPreload: 'intent',
   scrollRestoration: true,

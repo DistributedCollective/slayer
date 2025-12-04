@@ -2,6 +2,8 @@ import { Address } from 'viem';
 import { ChainId, chains, ChainSelector } from '../../configs/chains';
 import { BASE_DEFINITIONS_URL } from '../../configs/constants';
 
+// uses contract from @aave/contract-helpers
+// @see https://github.com/aave/aave-utilities/blob/%40aave/contract-helpers%401.29.1/packages/contract-helpers/
 const uiPoolDataProviderAbi = [
   {
     inputs: [
@@ -320,6 +322,11 @@ const uiPoolDataProviderAbi = [
         internalType: 'struct IUiPoolDataProvider.UserReserveData[]',
         name: '',
         type: 'tuple[]',
+      },
+      {
+        internalType: 'uint8',
+        name: '',
+        type: 'uint8',
       },
     ],
     stateMutability: 'view',

@@ -1,15 +1,15 @@
 import { Accordion } from '@/components/ui/accordion';
+import type { MoneyMarketPoolPosition } from '@sovryn/slayer-sdk';
 import { useState, type FC } from 'react';
 import { AmountRenderer } from '../../../ui/amount-renderer';
 import { PoolPositionStat } from '../PoolPositionStat/PoolPositionStat';
 import { AssetsTable } from './components/AssetsTable/AssetsTable';
-import type { LendPosition } from './LendPositionsList.types';
 
 type LendPositionsListProps = {
   supplyBalance: number;
   supplyWeightedApy: number;
   collateralBalance: number;
-  lendPositions: LendPosition[];
+  lendPositions: MoneyMarketPoolPosition[];
   loading?: boolean;
 };
 
@@ -19,7 +19,7 @@ export const LendPositionsList: FC<LendPositionsListProps> = ({
   collateralBalance,
   lendPositions,
 }) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
 
   return (
     <Accordion

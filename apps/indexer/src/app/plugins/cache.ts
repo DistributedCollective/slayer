@@ -142,7 +142,7 @@ const redisCachePlugin: FastifyPluginAsync<RedisCachePluginOptions> = async (
         (cfg.key?.(req) ??
           encode.sha256(
             `${routeUrl}:${req.raw.method}:` +
-              `${JSON.stringify(req.query ?? {})}:${JSON.stringify(req.body ?? {})}`,
+              `${JSON.stringify(req.params ?? {})}:${JSON.stringify(req.query ?? {})}:${JSON.stringify(req.body ?? {})}`,
           ));
 
       req.__cacheKey = key;

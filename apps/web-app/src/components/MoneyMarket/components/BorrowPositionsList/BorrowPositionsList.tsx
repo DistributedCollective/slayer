@@ -1,16 +1,16 @@
 import { Accordion } from '@/components/ui/accordion';
+import type { MoneyMarketPoolPosition } from '@sovryn/slayer-sdk';
 import { Settings, Zap } from 'lucide-react';
 import { useState, type FC } from 'react';
 import { AmountRenderer } from '../../../ui/amount-renderer';
 import { PoolPositionStat } from '../PoolPositionStat/PoolPositionStat';
-import type { BorrowPosition } from './BorrowPositionsList.types';
 import { AssetsTable } from './components/AssetsTable/AssetsTable';
 
 type BorrowPositionsListProps = {
   supplyBalance: number;
   supplyWeightedApy: number;
   borrowPower: number;
-  borrowPositions: BorrowPosition[];
+  borrowPositions: MoneyMarketPoolPosition[];
   loading?: boolean;
 };
 

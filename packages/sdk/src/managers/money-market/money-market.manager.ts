@@ -1,5 +1,5 @@
 import { areAddressesEqual, Decimal, Decimalish } from '@sovryn/slayer-shared';
-import { Account, encodeFunctionData, type Chain } from 'viem';
+import { Account, Address, encodeFunctionData, type Chain } from 'viem';
 import { BaseClient, type SdkRequestOptions } from '../../lib/context.js';
 import { buildQuery, toAddress } from '../../lib/helpers.js';
 import {
@@ -9,6 +9,7 @@ import {
 import {
   BorrowRateMode,
   MoneyMarketPool,
+  MoneyMarketPoolPosition,
   MoneyMarketPoolReserve,
   SdkPaginatedResponse,
   TransactionOpts,
@@ -123,6 +124,21 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
       ...response,
       data: response.data.reservesData,
     };
+  }
+
+  async listUserPositions(
+    pool: MoneyMarketPool['id'],
+    user: Address,
+    opts: SdkRequestOptions = {},
+  ) {
+    const response = await this.ctx.http.request<{
+      data: { userReserves: MoneyMarketPoolPosition[] };
+    }>(`/${this.ctx.chainId}/money-market/${pool}/user/${user}/positions`, {
+      ...opts,
+      query: buildQuery(opts.query),
+    });
+
+    return { ...response, data: response.data.userReserves };
   }
 
   async borrow<account extends Account>(

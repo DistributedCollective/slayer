@@ -77,3 +77,21 @@ export const BORROW_RATE_MODES = {
 
 export type BorrowRateMode =
   (typeof BORROW_RATE_MODES)[keyof typeof BORROW_RATE_MODES];
+
+export type MoneyMarketPoolPosition = {
+  id: string;
+  pool: MoneyMarketPool;
+  token: SdkToken;
+  reserve: any; // todo
+
+  suppliedBalance: string;
+  borrowedBalance: string;
+
+  underlyingAsset: string;
+  scaledATokenBalance: string;
+  usageAsCollateralEnabledOnUser: boolean;
+  stableBorrowRate: string;
+  scaledVariableDebt: string;
+  principalStableDebt: string;
+  stableBorrowLastUpdateTimestamp: number;
+};
