@@ -8,6 +8,8 @@ export type Mode = (typeof modes)[keyof typeof modes];
 
 export const DEFAULT_PAGE_LIMIT = 100;
 
+export const USD_DECIMALS = 8;
+
 export const INDEXER_URL = {
   [modes.production]: 'https://slayer-indexer.sovryn.app',
   [modes.staging]: 'https://slayer-indexer.staging.sovryn.app',

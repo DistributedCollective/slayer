@@ -85,7 +85,9 @@ export type MoneyMarketPoolPosition = {
   reserve: any; // todo
 
   suppliedBalance: string;
+  suppliedBalanceUsd: string;
   borrowedBalance: string;
+  borrowedBalanceUsd: string;
 
   underlyingAsset: string;
   scaledATokenBalance: string;

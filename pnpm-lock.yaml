@@ -152,6 +152,9 @@ importers:
 
   apps/indexer:
     dependencies:
+      '@aave/math-utils':
+        specifier: ^1.29.1
+        version: 1.36.2(bignumber.js@9.3.1)(tslib@2.8.1)
       '@bull-board/api':
         specifier: 6.13.0
         version: 6.13.0(@bull-board/ui@6.13.0)
@@ -19980,7 +19983,7 @@ snapshots:
 
   extension-port-stream@3.0.0:
     dependencies:
-      readable-stream: 3.6.2
+      readable-stream: 4.7.0
       webextension-polyfill: 0.10.0
 
   eyes@0.1.8: {}

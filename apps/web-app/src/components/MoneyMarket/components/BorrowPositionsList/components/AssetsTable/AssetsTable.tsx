@@ -220,9 +220,13 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
 
                 <TableCell className="border-neutral-800 border-y">
                   <AmountRenderer value={asset.borrowedBalance} />
-                  {/* <p className="text-neutral-500 font-medium text-xs">
-                    <AmountRenderer value={asset.balanceUsd} prefix="$" />
-                  </p> */}
+                  <p className="text-neutral-500 font-medium text-xs">
+                    <AmountRenderer
+                      value={asset.borrowedBalanceUsd}
+                      prefix="$"
+                      showApproxSign
+                    />
+                  </p>
                 </TableCell>
 
                 <TableCell className="border-neutral-800 border-y">

@@ -7,7 +7,27 @@ import type {
 import fp from 'fastify-plugin';
 import { ENV } from '../../env';
 import { encode } from '../../libs/encode';
+import { logger } from '../../libs/logger';
 import { createRedisConnection } from '../../libs/utils/redis';
+
+// Custom JSON serialization to handle BigInt values
+function serializeWithBigInt(value: unknown): string {
+  return JSON.stringify(value, (key, val) => {
+    if (typeof val === 'bigint') {
+      return { __type: 'bigint', value: val.toString() };
+    }
+    return val;
+  });
+}
+
+function deserializeWithBigInt<T>(json: string): T {
+  return JSON.parse(json, (key, val) => {
+    if (val && typeof val === 'object' && val.__type === 'bigint') {
+      return BigInt(val.value);
+    }
+    return val;
+  });
+}
 
 const cacheRedisConnection = createRedisConnection(
   ENV.REDIS_URL,
@@ -106,7 +126,7 @@ const redisCachePlugin: FastifyPluginAsync<RedisCachePluginOptions> = async (
     req: FastifyRequest,
   ): RouteCacheOptions | null => {
     const rawCfg = req.routeOptions.config.cache;
-    if (!rawCfg) return null;
+    if (!rawCfg || ENV.NO_CACHE) return null;
 
     if (typeof rawCfg === 'boolean') {
       if (!rawCfg) return null;
@@ -150,7 +170,7 @@ const redisCachePlugin: FastifyPluginAsync<RedisCachePluginOptions> = async (
       const cached = await redis.get(key);
       if (!cached) return;
 
-      const entry: CacheEntry = JSON.parse(cached);
+      const entry: CacheEntry = deserializeWithBigInt(cached);
       const ageSec = (Date.now() - entry.storedAt) / 1000;
 
       const isFresh = ageSec <= entry.ttlSeconds;
@@ -228,7 +248,7 @@ const redisCachePlugin: FastifyPluginAsync<RedisCachePluginOptions> = async (
       const cfg: RouteCacheOptions =
         typeof rawCfg === 'boolean' ? { enabled: rawCfg } : rawCfg;
 
-      if (cfg.enabled === false) return payload;
+      if (cfg.enabled === false || ENV.NO_CACHE) return payload;
 
       if (req.__cacheHit) {
         return payload;
@@ -260,7 +280,7 @@ const redisCachePlugin: FastifyPluginAsync<RedisCachePluginOptions> = async (
 
       const expireSeconds = ttl + (cfg.staleTtlSeconds ?? defaultStaleTtl);
 
-      await redis.setex(key, expireSeconds, JSON.stringify(entry));
+      await redis.setex(key, expireSeconds, serializeWithBigInt(entry));
 
       // For "real" client requests (not internal revalidation), set MISS header
       if (req.headers['x-cache-revalidate'] !== '1') {
@@ -270,6 +290,53 @@ const redisCachePlugin: FastifyPluginAsync<RedisCachePluginOptions> = async (
       return payload;
     },
   );
+};
+
+export const maybeCache = async <T = unknown>(
+  key: string,
+  fn: () => Promise<T>,
+  opts: Pick<RouteCacheOptions, 'ttlSeconds' | 'enabled'> = {},
+): Promise<T> => {
+  const enabled = opts.enabled ?? true;
+
+  if (!enabled || ENV.NO_CACHE) {
+    return fn();
+  }
+
+  const redis = cacheRedisConnection;
+
+  const ttl = opts.ttlSeconds ?? 30; // 30 seconds
+
+  const cacheKey = 'maybe-cache:fn:' + encode.sha256(key);
+
+  const cached = await redis.get(cacheKey);
+
+  if (cached) {
+    const entry: CacheEntry = deserializeWithBigInt(cached);
+    const ageSec = (Date.now() - entry.storedAt) / 1000;
+
+    const isFresh = ageSec <= entry.ttlSeconds;
+
+    logger.info({ key, ageSec, ttl: entry.ttlSeconds }, 'Cache hit');
+
+    if (isFresh) {
+      return entry.payload as T;
+    }
+  }
+
+  logger.info({ key }, 'Cache miss, invoking function');
+
+  const entry = {
+    payload: await fn(),
+    headers: {},
+    statusCode: 200,
+    storedAt: Date.now(),
+    ttlSeconds: ttl,
+  };
+
+  await redis.setex(cacheKey, ttl, serializeWithBigInt(entry));
+
+  return entry.payload as T;
 };
 
 export default fp(redisCachePlugin, {
