@@ -138,7 +138,8 @@
     }
   },
   "dependencies": {
-    "@aave/math-utils": "^1.29.1",
+    "@aave/math-utils": "1.29.1",
+    "@aave/contract-helpers": "1.29.1",
     "@bull-board/api": "6.13.0",
     "@bull-board/fastify": "6.13.0",
     "@fastify/autoload": "6.0.3",

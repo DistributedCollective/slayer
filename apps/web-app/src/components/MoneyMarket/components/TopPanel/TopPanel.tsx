@@ -1,17 +1,20 @@
+import { Skeleton } from '@/components/ui/skeleton';
 import type { FC } from 'react';
 import { AmountRenderer } from '../../../ui/amount-renderer';
 import { StatisticsCard } from '../StatisticsCard/StatisticsCard';
 
 type TopPanelProps = {
-  netWorth: number;
-  netApy: number;
-  healthFactor: number;
+  netWorth: string;
+  netApy: string;
+  healthFactor: string;
+  isPending?: boolean;
 };
 
 export const TopPanel: FC<TopPanelProps> = ({
   netApy,
   netWorth,
   healthFactor,
+  isPending,
 }) => (
   <div className="w-full flex flex-col gap-6">
     <div className="flex flex-col gap-6 md:flex-row">
@@ -20,7 +23,11 @@ export const TopPanel: FC<TopPanelProps> = ({
           label="Net Worth"
           value={
             <span className="text-2xl">
-              <AmountRenderer value={netWorth} decimals={2} prefix="$" />
+              {isPending ? (
+                <Skeleton className="w-24 h-8" />
+              ) : (
+                <AmountRenderer value={netWorth} decimals={2} prefix="$" />
+              )}
             </span>
           }
         />
@@ -29,7 +36,11 @@ export const TopPanel: FC<TopPanelProps> = ({
             label="Net APY"
             value={
               <span className="text-2xl">
-                <AmountRenderer value={netApy} decimals={2} suffix="%" />
+                {isPending ? (
+                  <Skeleton className="w-24 h-8" />
+                ) : (
+                  <AmountRenderer value={netApy} decimals={2} suffix="%" />
+                )}
               </span>
             }
             help="Net APY is the combined effect of all supply and borrow positions on net worth, including incentives. It is possible to have a negative net APY if debt APY is higher than supply APY."
@@ -38,7 +49,11 @@ export const TopPanel: FC<TopPanelProps> = ({
             label="Health Factor"
             value={
               <span className="text-2xl">
-                <AmountRenderer value={healthFactor} decimals={2} />
+                {isPending ? (
+                  <Skeleton className="w-24 h-8" />
+                ) : (
+                  <AmountRenderer value={healthFactor} decimals={2} />
+                )}
               </span>
             }
           />

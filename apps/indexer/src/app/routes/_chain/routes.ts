@@ -123,86 +123,6 @@ export default async function (fastify: ZodFastifyInstance) {
           baseCurrencyData.marketReferenceCurrencyDecimals,
       });
 
-      // const reservesData: Partial<ReserveDataHumanized>[] = reservesRaw.map(
-      //   (reserveRaw, index) => {
-      //     // const virtualUnderlyingBalance =
-      //     //   reserveRaw.virtualUnderlyingBalance.toString();
-      //     // const { virtualAccActive } = reserveRaw;
-
-      //     // const { totalDebt, totalVariableDebt, totalLiquidity } =
-      //     //   calculateReserveDebt(reserveRaw, currentTimestamp);
-
-      //     //   formatRe
-
-      //     return {
-      //       originalId: index,
-      //       id: `${req.chain.chainId}-${reserveRaw.underlyingAsset}-${pool.address}`.toLowerCase(),
-      //       // underlyingAsset: reserveRaw.underlyingAsset.toLowerCase(),
-
-      //       token: tokens.find((t) =>
-      //         areAddressesEqual(t.address, reserveRaw.underlyingAsset),
-      //       ),
-      //       pool,
-
-      //       // name: reserveRaw.name,
-      //       // symbol: ammSymbolMap[reserveRaw.underlyingAsset.toLowerCase()]
-      //       //   ? ammSymbolMap[reserveRaw.underlyingAsset.toLowerCase()]
-      //       //   : reserveRaw.symbol,
-      //       // decimals: reserveRaw.decimals.toNumber(),
-      //       baseLTVasCollateral: reserveRaw.baseLTVasCollateral.toString(),
-      //       reserveLiquidationThreshold:
-      //         reserveRaw.reserveLiquidationThreshold.toString(),
-      //       reserveLiquidationBonus:
-      //         reserveRaw.reserveLiquidationBonus.toString(),
-      //       reserveFactor: reserveRaw.reserveFactor.toString(),
-      //       usageAsCollateralEnabled: reserveRaw.usageAsCollateralEnabled,
-      //       borrowingEnabled: reserveRaw.borrowingEnabled,
-      //       isActive: reserveRaw.isActive,
-      //       isFrozen: reserveRaw.isFrozen,
-      //       liquidityIndex: reserveRaw.liquidityIndex.toString(),
-      //       variableBorrowIndex: reserveRaw.variableBorrowIndex.toString(),
-      //       liquidityRate: reserveRaw.liquidityRate.toString(),
-      //       variableBorrowRate: reserveRaw.variableBorrowRate.toString(),
-      //       lastUpdateTimestamp: reserveRaw.lastUpdateTimestamp,
-      //       aTokenAddress: reserveRaw.aTokenAddress.toString(),
-      //       variableDebtTokenAddress:
-      //         reserveRaw.variableDebtTokenAddress.toString(),
-      //       interestRateStrategyAddress:
-      //         reserveRaw.interestRateStrategyAddress.toString(),
-      //       availableLiquidity: Decimal.from(
-      //         reserveRaw.availableLiquidity,
-      //         reserveRaw.decimals.toNumber(),
-      //       ).toString(),
-      //       // availableLiquidity: reserveRaw.availableLiquidity.toString(),
-      //       totalScaledVariableDebt:
-      //         reserveRaw.totalScaledVariableDebt.toString(),
-      //       priceInMarketReferenceCurrency:
-      //         reserveRaw.priceInMarketReferenceCurrency.toString(),
-      //       // priceOracle: reserveRaw.priceOracle,
-      //       variableRateSlope1: reserveRaw.variableRateSlope1.toString(),
-      //       variableRateSlope2: reserveRaw.variableRateSlope2.toString(),
-      //       // baseVariableBorrowRate:
-      //       //   reserveRaw.baseVariableBorrowRate.toString(),
-      //       // optimalUsageRatio: reserveRaw.optimalUsageRatio.toString(),
-      //       // new fields
-      //       // isPaused: reserveRaw.isPaused,
-      //       // debtCeiling: reserveRaw.debtCeiling.toString(),
-      //       // borrowCap: reserveRaw.borrowCap.toString(),
-      //       // supplyCap: reserveRaw.supplyCap.toString(),
-      //       // borrowableInIsolation: reserveRaw.borrowableInIsolation,
-      //       // accruedToTreasury: reserveRaw.accruedToTreasury.toString(),
-      //       // unbacked: reserveRaw.unbacked.toString(),
-      //       // isolationModeTotalDebt:
-      //       //   reserveRaw.isolationModeTotalDebt.toString(),
-      //       // debtCeilingDecimals: reserveRaw.debtCeilingDecimals.toNumber(),
-      //       // isSiloedBorrowing: reserveRaw.isSiloedBorrowing,
-      //       // flashLoanEnabled: reserveRaw.flashLoanEnabled,
-      //       // virtualAccActive,
-      //       // virtualUnderlyingBalance,
-      //     };
-      //   },
-      // );
-
       const items = data.map((item) => {
         const token = tokens.find((t) =>
           areAddressesEqual(t.address, item.underlyingAsset),
@@ -217,7 +137,10 @@ export default async function (fastify: ZodFastifyInstance) {
           liquidityUsd: Decimal.from(item.totalLiquidity)
             .mul(Decimal.from(item.priceInUSD))
             .toFixed(USD_DECIMALS),
-          borrowApy: Decimal.from(item.variableBorrowAPY)
+          stableBorrowApy: Decimal.from(item.stableBorrowAPY ?? 0)
+            .mul(100)
+            .toFixed(USD_DECIMALS),
+          variableBorrowApy: Decimal.from(item.variableBorrowAPY ?? 0)
             .mul(100)
             .toFixed(USD_DECIMALS),
           canBeBorrowed: item.borrowingEnabled,
@@ -227,7 +150,8 @@ export default async function (fastify: ZodFastifyInstance) {
           canBeCollateral: item.usageAsCollateralEnabled,
           isActive: item.isActive,
           isFroze: item.isFrozen,
-          eModes: item.eModes,
+          // eModes: item.eModes,
+          i: item,
         };
       });
 
@@ -314,70 +238,6 @@ export default async function (fastify: ZodFastifyInstance) {
             baseCurrencyData.marketReferenceCurrencyDecimals,
         }),
       });
-
-      // const userReserves = userReservesRaw
-      //   .filter(
-      //     (item) =>
-      //       item.scaledATokenBalance > 0n || item.scaledVariableDebt > 0n,
-      //   )
-      //   .map((userReserveRaw) => {
-      //     const token = tokens.find((t) =>
-      //       areAddressesEqual(t.address, userReserveRaw.underlyingAsset),
-      //     );
-      //     const reserve = reserves.find((r) =>
-      //       areAddressesEqual(
-      //         r.underlyingAsset,
-      //         userReserveRaw.underlyingAsset,
-      //       ),
-      //     );
-
-      //     const usdPrice = Decimal.from(
-      //       reserve?.priceInMarketReferenceCurrency.toString() || '0',
-      //     ).div(Decimal.pow(baseCurrencyData.marketReferenceCurrencyDecimals));
-
-      //     const suppliedBalance = Decimal.from(
-      //       userReserveRaw.scaledATokenBalance,
-      //       token?.decimals ?? 18,
-      //     );
-
-      //     const borrowedBalance = Decimal.from(
-      //       userReserveRaw.scaledVariableDebt,
-      //       token?.decimals ?? 18,
-      //     );
-
-      //     return {
-      //       id: `${req.chain.chainId}-${req.params.address}-${userReserveRaw.underlyingAsset}-${pool.address}`.toLowerCase(),
-      //       // pool,
-      //       // token,
-      //       // reserve,
-
-      //       usdPrice: usdPrice.toString(),
-      //       priceInMarketReferenceCurrency:
-      //         reserve?.priceInMarketReferenceCurrency,
-      //       decimalsD: baseCurrencyData.marketReferenceCurrencyDecimals,
-      //       raw: baseCurrencyData,
-
-      //       suppliedBalance: suppliedBalance.toString(),
-      //       suppliedBalanceUsd: suppliedBalance
-      //         .mul(usdPrice)
-      //         .toFixed(USD_DECIMALS),
-
-      //       borrowedBalance: borrowedBalance.toString(),
-      //       borrowedBalanceUsd: borrowedBalance
-      //         .mul(usdPrice)
-      //         .toFixed(USD_DECIMALS),
-
-      //       underlyingAsset: userReserveRaw.underlyingAsset.toLowerCase(),
-      //       scaledATokenBalance: userReserveRaw.scaledATokenBalance.toString(),
-      //       usageAsCollateralEnabledOnUser:
-      //         userReserveRaw.usageAsCollateralEnabledOnUser,
-      //       stableBorrowRate: userReserveRaw.stableBorrowRate.toString(),
-      //       scaledVariableDebt: userReserveRaw.scaledVariableDebt.toString(),
-      //       principalStableDebt: userReserveRaw.principalStableDebt.toString(),
-      //       stableBorrowLastUpdateTimestamp:
-      //         userReserveRaw.stableBorrowLastUpdateTimestamp.toNumber(),
-      //     };
-      //   });
 
       const netWorth = Decimal.from(summary.netWorthUSD);
       const borrowBalance = Decimal.from(summary.totalBorrowsUSD);
@@ -508,17 +368,20 @@ export default async function (fastify: ZodFastifyInstance) {
             liquidityUsd: Decimal.from(item.reserve.totalLiquidity)
               .mul(Decimal.from(item.reserve.priceInUSD))
               .toFixed(USD_DECIMALS),
-            borrowApy: Decimal.from(item.reserve.variableBorrowAPY)
-              .mul(100)
-              .toFixed(USD_DECIMALS),
             canBeBorrowed: item.reserve.borrowingEnabled,
             supplyApy: Decimal.from(item.reserve.supplyAPY)
+              .mul(100)
+              .toFixed(USD_DECIMALS),
+            stableBorrowApy: Decimal.from(item.reserve.stableBorrowAPY)
+              .mul(100)
+              .toFixed(USD_DECIMALS),
+            variableBorrowApy: Decimal.from(item.reserve.variableBorrowAPY)
               .mul(100)
               .toFixed(USD_DECIMALS),
             canBeCollateral: item.reserve.usageAsCollateralEnabled,
             isActive: item.reserve.isActive,
             isFroze: item.reserve.isFrozen,
-            eModes: item.reserve.eModes,
+            // eModes: item.reserve.eModes,
           },
           supplied: item.underlyingBalance,
           suppliedUsd: item.underlyingBalanceUSD,
@@ -537,17 +400,15 @@ export default async function (fastify: ZodFastifyInstance) {
           borrowRateMode,
           borrowApy: Decimal.from(
             borrowRateMode === 1
-              ? // @ts-expect-error stableBorrowAPY exists
-                (item.reserve.stableBorrowAPY ?? 0)
+              ? item.reserve.stableBorrowAPY
               : item.reserve.variableBorrowAPY,
           )
             .mul(100)
             .toString(),
-          // @ts-expect-error stableBorrowAPY exists
-          stableApy: Decimal.from(item.reserve.stableBorrowAPY ?? 0)
+          stableBorrowApy: Decimal.from(item.reserve.stableBorrowAPY ?? 0)
             .mul(100)
             .toString(),
-          variableApy: Decimal.from(item.reserve.variableBorrowAPY ?? 0)
+          variableBorrowApy: Decimal.from(item.reserve.variableBorrowAPY ?? 0)
             .mul(100)
             .toString(),
         };
@@ -581,6 +442,7 @@ export default async function (fastify: ZodFastifyInstance) {
             userEmodeCategoryId: summary.userEmodeCategoryId,
             isInIsolationMode: summary.isInIsolationMode,
           },
+          reservesData,
         },
       };
     },

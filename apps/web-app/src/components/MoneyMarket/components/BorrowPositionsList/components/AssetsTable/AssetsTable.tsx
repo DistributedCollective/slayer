@@ -152,18 +152,18 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={String(asset.variableApy)}>
+                        <SelectItem value={String(asset.variableBorrowApy)}>
                           APY, variable{' '}
                           <AmountRenderer
-                            value={asset.variableApy}
+                            value={asset.variableBorrowApy}
                             suffix="%"
                             showApproxSign
                           />
                         </SelectItem>
-                        <SelectItem value={String(asset.stableApy)}>
+                        <SelectItem value={String(asset.stableBorrowApy)}>
                           APY, stable{' '}
                           <AmountRenderer
-                            value={asset.stableApy}
+                            value={asset.stableBorrowApy}
                             suffix="%"
                             showApproxSign
                           />

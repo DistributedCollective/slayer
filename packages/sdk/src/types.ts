@@ -41,7 +41,8 @@ export interface MoneyMarketPoolReserve {
   liquidity: string;
   liquidityUsd: string;
 
-  borrowApy: string;
+  stableBorrowApy: string;
+  variableBorrowApy: string;
   supplyApy: string;
 
   canBeBorrowed: boolean;
@@ -90,8 +91,8 @@ export type MoneyMarketPoolPosition = {
   borrowedUsd: string;
 
   borrowApy: string;
-  stableApy: string;
-  variableApy: string;
+  stableBorrowApy: string;
+  variableBorrowApy: string;
 
   collateral: boolean;
 

@@ -8,11 +8,6 @@ import { BorrowDialog } from '@/components/MoneyMarket/components/BorrowDialog/B
 import { BorrowPositionsList } from '@/components/MoneyMarket/components/BorrowPositionsList/BorrowPositionsList';
 import { LendAssetsList } from '@/components/MoneyMarket/components/LendAssetsList/LendAssetsList';
 import { LendDialog } from '@/components/MoneyMarket/components/LendDialog/LendDialog';
-import {
-  healthFactor,
-  netApy,
-  netWorth,
-} from '@/components/MoneyMarket/MoneyMarket.constants';
 import { Heading } from '@/components/ui/heading/heading';
 import { sdk } from '@/lib/sdk';
 import { useQuery } from '@tanstack/react-query';
@@ -80,7 +75,7 @@ function RouteComponent() {
     staleTime: STALE_TIME,
   });
 
-  const { data: positions } = useQuery({
+  const { data: positions, isPending } = useQuery({
     queryKey: ['money-market:positions', pool || 'default', address],
     queryFn: () =>
       sdk.moneyMarket.listUserPositions(pool || 'default', address!),
@@ -104,9 +99,10 @@ function RouteComponent() {
         </div>
 
         <TopPanel
-          healthFactor={healthFactor}
-          netApy={netApy}
-          netWorth={netWorth}
+          healthFactor={positions?.data?.summary?.healthFactor ?? '0'}
+          netApy={positions?.data?.summary?.netApy ?? '0'}
+          netWorth={positions?.data?.summary?.netWorthUsd ?? '0'}
+          isPending={isPending}
         />
 
         <div className="grid grid-cols-1 2xl:grid-cols-2 2xl:gap-4 space-y-4">

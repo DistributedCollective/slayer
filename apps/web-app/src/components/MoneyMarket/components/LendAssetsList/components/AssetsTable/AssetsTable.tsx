@@ -87,7 +87,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
               </TableCell>
               <TableCell className="border-neutral-800 border-y">
                 <div className="flex items-center">
-                  <AmountRenderer value={asset.borrowApy} suffix="%" />
+                  <AmountRenderer value={asset.variableBorrowApy} suffix="%" />
                 </div>
               </TableCell>
               <TableCell className="border-neutral-800 border-y">
