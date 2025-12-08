@@ -34,25 +34,21 @@ export type Token = Pick<SdkToken, 'address' | 'decimals'> &
 
 export interface MoneyMarketPoolReserve {
   id: string;
-  originalId: number;
+  // originalId: number;
   token: SdkToken;
   pool: MoneyMarketPool;
 
-  availableLiquidity: string;
-  baseLTVasCollateral: string;
+  liquidity: string;
+  liquidityUsd: string;
 
-  borrowingEnabled: boolean;
-  usageAsCollateralEnabled: boolean;
+  borrowApy: string;
+  supplyApy: string;
+
+  canBeBorrowed: boolean;
+  canBeCollateral: boolean;
 
   isActive: boolean;
   isFrozen: boolean;
-
-  liquidityRate: string;
-  variableBorrowRate: string;
-
-  reserveFactor: string;
-  reserveLiquidationBonus: string;
-  reserveLiquidationThreshold: string;
 }
 
 export interface MoneyMarketPool {

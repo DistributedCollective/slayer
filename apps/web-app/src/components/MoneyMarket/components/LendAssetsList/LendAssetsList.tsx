@@ -1,8 +1,6 @@
 import { Accordion } from '@/components/ui/accordion';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
 import type { MoneyMarketPoolReserve } from '@sovryn/slayer-sdk';
-import { useCallback, useMemo, useState, type FC } from 'react';
+import { useState, type FC } from 'react';
 import { AssetsTable } from './components/AssetsTable/AssetsTable';
 
 type LendPAssetsListProps = {
@@ -12,17 +10,6 @@ type LendPAssetsListProps = {
 
 export const LendAssetsList: FC<LendPAssetsListProps> = ({ lendAssets }) => {
   const [open, setOpen] = useState(false);
-  const [showZeroBalances, setShowZeroBalances] = useState(false);
-
-  const handleShowBalances = useCallback(
-    () => setShowZeroBalances((prevState) => !prevState),
-    [],
-  );
-
-  const filteredAssets = useMemo(
-    () => lendAssets,
-    [lendAssets, showZeroBalances],
-  );
 
   return (
     <Accordion
@@ -32,24 +19,7 @@ export const LendAssetsList: FC<LendPAssetsListProps> = ({ lendAssets }) => {
       open={open}
       onClick={setOpen}
     >
-      <div className="mb-2 lg:mb-6">
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="zeroBalances"
-            onCheckedChange={handleShowBalances}
-            checked={showZeroBalances}
-            defaultChecked
-          />
-          <Label
-            htmlFor="zeroBalances"
-            className="text-xs font-medium text-gray-50 cursor-pointer"
-          >
-            Show zero balances
-          </Label>
-        </div>
-      </div>
-
-      <AssetsTable assets={filteredAssets} />
+      <AssetsTable assets={lendAssets} />
     </Accordion>
   );
 };

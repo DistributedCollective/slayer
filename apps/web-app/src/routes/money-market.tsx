@@ -55,16 +55,9 @@ export const Route = createFileRoute('/money-market')({
     const owner = context.connection().address;
     if (owner) {
       client.prefetchQuery({
-        queryKey: ['money-market:borrows', pool || 'default', owner],
+        queryKey: ['money-market:positions', pool || 'default', owner],
         queryFn: () =>
           sdk.moneyMarket.listUserPositions(pool || 'default', owner),
-        staleTime: STALE_TIME,
-      });
-
-      client.prefetchQuery({
-        queryKey: ['money-market:lendings', pool || 'default', owner],
-        queryFn: () =>
-          sdk.moneyMarket.listUserLendings(pool || 'default', owner),
         staleTime: STALE_TIME,
       });
     }
@@ -96,7 +89,7 @@ function RouteComponent() {
   });
 
   const borrowAssets = useMemo(
-    () => (reserves?.data ?? []).filter((r) => r.borrowingEnabled),
+    () => (reserves?.data ?? []).filter((r) => r.canBeBorrowed),
     [reserves],
   );
 

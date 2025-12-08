@@ -1,4 +1,9 @@
-import { formatReserves, formatUserSummary } from '@aave/math-utils';
+import {
+  formatReserves,
+  formatUserSummary,
+  USD_DECIMALS,
+} from '@aave/math-utils';
+import { areAddressesEqual, Decimal } from '@sovryn/slayer-shared';
 import { and, asc, eq, gte, inArray } from 'drizzle-orm';
 import { FastifyRequest } from 'fastify';
 import z from 'zod';
@@ -98,16 +103,16 @@ export default async function (fastify: ZodFastifyInstance) {
         pool,
       );
 
-      // const tokens = await client.query.tTokens.findMany({
-      //   columns: tTokensSelectors.columns,
-      //   where: and(
-      //     eq(tTokens.chainId, req.chain.chainId),
-      //     inArray(
-      //       tTokens.address,
-      //       reservesRaw.map((i) => i.underlyingAsset.toLowerCase()),
-      //     ),
-      //   ),
-      // });
+      const tokens = await client.query.tTokens.findMany({
+        columns: tTokensSelectors.columns,
+        where: and(
+          eq(tTokens.chainId, req.chain.chainId),
+          inArray(
+            tTokens.address,
+            reservesData.map((i) => i.underlyingAsset.toLowerCase()),
+          ),
+        ),
+      });
 
       const data = formatReserves({
         reserves: reservesData,
@@ -198,7 +203,35 @@ export default async function (fastify: ZodFastifyInstance) {
       //   },
       // );
 
-      return { data: { reservesData: data, baseCurrencyData } };
+      const items = data.map((item) => {
+        const token = tokens.find((t) =>
+          areAddressesEqual(t.address, item.underlyingAsset),
+        );
+
+        return {
+          id: item.id,
+          pool,
+          token,
+          priceUsd: Decimal.from(item.priceInUSD).toFixed(USD_DECIMALS),
+          liquidity: Decimal.from(item.totalLiquidity).toString(),
+          liquidityUsd: Decimal.from(item.totalLiquidity)
+            .mul(Decimal.from(item.priceInUSD))
+            .toFixed(USD_DECIMALS),
+          borrowApy: Decimal.from(item.variableBorrowAPY)
+            .mul(100)
+            .toFixed(USD_DECIMALS),
+          canBeBorrowed: item.borrowingEnabled,
+          supplyApy: Decimal.from(item.supplyAPY)
+            .mul(100)
+            .toFixed(USD_DECIMALS),
+          canBeCollateral: item.usageAsCollateralEnabled,
+          isActive: item.isActive,
+          isFroze: item.isFrozen,
+          eModes: item.eModes,
+        };
+      });
+
+      return { data: { reservesData: items, baseCurrencyData } };
 
       // return {
       //   data: items

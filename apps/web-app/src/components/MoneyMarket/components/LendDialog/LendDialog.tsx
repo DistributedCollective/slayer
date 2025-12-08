@@ -24,7 +24,6 @@ const LendDialogForm = () => {
 
   const { begin } = useSlayerTx({
     onClosed: (ok: boolean) => {
-      console.log('lend tx modal closed, success:', ok);
       if (ok) {
         // close lending dialog if tx was successful
         lendRequestStore.getState().reset();
@@ -99,7 +98,7 @@ const LendDialogForm = () => {
         </form.AppField>
         <p>
           {reserve.token.symbol} can be used as collateral:{' '}
-          {reserve.usageAsCollateralEnabled ? 'Yes' : 'No'}
+          {reserve.canBeCollateral ? 'Yes' : 'No'}
         </p>
 
         <DialogFooter>
