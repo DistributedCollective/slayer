@@ -6,9 +6,9 @@ import { PoolPositionStat } from '../PoolPositionStat/PoolPositionStat';
 import { AssetsTable } from './components/AssetsTable/AssetsTable';
 
 type LendPositionsListProps = {
-  supplyBalance: number;
-  supplyWeightedApy: number;
-  collateralBalance: number;
+  supplyBalance: string;
+  supplyWeightedApy: string;
+  collateralBalance: string;
   lendPositions: MoneyMarketPoolPosition[];
   loading?: boolean;
 };

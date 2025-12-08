@@ -286,7 +286,7 @@ export default async function (fastify: ZodFastifyInstance) {
         req.params.address,
       );
 
-      await client.query.tTokens.findMany({
+      const tokens = await client.query.tTokens.findMany({
         columns: tTokensSelectors.columns,
         where: and(
           eq(tTokens.chainId, req.chain.chainId),
@@ -379,8 +379,209 @@ export default async function (fastify: ZodFastifyInstance) {
       //     };
       //   });
 
+      const netWorth = Decimal.from(summary.netWorthUSD);
+      const borrowBalance = Decimal.from(summary.totalBorrowsUSD);
+      const supplyBalance = summary.userReservesData.reduce(
+        (s, r) => s.add(r.underlyingBalanceUSD),
+        Decimal.from(0),
+      );
+
+      const collateralBalance = summary.userReservesData.reduce(
+        (s, r) =>
+          r.usageAsCollateralEnabledOnUser ? s.add(r.underlyingBalanceUSD) : s,
+        Decimal.from(0),
+      );
+
+      const computeWeightedSupplyApy = () => {
+        let totalSuppliedUsd = Decimal.from(0);
+        let weightedSupplyAPYSum = Decimal.from(0);
+
+        summary.userReservesData.forEach((reserve) => {
+          const suppliedAmountUsd = Decimal.from(reserve.underlyingBalanceUSD);
+          const supplyAPY = Decimal.from(reserve.reserve.supplyAPY);
+
+          weightedSupplyAPYSum = weightedSupplyAPYSum.add(
+            supplyAPY.mul(suppliedAmountUsd),
+          );
+          totalSuppliedUsd = totalSuppliedUsd.add(suppliedAmountUsd);
+        });
+
+        if (totalSuppliedUsd.eq(0) || weightedSupplyAPYSum.eq(0)) {
+          return Decimal.from(0);
+        }
+        return weightedSupplyAPYSum.div(totalSuppliedUsd).mul(100);
+      };
+
+      const computeWeightedBorrowApy = () => {
+        let totalBorrowedUsd = Decimal.from(0);
+        let weightedBorrowAPYSum = Decimal.from(0);
+
+        summary.userReservesData.forEach((reserve) => {
+          const borrowedAmountUsd = Decimal.from(reserve.totalBorrowsUSD);
+          const borrowAPY = Decimal.from(reserve.reserve.variableBorrowAPY);
+
+          weightedBorrowAPYSum = weightedBorrowAPYSum.add(
+            borrowAPY.mul(borrowedAmountUsd),
+          );
+          totalBorrowedUsd = totalBorrowedUsd.add(borrowedAmountUsd);
+        });
+
+        if (totalBorrowedUsd.eq(0) || weightedBorrowAPYSum.eq(0)) {
+          return Decimal.from(0);
+        }
+        return weightedBorrowAPYSum.div(totalBorrowedUsd).mul(100);
+      };
+
+      const supplyWeightedApy = computeWeightedSupplyApy();
+      const borrowWeightedApy = computeWeightedBorrowApy();
+
+      const netApy = netWorth.eq(0)
+        ? Decimal.from(0)
+        : supplyWeightedApy
+            .mul(supplyBalance)
+            .div(netWorth)
+            .sub(borrowWeightedApy.mul(borrowBalance).div(netWorth));
+
+      const currentLiquidationThreshold = Decimal.from(
+        summary.currentLiquidationThreshold,
+      );
+      const borrowPower = collateralBalance
+        .mul(currentLiquidationThreshold)
+        .div(1.1);
+      const borrowPowerUsed = borrowPower.eq(0)
+        ? Decimal.from(100)
+        : Decimal.from(borrowBalance).div(borrowPower).mul(100);
+
+      const healthFactor = borrowBalance.eq(0)
+        ? Decimal.INFINITY
+        : collateralBalance.mul(currentLiquidationThreshold).div(borrowBalance);
+
+      const collateralRatio = borrowBalance.eq(0)
+        ? Decimal.INFINITY
+        : Decimal.from(summary.healthFactor);
+
+      const userPositions = summary.userReservesData.map((item) => {
+        const token = tokens.find((t) =>
+          areAddressesEqual(t.address, item.underlyingAsset),
+        );
+
+        const availableLiquidity = Decimal.from(
+          item.reserve.availableLiquidity,
+          item.reserve.decimals,
+        );
+        // how much the user can borrow if there is no limit of supply
+        const canBorrow = Decimal.max(
+          borrowPower.sub(borrowBalance).div(item.reserve.priceInUSD),
+          Decimal.ZERO,
+        );
+
+        // available to borrow for user including liquidity limitation
+        const availableToBorrow = availableLiquidity.lt(canBorrow)
+          ? availableLiquidity
+          : canBorrow;
+        const availableToBorrowUsd = availableToBorrow.mul(
+          item.reserve.priceInUSD,
+        );
+
+        const borrowRateMode = Decimal.from(item.variableBorrows).gt(0) ? 2 : 1;
+
+        const canToggleCollateral =
+          !item.usageAsCollateralEnabledOnUser ||
+          (borrowBalance.eq(0)
+            ? Decimal.INFINITY
+            : collateralBalance
+                .sub(item.underlyingBalanceUSD)
+                .div(borrowBalance)
+          ).gt(1.5);
+
+        return {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          id: (item as any).id,
+          pool,
+          token,
+          reserve: {
+            id: item.reserve.id,
+            priceUsd: Decimal.from(item.reserve.priceInUSD).toFixed(
+              USD_DECIMALS,
+            ),
+            liquidity: Decimal.from(item.reserve.totalLiquidity).toString(),
+            liquidityUsd: Decimal.from(item.reserve.totalLiquidity)
+              .mul(Decimal.from(item.reserve.priceInUSD))
+              .toFixed(USD_DECIMALS),
+            borrowApy: Decimal.from(item.reserve.variableBorrowAPY)
+              .mul(100)
+              .toFixed(USD_DECIMALS),
+            canBeBorrowed: item.reserve.borrowingEnabled,
+            supplyApy: Decimal.from(item.reserve.supplyAPY)
+              .mul(100)
+              .toFixed(USD_DECIMALS),
+            canBeCollateral: item.reserve.usageAsCollateralEnabled,
+            isActive: item.reserve.isActive,
+            isFroze: item.reserve.isFrozen,
+            eModes: item.reserve.eModes,
+          },
+          supplied: item.underlyingBalance,
+          suppliedUsd: item.underlyingBalanceUSD,
+
+          supplyApy: Decimal.from(item.reserve.supplyAPY).mul(100).toString(),
+          canToggleCollateral,
+
+          borrowed: item.variableBorrows,
+          borrowedUsd: item.variableBorrowsUSD,
+
+          collateral: item.usageAsCollateralEnabledOnUser,
+
+          availableToBorrow: availableToBorrow.toString(),
+          availableToBorrowUsd: availableToBorrowUsd.toFixed(USD_DECIMALS),
+
+          borrowRateMode,
+          borrowApy: Decimal.from(
+            borrowRateMode === 1
+              ? // @ts-expect-error stableBorrowAPY exists
+                (item.reserve.stableBorrowAPY ?? 0)
+              : item.reserve.variableBorrowAPY,
+          )
+            .mul(100)
+            .toString(),
+          // @ts-expect-error stableBorrowAPY exists
+          stableApy: Decimal.from(item.reserve.stableBorrowAPY ?? 0)
+            .mul(100)
+            .toString(),
+          variableApy: Decimal.from(item.reserve.variableBorrowAPY ?? 0)
+            .mul(100)
+            .toString(),
+        };
+      });
+
       return {
-        data: summary,
+        data: {
+          positions: userPositions,
+          summary: {
+            netApy: netApy.toFixed(USD_DECIMALS),
+            healthFactor: healthFactor.toFixed(USD_DECIMALS),
+            collateralRatio: collateralRatio.toFixed(USD_DECIMALS),
+            borrowPower: borrowPower.toFixed(USD_DECIMALS),
+            borrowPowerUsed: borrowPowerUsed.toFixed(USD_DECIMALS),
+
+            borrowWeightedApy: borrowWeightedApy.toFixed(USD_DECIMALS),
+            supplyWeightedApy: supplyWeightedApy.toFixed(USD_DECIMALS),
+
+            totalLiquidityUsd: supplyBalance.toFixed(USD_DECIMALS),
+            totalCollateralUsd: collateralBalance.toFixed(USD_DECIMALS),
+            totalBorrowsUsd: borrowBalance.toFixed(USD_DECIMALS),
+            availableBorrowsUsd: summary.availableBorrowsUSD,
+
+            currentLoanToValue: summary.currentLoanToValue,
+            currentLiquidationThreshold: summary.currentLiquidationThreshold,
+
+            supplyBalanceUsd: supplyBalance.toFixed(USD_DECIMALS),
+            collateralBalanceUsd: collateralBalance.toFixed(USD_DECIMALS),
+
+            netWorthUsd: summary.netWorthUSD,
+            userEmodeCategoryId: summary.userEmodeCategoryId,
+            isInIsolationMode: summary.isInIsolationMode,
+          },
+        },
       };
     },
   );

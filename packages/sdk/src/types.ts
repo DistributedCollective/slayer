@@ -78,18 +78,51 @@ export type MoneyMarketPoolPosition = {
   id: string;
   pool: MoneyMarketPool;
   token: SdkToken;
-  reserve: any; // todo
+  reserve: Omit<MoneyMarketPoolReserve, 'pool' | 'token'>;
 
-  suppliedBalance: string;
-  suppliedBalanceUsd: string;
-  borrowedBalance: string;
-  borrowedBalanceUsd: string;
+  supplied: string;
+  suppliedUsd: string;
 
-  underlyingAsset: string;
-  scaledATokenBalance: string;
-  usageAsCollateralEnabledOnUser: boolean;
-  stableBorrowRate: string;
-  scaledVariableDebt: string;
-  principalStableDebt: string;
-  stableBorrowLastUpdateTimestamp: number;
+  supplyApy: string;
+  canToggleCollateral: boolean;
+
+  borrowed: string;
+  borrowedUsd: string;
+
+  borrowApy: string;
+  stableApy: string;
+  variableApy: string;
+
+  collateral: boolean;
+
+  availableToBorrow: string;
+  availableToBorrowUsd: string;
+
+  borrowRateMode: BorrowRateMode;
+};
+
+export type MoneyMarketUserSummary = {
+  netApy: string;
+  healthFactor: string;
+  collateralRatio: string;
+  borrowPower: string;
+  borrowPowerUsed: string;
+
+  totalLiquidityUsd: string;
+  totalCollateralUsd: string;
+  totalBorrowsUsd: string;
+  availableBorrowsUsd: string;
+
+  currentLoanToValue: string;
+  currentLiquidationThreshold: string;
+
+  supplyBalanceUsd: string;
+  collateralBalanceUsd: string;
+
+  netWorthUsd: string;
+  userEmodeCategoryId: number | null;
+  isInIsolationMode: boolean;
+
+  borrowWeightedApy: string;
+  supplyWeightedApy: string;
 };

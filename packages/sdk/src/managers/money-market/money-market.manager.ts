@@ -11,6 +11,7 @@ import {
   MoneyMarketPool,
   MoneyMarketPoolPosition,
   MoneyMarketPoolReserve,
+  MoneyMarketUserSummary,
   SdkPaginatedResponse,
   TransactionOpts,
 } from '../../types.js';
@@ -132,13 +133,16 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
     opts: SdkRequestOptions = {},
   ) {
     const response = await this.ctx.http.request<{
-      data: { userReserves: MoneyMarketPoolPosition[] };
+      data: {
+        positions: MoneyMarketPoolPosition[];
+        summary: MoneyMarketUserSummary;
+      };
     }>(`/${this.ctx.chainId}/money-market/${pool}/user/${user}/positions`, {
       ...opts,
       query: buildQuery(opts.query),
     });
 
-    return { ...response, data: response.data.userReserves };
+    return response;
   }
 
   async borrow<account extends Account>(

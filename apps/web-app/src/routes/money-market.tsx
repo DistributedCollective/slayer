@@ -112,19 +112,25 @@ function RouteComponent() {
         <div className="grid grid-cols-1 2xl:grid-cols-2 2xl:gap-4 space-y-4">
           <div className="space-y-4">
             <LendPositionsList
-              lendPositions={positions?.data ?? []}
-              supplyBalance={100}
-              collateralBalance={50}
-              supplyWeightedApy={2.5}
+              lendPositions={positions?.data?.positions ?? []}
+              supplyBalance={positions?.data?.summary?.supplyBalanceUsd ?? '0'}
+              collateralBalance={
+                positions?.data?.summary?.collateralBalanceUsd ?? '0'
+              }
+              supplyWeightedApy={
+                positions?.data?.summary?.supplyWeightedApy ?? '0'
+              }
             />
             <LendAssetsList lendAssets={reserves?.data ?? []} />
           </div>
           <div className="space-y-4">
             <BorrowPositionsList
-              borrowPositions={positions?.data ?? []}
-              supplyBalance={10}
-              borrowPower={1.29}
-              supplyWeightedApy={0.05}
+              borrowPositions={positions?.data?.positions ?? []}
+              borrowBalance={positions?.data?.summary?.totalBorrowsUsd ?? '0'}
+              borrowPower={positions?.data?.summary?.borrowPowerUsed ?? '0'}
+              borrowWeightedApy={
+                positions?.data?.summary?.borrowWeightedApy ?? '0'
+              }
             />
             <BorrowAssetsList borrowAssets={borrowAssets} />
           </div>

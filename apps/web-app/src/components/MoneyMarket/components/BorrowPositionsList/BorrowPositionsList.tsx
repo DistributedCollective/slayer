@@ -7,16 +7,16 @@ import { PoolPositionStat } from '../PoolPositionStat/PoolPositionStat';
 import { AssetsTable } from './components/AssetsTable/AssetsTable';
 
 type BorrowPositionsListProps = {
-  supplyBalance: number;
-  supplyWeightedApy: number;
-  borrowPower: number;
+  borrowBalance: string;
+  borrowWeightedApy: string;
+  borrowPower: string;
   borrowPositions: MoneyMarketPoolPosition[];
   loading?: boolean;
 };
 
 export const BorrowPositionsList: FC<BorrowPositionsListProps> = ({
-  supplyBalance,
-  supplyWeightedApy,
+  borrowBalance,
+  borrowWeightedApy,
   borrowPower,
   borrowPositions,
 }) => {
@@ -48,20 +48,37 @@ export const BorrowPositionsList: FC<BorrowPositionsListProps> = ({
         <PoolPositionStat
           label="Balance"
           value={
-            <AmountRenderer value={supplyBalance} decimals={2} prefix="$" />
+            <AmountRenderer
+              value={borrowBalance}
+              decimals={2}
+              prefix="$"
+              showApproxSign
+            />
           }
         />
         <PoolPositionStat
           label="APY"
           labelInfo="Compounding interest accrued by deposit or borrowing on the lending pool"
           value={
-            <AmountRenderer value={supplyWeightedApy} decimals={2} suffix="%" />
+            <AmountRenderer
+              value={borrowWeightedApy}
+              decimals={2}
+              suffix="%"
+              showApproxSign
+            />
           }
         />
         <PoolPositionStat
           label="Borrow power used"
           labelInfo="The percentage of your borrow power that is currently being used."
-          value={<AmountRenderer value={borrowPower} decimals={2} suffix="%" />}
+          value={
+            <AmountRenderer
+              value={borrowPower}
+              decimals={2}
+              suffix="%"
+              showApproxSign
+            />
+          }
         />
       </div>
 

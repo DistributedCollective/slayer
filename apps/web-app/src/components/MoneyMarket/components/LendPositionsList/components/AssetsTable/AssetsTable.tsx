@@ -21,48 +21,9 @@ type AssetsTableProps = {
 
 export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
   const items = useMemo(
-    () => assets.filter((asset) => Decimal.from(asset.suppliedBalance).gt(0)),
+    () => assets.filter((asset) => Decimal.from(asset.supplied).gt(0)),
     [assets],
   );
-
-  // const [sortDirection, setSortDirection] = useState<OrderSorting>(
-  //   OrderType.ASC,
-  // );
-  // const [sortedAssets, setSortedAssets] =
-  //   useState<MoneyMarketPoolPosition[]>(assets);
-  // useEffect(() => {
-  //   setSortedAssets(assets);
-  // }, [assets]);
-
-  // const sortAssets = useCallback(
-  //   (column: keyof MoneyMarketPoolPosition) => {
-  //     const newSortDirection =
-  //       sortDirection === OrderType.ASC ? OrderType.DESC : OrderType.ASC;
-  //     setSortDirection(newSortDirection);
-
-  //     const sorted = [...sortedAssets].sort((a, b) => {
-  //       if (column === OrderColumn.SYMBOL) {
-  //         return newSortDirection === OrderType.ASC
-  //           ? a[column].localeCompare(b[column])
-  //           : b[column].localeCompare(a[column]);
-  //       } else if (column === OrderColumn.BALANCE) {
-  //         const balanceA = parseFloat(a.balance.replace(/,/g, ''));
-  //         const balanceB = parseFloat(b.balance.replace(/,/g, ''));
-  //         return newSortDirection === OrderType.ASC
-  //           ? balanceA - balanceB
-  //           : balanceB - balanceA;
-  //       } else if (column === OrderColumn.APY) {
-  //         const apyA = parseFloat(a.apy.replace('%', ''));
-  //         const apyB = parseFloat(b.apy.replace('%', ''));
-  //         return newSortDirection === OrderType.ASC ? apyA - apyB : apyB - apyA;
-  //       }
-  //       return 0;
-  //     });
-
-  //     setSortedAssets(sorted);
-  //   },
-  //   [sortDirection],
-  // );
 
   const toggleCollateral = useCallback((symbol: string) => {
     // setSortedAssets((prevAssets) =>
@@ -81,31 +42,11 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
           <TableHead>
             <div className="flex items-center gap-2">
               <span>Asset</span>
-              {/* {assets.some((asset) => asset.isSortable) && (
-                <Button
-                  variant="ghost"
-                  className="p-0 cursor-pointer hover:opacity-80 dark:hover:bg-transparent"
-                  onClick={() => sortAssets(OrderColumn.SYMBOL)}
-                  aria-label="Sort Assets"
-                >
-                  <img src={iconSort} alt="Sort Icon" className="w-2 h-2.5" />
-                </Button>
-              )} */}
             </div>
           </TableHead>
           <TableHead>
             <div className="flex items-center gap-2">
               <span>Balance</span>
-              {/* {assets.some((asset) => asset.isSortable) && (
-                <Button
-                  variant="ghost"
-                  className="p-0 cursor-pointer hover:opacity-80 dark:hover:bg-transparent"
-                  onClick={() => sortAssets(OrderColumn.BALANCE)}
-                  aria-label="Sort Wallet Balance"
-                >
-                  <img src={iconSort} alt="Sort Icon" className="w-2 h-2.5" />
-                </Button>
-              )} */}
             </div>
           </TableHead>
           <TableHead>
@@ -114,16 +55,6 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                 APY
                 <InfoButton content="APY - The annual percentage yield (APY) is the real rate of return earned on an investment, taking into account the effect of compounding interest." />
               </div>
-              {/* {assets.some((asset) => asset.isSortable) && (
-                <Button
-                  variant="ghost"
-                  className="p-0 cursor-pointer hover:opacity-80 dark:hover:bg-transparent"
-                  onClick={() => sortAssets(OrderColumn.APY)}
-                  aria-label="Sort APY"
-                >
-                  <img src={iconSort} alt="Sort Icon" className="w-2 h-2.5" />
-                </Button>
-              )} */}
             </div>
           </TableHead>
           <TableHead>
@@ -153,10 +84,13 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                 </div>
               </TableCell>
               <TableCell className="border-neutral-800 border-y">
-                <AmountRenderer value={asset.suppliedBalance} />
+                <AmountRenderer
+                  value={asset.supplied}
+                  suffix={asset.token.symbol}
+                />
                 <p className="text-neutral-500 font-medium text-xs">
                   <AmountRenderer
-                    value={asset.suppliedBalanceUsd}
+                    value={asset.suppliedUsd}
                     prefix="$"
                     showApproxSign
                   />
@@ -164,16 +98,19 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
               </TableCell>
               <TableCell className="border-neutral-800 border-y">
                 <div className="flex items-center">
-                  <p className="text-gray-50 font-medium">
-                    {asset.stableBorrowRate}
-                  </p>
+                  <AmountRenderer
+                    value={asset.supplyApy}
+                    suffix="%"
+                    className="text-gray-50 font-medium"
+                    showApproxSign
+                  />
                 </div>
               </TableCell>
               <TableCell className="border-neutral-800 border-y">
                 <div className="flex items-center">
                   <Switch
                     className="cursor-pointer data-[state=checked]:bg-primary"
-                    checked={asset.usageAsCollateralEnabledOnUser}
+                    checked={asset.collateral}
                     id={`collateral-${asset.token.address}`}
                     onClick={() => toggleCollateral(asset.id)}
                     // disabled={!asset}
