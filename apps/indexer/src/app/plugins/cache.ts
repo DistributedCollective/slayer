@@ -54,7 +54,7 @@ export type RouteCacheOptions = {
    */
   backgroundRevalidate?: boolean;
   /** Build a custom cache key based on request */
-  key?: (req: FastifyRequest) => string;
+  key?: (req: FastifyRequest<any, any, any, any>) => string;
 };
 
 export type RedisCachePluginOptions = {

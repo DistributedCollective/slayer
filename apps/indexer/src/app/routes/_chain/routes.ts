@@ -16,7 +16,11 @@ import {
   fetchUserReserves,
   selectPoolById,
 } from '../../../libs/loaders/money-market';
-import { paginationResponse, paginationSchema } from '../../../libs/pagination';
+import {
+  paginationResponse,
+  paginationSchema,
+  paginationSchemaQuery,
+} from '../../../libs/pagination';
 import { ZodFastifyInstance } from '../../../libs/server';
 import { ze } from '../../../libs/validators/validators';
 
@@ -33,7 +37,8 @@ export default async function (fastify: ZodFastifyInstance) {
       },
       config: {
         cache: {
-          key: (req) => `chain:${req.chain.chainId}:tokens`,
+          key: (req) =>
+            `chain:${req.chain.chainId}:tokens:${paginationSchemaQuery(req.query)}`,
           ttlSeconds: 30,
           enabled: true,
         },
@@ -58,7 +63,9 @@ export default async function (fastify: ZodFastifyInstance) {
     '/money-market',
     {
       config: {
-        cache: true,
+        cache: {
+          key: (req) => `chain:${req.chain.chainId}:money-market:pools`,
+        },
       },
     },
     async (req, reply) => {
@@ -81,13 +88,15 @@ export default async function (fastify: ZodFastifyInstance) {
     '/money-market/:pool/reserves',
     {
       schema: {
-        querystring: paginationSchema,
         params: z.object({
           pool: z.string(),
         }),
       },
       config: {
-        cache: false,
+        cache: {
+          key: (req: FastifyRequest<{ Params: { pool: string } }>) =>
+            `chain:${req.chain.chainId}:money-market:reserves:${req.params.pool}`,
+        },
       },
     },
     async (req: FastifyRequest<{ Params: { pool: string } }>, reply) => {
@@ -151,22 +160,10 @@ export default async function (fastify: ZodFastifyInstance) {
           isActive: item.isActive,
           isFroze: item.isFrozen,
           // eModes: item.eModes,
-          i: item,
         };
       });
 
       return { data: { reservesData: items, baseCurrencyData } };
-
-      // return {
-      //   data: items
-      //     .map((item) => ({
-      //       ...item,
-      //       token: tokens.find((t) => t.address === item.underlyingAsset),
-      //     }))
-      //     .filter((i) => i.token),
-      //   nextCursor: null,
-      //   count: items.length,
-      // };
     },
   );
 
@@ -174,7 +171,6 @@ export default async function (fastify: ZodFastifyInstance) {
     '/money-market/:pool/user/:address/positions',
     {
       schema: {
-        querystring: paginationSchema,
         params: z.object({
           pool: z.string(),
           address: ze.address,
@@ -182,9 +178,10 @@ export default async function (fastify: ZodFastifyInstance) {
       },
       config: {
         cache: {
-          enabled: false,
-          ttlSeconds: 10,
-          staleTtlSeconds: 15,
+          key: (
+            req: FastifyRequest<{ Params: { pool: string; address: string } }>,
+          ) =>
+            `chain:${req.chain.chainId}:money-market:user-positions:${req.params.pool}:${req.params.address}`,
         },
       },
     },
@@ -442,7 +439,6 @@ export default async function (fastify: ZodFastifyInstance) {
             userEmodeCategoryId: summary.userEmodeCategoryId,
             isInIsolationMode: summary.isInIsolationMode,
           },
-          reservesData,
         },
       };
     },

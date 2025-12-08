@@ -39,3 +39,6 @@ export const paginationResponse = <T>(
     count: items.length,
   };
 };
+
+export const paginationSchemaQuery = (d: any) =>
+  JSON.stringify({ limit: d.limit, cursor: d.cursor, search: d.search });
