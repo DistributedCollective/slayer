@@ -16,8 +16,8 @@
     }
   },
   "dependencies": {
-    "@aave/contract-helpers": "^1.36.2",
-    "@aave/math-utils": "^1.36.2",
+    "@aave/contract-helpers": "1.29.1",
+    "@aave/math-utils": "1.29.1",
     "@sovryn/slayer-shared": "workspace:*",
     "debug": "4.4.3",
     "mobx": "^6.15.0",

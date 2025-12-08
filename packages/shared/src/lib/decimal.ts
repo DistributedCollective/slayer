@@ -62,6 +62,10 @@ export class Decimal {
     throw new Error(`Cannot convert to Decimal: ${value}`);
   }
 
+  static pow(exponent: number): Decimal {
+    return Decimal.from(1).mul(10 ** exponent);
+  }
+
   toBigInt(): bigint {
     return BigInt(this.d.mul(new D(10).pow(this.precision)).toFixed(0));
   }

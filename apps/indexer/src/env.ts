@@ -1,5 +1,13 @@
 import 'dotenv/config';
-import { bool, cleanEnv, makeValidator, port, str, testOnly } from 'envalid';
+import {
+  bool,
+  cleanEnv,
+  makeValidator,
+  port,
+  str,
+  testOnly,
+  url,
+} from 'envalid';
 
 export const ENV = cleanEnv(process.env, {
   PORT: port({ default: 8000 }),
@@ -25,4 +33,8 @@ export const ENV = cleanEnv(process.env, {
       throw new Error('FLAGS must be a comma-separated list of strings');
     }
   })({ default: [] }),
+
+  RPC_BOB_TESTNET: url({ default: undefined }),
+
+  NO_CACHE: bool({ default: false }),
 });

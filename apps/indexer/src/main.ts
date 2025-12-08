@@ -4,15 +4,11 @@ import './libs/shims';
 // other imports
 import cors from '@fastify/cors';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
-import Fastify from 'fastify';
-import {
-  serializerCompiler,
-  validatorCompiler,
-} from 'fastify-type-provider-zod';
 import path from 'node:path';
 import { app } from './app/app';
 import { client } from './database/client';
 import { logger } from './libs/logger';
+import { zodFastify } from './libs/server';
 import { onShutdown } from './libs/shutdown';
 import { notifyReady, onReady } from './libs/startup';
 // spawn background jobs, workers, crontab, etc
@@ -20,14 +16,11 @@ import './crontab';
 import './workers/spawner';
 
 // Instantiate Fastify with some config
-const server = Fastify({
+const server = zodFastify({
   loggerInstance: logger,
   disableRequestLogging: true,
   trustProxy: true,
 });
-
-server.setValidatorCompiler(validatorCompiler);
-server.setSerializerCompiler(serializerCompiler);
 
 // Enable CORS with the given origins.
 server.register(cors, {

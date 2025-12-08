@@ -6,16 +6,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table/table';
-import {
-  Fragment,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type FC,
-} from 'react';
+import { Fragment, useCallback, useMemo, useState, type FC } from 'react';
 
-import iconSort from '@/assets/lend/icon-sort.svg';
 import { AmountRenderer } from '@/components/ui/amount-renderer';
 import { Button } from '@/components/ui/button';
 import { InfoButton } from '@/components/ui/info-button';
@@ -26,36 +18,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  OrderColumn,
-  OrderType,
-  type OrderSorting,
-} from '@/components/ui/table/table.types';
+import type { MoneyMarketPoolPosition } from '@sovryn/slayer-sdk';
+import { Decimal } from '@sovryn/slayer-shared';
 import type { BorrowPosition } from '../../BorrowPositionsList.types';
 
 type AssetsTableProps = {
-  assets: BorrowPosition[];
+  assets: MoneyMarketPoolPosition[];
 };
 
 export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
-  const [sortDirection, setSortDirection] = useState<OrderSorting>(
-    OrderType.ASC,
+  const items = useMemo(
+    () => assets.filter((a) => Decimal.from(a.borrowed).gt(0)),
+    [assets],
   );
-  const [sortedAssets, setSortedAssets] = useState<BorrowPosition[]>(assets);
 
   const [selectedApy, setSelectedApy] = useState<Record<string, number>>({});
-
-  useEffect(() => {
-    setSortedAssets(assets);
-    setSelectedApy((prev) => {
-      const next = { ...prev };
-      assets.forEach((a, i) => {
-        const id = rowKey(a, i);
-        if (next[id] == null) next[id] = inferDefaultSelected(a);
-      });
-      return next;
-    });
-  }, [assets]);
 
   const parsePct = (v: unknown): number => {
     if (typeof v === 'number') return v;
@@ -87,49 +64,6 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
     [selectedApy, rowKey],
   );
 
-  const sortAssets = useCallback(
-    (column: OrderColumn) => {
-      const nextDir =
-        sortDirection === OrderType.ASC ? OrderType.DESC : OrderType.ASC;
-      setSortDirection(nextDir);
-
-      const sorted = [...sortedAssets].sort((a, b) => {
-        switch (column) {
-          case OrderColumn.SYMBOL: {
-            const cmp = a.symbol.localeCompare(b.symbol);
-            return nextDir === OrderType.ASC ? cmp : -cmp;
-          }
-          case OrderColumn.BALANCE: {
-            const av = parseFloat(String(a.balance).replace(/,/g, '')) || 0;
-            const bv = parseFloat(String(b.balance).replace(/,/g, '')) || 0;
-            return nextDir === OrderType.ASC ? av - bv : bv - av;
-          }
-          case OrderColumn.APY:
-          case OrderColumn.APY_TYPE: {
-            const ai = assets.indexOf(a);
-            const bi = assets.indexOf(b);
-            const av = currentApy(a, ai);
-            const bv = currentApy(b, bi);
-            return nextDir === OrderType.ASC ? av - bv : bv - av;
-          }
-          default:
-            return 0;
-        }
-      });
-
-      setSortedAssets(sorted);
-    },
-    [sortDirection, sortedAssets, assets, currentApy],
-  );
-
-  const handleApyTypeChange = useCallback(
-    (asset: BorrowPosition, idx: number, value: string) => {
-      const id = rowKey(asset, idx);
-      setSelectedApy((prev) => ({ ...prev, [id]: Number(value) }));
-      setSortedAssets((prev) => [...prev]);
-    },
-    [rowKey],
-  );
   return (
     <Table className="w-full border-separate">
       <TableHeader>
@@ -137,31 +71,11 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
           <TableHead>
             <div className="flex items-center gap-2">
               <span>Asset</span>
-              {assets.some((a) => a.isSortable) && (
-                <Button
-                  variant="ghost"
-                  className="p-0 cursor-pointer hover:opacity-80 dark:hover:bg-transparent"
-                  onClick={() => sortAssets(OrderColumn.SYMBOL)}
-                  aria-label="Sort Assets"
-                >
-                  <img src={iconSort} alt="Sort" className="w-2 h-2.5" />
-                </Button>
-              )}
             </div>
           </TableHead>
           <TableHead>
             <div className="flex items-center gap-2">
               <span>Balance</span>
-              {assets.some((a) => a.isSortable) && (
-                <Button
-                  variant="ghost"
-                  className="p-0 cursor-pointer hover:opacity-80 dark:hover:bg-transparent"
-                  onClick={() => sortAssets(OrderColumn.BALANCE)}
-                  aria-label="Sort Wallet Balance"
-                >
-                  <img src={iconSort} alt="Sort" className="w-2 h-2.5" />
-                </Button>
-              )}
             </div>
           </TableHead>
           <TableHead>
@@ -170,16 +84,6 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                 APY
                 <InfoButton content="APY is the annual percentage yield including compounding." />
               </div>
-              {assets.some((a) => a.isSortable) && (
-                <Button
-                  variant="ghost"
-                  className="p-0 cursor-pointer hover:opacity-80 dark:hover:bg-transparent"
-                  onClick={() => sortAssets(OrderColumn.APY)}
-                  aria-label="Sort APY"
-                >
-                  <img src={iconSort} alt="Sort" className="w-2 h-2.5" />
-                </Button>
-              )}
             </div>
           </TableHead>
           <TableHead>
@@ -188,16 +92,6 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                 APY type
                 <InfoButton content="Variable rate changes with market conditions." />
               </div>
-              {assets.some((a) => a.isSortable) && (
-                <Button
-                  variant="ghost"
-                  className="p-0 cursor-pointer hover:opacity-80 dark:hover:bg-transparent"
-                  onClick={() => sortAssets(OrderColumn.APY_TYPE)}
-                  aria-label="Sort APY type"
-                >
-                  <img src={iconSort} alt="Sort" className="w-2 h-2.5" />
-                </Button>
-              )}
             </div>
           </TableHead>
           <TableHead />
@@ -205,62 +99,75 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
       </TableHeader>
 
       <TableBody>
-        {sortedAssets.map((asset, index) => {
-          const selected = currentApy(asset, index);
-          const types = (asset.apyType ?? [])
-            .map(Number)
-            .filter(Number.isFinite);
-          const options = [selected, ...types.filter((t) => t !== selected)];
-
+        {items.map((asset, index) => {
           return (
-            <Fragment key={rowKey(asset, index)}>
+            <Fragment key={asset.id}>
               <TableRow className="hover:bg-transparent">
                 <TableCell className="border-neutral-800 border-y border-l rounded-tl-[1.25rem] rounded-bl-[1.25rem]">
                   <div className="flex items-center min-w-24">
                     <img
-                      src={asset.icon}
-                      alt={asset.symbol}
+                      src={asset.token.logoUrl}
+                      alt={asset.token.name}
                       className="w-8 h-8"
                     />
                     <div className="ml-2">
-                      <p className="text-gray-50 font-medium">{asset.symbol}</p>
+                      <p className="text-gray-50 font-medium">
+                        {asset.token.symbol}
+                      </p>
                     </div>
                   </div>
                 </TableCell>
 
                 <TableCell className="border-neutral-800 border-y">
-                  <AmountRenderer value={asset.balance} />
-                  <p className="text-neutral-500 font-medium text-xs">
-                    <AmountRenderer value={asset.balanceUsd} prefix="$" />
-                  </p>
+                  <div className="flex flex-col gap-1">
+                    <AmountRenderer value={asset.borrowed} />
+                    <AmountRenderer
+                      value={asset.borrowedUsd}
+                      prefix="$"
+                      showApproxSign
+                      className="text-neutral-500 font-medium text-xs"
+                    />
+                  </div>
                 </TableCell>
 
                 <TableCell className="border-neutral-800 border-y">
                   <div className="flex items-center">
-                    <AmountRenderer value={selected} suffix="%" />
+                    <AmountRenderer
+                      value={asset.borrowApy}
+                      suffix="%"
+                      showApproxSign
+                    />
                   </div>
                 </TableCell>
 
                 <TableCell className="border-neutral-800 border-y">
                   <div className="flex items-center">
                     <Select
-                      value={String(selected)}
-                      onValueChange={(val) =>
-                        handleApyTypeChange(asset, index, val)
-                      }
+                      value={String(asset.borrowApy)}
+                      // onValueChange={(val) =>
+                      //   handleApyTypeChange(asset, index, val)
+                      // }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {options.map((type) => (
-                          <SelectItem
-                            value={String(type)}
-                            key={`${rowKey(asset, index)}-${type}`}
-                          >
-                            APY, variable {type}%
-                          </SelectItem>
-                        ))}
+                        <SelectItem value={String(asset.variableBorrowApy)}>
+                          APY, variable{' '}
+                          <AmountRenderer
+                            value={asset.variableBorrowApy}
+                            suffix="%"
+                            showApproxSign
+                          />
+                        </SelectItem>
+                        <SelectItem value={String(asset.stableBorrowApy)}>
+                          APY, stable{' '}
+                          <AmountRenderer
+                            value={asset.stableBorrowApy}
+                            suffix="%"
+                            showApproxSign
+                          />
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -278,7 +185,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                 </TableCell>
               </TableRow>
 
-              {index !== sortedAssets.length - 1 && (
+              {index !== items.length - 1 && (
                 <TableRow className="h-1 hover:bg-transparent border-none">
                   <TableCell className="p-0.5" colSpan={5}></TableCell>
                 </TableRow>
@@ -287,7 +194,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
           );
         })}
 
-        {sortedAssets.length === 0 && (
+        {items.length === 0 && (
           <TableRow>
             <TableCell colSpan={5} className="text-center py-4">
               No assets found.

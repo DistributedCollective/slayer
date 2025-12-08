@@ -1,11 +1,15 @@
+import {
+  formatReserves,
+  formatUserSummary,
+  USD_DECIMALS,
+} from '@aave/math-utils';
 import { areAddressesEqual, Decimal } from '@sovryn/slayer-shared';
 import { and, asc, eq, gte, inArray } from 'drizzle-orm';
-import { FastifyInstance, FastifyRequest } from 'fastify';
-import { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { FastifyRequest } from 'fastify';
 import z from 'zod';
 import { client } from '../../../database/client';
 import { tTokens } from '../../../database/schema';
-import { TTokenSelected, tTokensSelectors } from '../../../database/selectors';
+import { tTokensSelectors } from '../../../database/selectors';
 import {
   fetchPoolList,
   fetchPoolReserves,
@@ -13,71 +17,15 @@ import {
   selectPoolById,
 } from '../../../libs/loaders/money-market';
 import { paginationResponse, paginationSchema } from '../../../libs/pagination';
-import { transformUserReservesData } from '../../../libs/utils/user-reserves';
+import { ZodFastifyInstance } from '../../../libs/server';
+import { ze } from '../../../libs/validators/validators';
 
-interface ReserveDataHumanized {
-  originalId: number;
-  id: string;
-  underlyingAsset: string;
-
-  token: TTokenSelected;
-
-  name: string;
-  symbol: string;
-  decimals: number;
-  baseLTVasCollateral: string;
-  reserveLiquidationThreshold: string;
-  reserveLiquidationBonus: string;
-  reserveFactor: string;
-  usageAsCollateralEnabled: boolean;
-  borrowingEnabled: boolean;
-  isActive: boolean;
-  isFrozen: boolean;
-  liquidityIndex: string;
-  variableBorrowIndex: string;
-  liquidityRate: string;
-  variableBorrowRate: string;
-  lastUpdateTimestamp: number;
-  aTokenAddress: string;
-  variableDebtTokenAddress: string;
-  interestRateStrategyAddress: string;
-  availableLiquidity: string;
-  totalScaledVariableDebt: string;
-  priceInMarketReferenceCurrency: string;
-  priceOracle: string;
-  variableRateSlope1: string;
-  variableRateSlope2: string;
-  baseVariableBorrowRate: string;
-  optimalUsageRatio: string;
-  // v3 only
-  isPaused: boolean;
-  isSiloedBorrowing: boolean;
-  accruedToTreasury: string;
-  unbacked: string;
-  isolationModeTotalDebt: string;
-  flashLoanEnabled: boolean;
-  debtCeiling: string;
-  debtCeilingDecimals: number;
-  borrowCap: string;
-  supplyCap: string;
-  borrowableInIsolation: boolean;
-  virtualAccActive: boolean;
-  virtualUnderlyingBalance: string;
-}
-
-interface PoolBaseCurrencyHumanized {
-  marketReferenceCurrencyDecimals: number;
-  marketReferenceCurrencyPriceInUsd: string;
-  networkBaseTokenPriceInUsd: string;
-  networkBaseTokenPriceDecimals: number;
-}
-
-export default async function (fastify: FastifyInstance) {
+export default async function (fastify: ZodFastifyInstance) {
   fastify.get('/', async (req) => {
     return { data: req.chain };
   });
 
-  fastify.withTypeProvider<ZodTypeProvider>().get(
+  fastify.get(
     '/tokens',
     {
       schema: {
@@ -106,7 +54,7 @@ export default async function (fastify: FastifyInstance) {
     },
   );
 
-  fastify.withTypeProvider<ZodTypeProvider>().get(
+  fastify.get(
     '/money-market',
     {
       config: {
@@ -129,7 +77,7 @@ export default async function (fastify: FastifyInstance) {
     },
   );
 
-  fastify.withTypeProvider<ZodTypeProvider>().get(
+  fastify.get(
     '/money-market/:pool/reserves',
     {
       schema: {
@@ -139,7 +87,7 @@ export default async function (fastify: FastifyInstance) {
         }),
       },
       config: {
-        cache: true,
+        cache: false,
       },
     },
     async (req: FastifyRequest<{ Params: { pool: string } }>, reply) => {
@@ -150,8 +98,10 @@ export default async function (fastify: FastifyInstance) {
         return reply.notFound('Pool not found');
       }
 
-      const { 0: reservesRaw, 1: poolBaseCurrencyRaw } =
-        await fetchPoolReserves(req.chain.chainId, pool);
+      const { reservesData, baseCurrencyData } = await fetchPoolReserves(
+        req.chain.chainId,
+        pool,
+      );
 
       const tokens = await client.query.tTokens.findMany({
         columns: tTokensSelectors.columns,
@@ -159,98 +109,53 @@ export default async function (fastify: FastifyInstance) {
           eq(tTokens.chainId, req.chain.chainId),
           inArray(
             tTokens.address,
-            reservesRaw.map((i) => i.underlyingAsset.toLowerCase()),
+            reservesData.map((i) => i.underlyingAsset.toLowerCase()),
           ),
         ),
       });
 
-      const reservesData: Partial<ReserveDataHumanized>[] = reservesRaw.map(
-        (reserveRaw, index) => {
-          // const virtualUnderlyingBalance =
-          //   reserveRaw.virtualUnderlyingBalance.toString();
-          // const { virtualAccActive } = reserveRaw;
-          return {
-            originalId: index,
-            id: `${req.chain.chainId}-${reserveRaw.underlyingAsset}-${pool.address}`.toLowerCase(),
-            // underlyingAsset: reserveRaw.underlyingAsset.toLowerCase(),
-
-            token: tokens.find((t) =>
-              areAddressesEqual(t.address, reserveRaw.underlyingAsset),
-            ),
-            pool,
-
-            // name: reserveRaw.name,
-            // symbol: ammSymbolMap[reserveRaw.underlyingAsset.toLowerCase()]
-            //   ? ammSymbolMap[reserveRaw.underlyingAsset.toLowerCase()]
-            //   : reserveRaw.symbol,
-            // decimals: reserveRaw.decimals.toNumber(),
-            baseLTVasCollateral: reserveRaw.baseLTVasCollateral.toString(),
-            reserveLiquidationThreshold:
-              reserveRaw.reserveLiquidationThreshold.toString(),
-            reserveLiquidationBonus:
-              reserveRaw.reserveLiquidationBonus.toString(),
-            reserveFactor: reserveRaw.reserveFactor.toString(),
-            usageAsCollateralEnabled: reserveRaw.usageAsCollateralEnabled,
-            borrowingEnabled: reserveRaw.borrowingEnabled,
-            isActive: reserveRaw.isActive,
-            isFrozen: reserveRaw.isFrozen,
-            liquidityIndex: reserveRaw.liquidityIndex.toString(),
-            variableBorrowIndex: reserveRaw.variableBorrowIndex.toString(),
-            liquidityRate: reserveRaw.liquidityRate.toString(),
-            variableBorrowRate: reserveRaw.variableBorrowRate.toString(),
-            lastUpdateTimestamp: reserveRaw.lastUpdateTimestamp,
-            aTokenAddress: reserveRaw.aTokenAddress.toString(),
-            variableDebtTokenAddress:
-              reserveRaw.variableDebtTokenAddress.toString(),
-            interestRateStrategyAddress:
-              reserveRaw.interestRateStrategyAddress.toString(),
-            availableLiquidity: Decimal.from(
-              reserveRaw.availableLiquidity,
-              reserveRaw.decimals.toNumber(),
-            ).toString(),
-            // availableLiquidity: reserveRaw.availableLiquidity.toString(),
-            totalScaledVariableDebt:
-              reserveRaw.totalScaledVariableDebt.toString(),
-            priceInMarketReferenceCurrency:
-              reserveRaw.priceInMarketReferenceCurrency.toString(),
-            // priceOracle: reserveRaw.priceOracle,
-            variableRateSlope1: reserveRaw.variableRateSlope1.toString(),
-            variableRateSlope2: reserveRaw.variableRateSlope2.toString(),
-            // baseVariableBorrowRate:
-            //   reserveRaw.baseVariableBorrowRate.toString(),
-            // optimalUsageRatio: reserveRaw.optimalUsageRatio.toString(),
-            // new fields
-            // isPaused: reserveRaw.isPaused,
-            // debtCeiling: reserveRaw.debtCeiling.toString(),
-            // borrowCap: reserveRaw.borrowCap.toString(),
-            // supplyCap: reserveRaw.supplyCap.toString(),
-            // borrowableInIsolation: reserveRaw.borrowableInIsolation,
-            // accruedToTreasury: reserveRaw.accruedToTreasury.toString(),
-            // unbacked: reserveRaw.unbacked.toString(),
-            // isolationModeTotalDebt:
-            //   reserveRaw.isolationModeTotalDebt.toString(),
-            // debtCeilingDecimals: reserveRaw.debtCeilingDecimals.toNumber(),
-            // isSiloedBorrowing: reserveRaw.isSiloedBorrowing,
-            // flashLoanEnabled: reserveRaw.flashLoanEnabled,
-            // virtualAccActive,
-            // virtualUnderlyingBalance,
-          };
-        },
-      );
-
-      const baseCurrencyData: PoolBaseCurrencyHumanized = {
-        // this is to get the decimals from the unit so 1e18 = string length of 19 - 1 to get the number of 0
+      const data = formatReserves({
+        reserves: reservesData,
+        currentTimestamp: Math.floor(Date.now() / 1000),
+        marketReferencePriceInUsd:
+          baseCurrencyData.marketReferenceCurrencyPriceInUsd,
         marketReferenceCurrencyDecimals:
-          poolBaseCurrencyRaw.marketReferenceCurrencyUnit.toString().length - 1,
-        marketReferenceCurrencyPriceInUsd:
-          poolBaseCurrencyRaw.marketReferenceCurrencyPriceInUsd.toString(),
-        networkBaseTokenPriceInUsd:
-          poolBaseCurrencyRaw.networkBaseTokenPriceInUsd.toString(),
-        networkBaseTokenPriceDecimals:
-          poolBaseCurrencyRaw.networkBaseTokenPriceDecimals,
-      };
+          baseCurrencyData.marketReferenceCurrencyDecimals,
+      });
 
-      return { data: { reservesData, baseCurrencyData } };
+      const items = data.map((item) => {
+        const token = tokens.find((t) =>
+          areAddressesEqual(t.address, item.underlyingAsset),
+        );
+
+        return {
+          id: item.id,
+          pool,
+          token,
+          priceUsd: Decimal.from(item.priceInUSD).toFixed(USD_DECIMALS),
+          liquidity: Decimal.from(item.totalLiquidity).toString(),
+          liquidityUsd: Decimal.from(item.totalLiquidity)
+            .mul(Decimal.from(item.priceInUSD))
+            .toFixed(USD_DECIMALS),
+          stableBorrowApy: Decimal.from(item.stableBorrowAPY ?? 0)
+            .mul(100)
+            .toFixed(USD_DECIMALS),
+          variableBorrowApy: Decimal.from(item.variableBorrowAPY ?? 0)
+            .mul(100)
+            .toFixed(USD_DECIMALS),
+          canBeBorrowed: item.borrowingEnabled,
+          supplyApy: Decimal.from(item.supplyAPY)
+            .mul(100)
+            .toFixed(USD_DECIMALS),
+          canBeCollateral: item.usageAsCollateralEnabled,
+          isActive: item.isActive,
+          isFroze: item.isFrozen,
+          // eModes: item.eModes,
+          i: item,
+        };
+      });
+
+      return { data: { reservesData: items, baseCurrencyData } };
 
       // return {
       //   data: items
@@ -265,18 +170,22 @@ export default async function (fastify: FastifyInstance) {
     },
   );
 
-  fastify.withTypeProvider<ZodTypeProvider>().get(
-    '/money-market/:pool/user/:address/lendings',
+  fastify.get(
+    '/money-market/:pool/user/:address/positions',
     {
       schema: {
         querystring: paginationSchema,
         params: z.object({
           pool: z.string(),
-          address: z.string(),
+          address: ze.address,
         }),
       },
       config: {
-        cache: true,
+        cache: {
+          enabled: false,
+          ttlSeconds: 10,
+          staleTtlSeconds: 15,
+        },
       },
     },
     async (
@@ -288,64 +197,254 @@ export default async function (fastify: FastifyInstance) {
 
       if (!pool) return reply.notFound('Pool not found');
 
-      const userReservesRaw = await fetchUserReserves(
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+
+      const { reservesData, baseCurrencyData } = await fetchPoolReserves(
+        req.chain.chainId,
+        pool,
+      );
+
+      const { userReserves, userEmodeCategoryId } = await fetchUserReserves(
         req.chain.chainId,
         pool,
         req.params.address,
       );
 
-      const activePositions = userReservesRaw.filter(
-        (r) => r.scaledATokenBalance > 0n,
-      );
-
-      return transformUserReservesData({
-        chainId: req.chain.chainId,
-        userAddress: req.params.address,
-        pool,
-        reserves: activePositions,
+      const tokens = await client.query.tTokens.findMany({
+        columns: tTokensSelectors.columns,
+        where: and(
+          eq(tTokens.chainId, req.chain.chainId),
+          inArray(
+            tTokens.address,
+            userReserves.map((i) => i.underlyingAsset.toLowerCase()),
+          ),
+        ),
       });
-    },
-  );
 
-  fastify.withTypeProvider<ZodTypeProvider>().get(
-    '/money-market/:pool/user/:address/borrowings',
-    {
-      schema: {
-        querystring: paginationSchema,
-        params: z.object({
-          pool: z.string(),
-          address: z.string(),
+      const summary = formatUserSummary({
+        currentTimestamp,
+        marketReferencePriceInUsd:
+          baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+        marketReferenceCurrencyDecimals:
+          baseCurrencyData.marketReferenceCurrencyDecimals,
+        userReserves,
+        userEmodeCategoryId,
+        formattedReserves: formatReserves({
+          reserves: reservesData,
+          currentTimestamp,
+          marketReferencePriceInUsd:
+            baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+          marketReferenceCurrencyDecimals:
+            baseCurrencyData.marketReferenceCurrencyDecimals,
         }),
-      },
-      config: {
-        cache: true,
-      },
-    },
-    async (
-      req: FastifyRequest<{ Params: { pool: string; address: string } }>,
-      reply,
-    ) => {
-      const pools = await fetchPoolList(req.chain.chainId);
-      const pool = selectPoolById(req.params.pool, pools);
-
-      if (!pool) return reply.notFound('Pool not found');
-
-      const userReservesRaw = await fetchUserReserves(
-        req.chain.chainId,
-        pool,
-        req.params.address,
-      );
-
-      const activeBorrows = userReservesRaw.filter(
-        (r) => r.scaledVariableDebt > 0n || r.principalStableDebt > 0n,
-      );
-
-      return transformUserReservesData({
-        chainId: req.chain.chainId,
-        userAddress: req.params.address,
-        pool,
-        reserves: activeBorrows,
       });
+
+      const netWorth = Decimal.from(summary.netWorthUSD);
+      const borrowBalance = Decimal.from(summary.totalBorrowsUSD);
+      const supplyBalance = summary.userReservesData.reduce(
+        (s, r) => s.add(r.underlyingBalanceUSD),
+        Decimal.from(0),
+      );
+
+      const collateralBalance = summary.userReservesData.reduce(
+        (s, r) =>
+          r.usageAsCollateralEnabledOnUser ? s.add(r.underlyingBalanceUSD) : s,
+        Decimal.from(0),
+      );
+
+      const computeWeightedSupplyApy = () => {
+        let totalSuppliedUsd = Decimal.from(0);
+        let weightedSupplyAPYSum = Decimal.from(0);
+
+        summary.userReservesData.forEach((reserve) => {
+          const suppliedAmountUsd = Decimal.from(reserve.underlyingBalanceUSD);
+          const supplyAPY = Decimal.from(reserve.reserve.supplyAPY);
+
+          weightedSupplyAPYSum = weightedSupplyAPYSum.add(
+            supplyAPY.mul(suppliedAmountUsd),
+          );
+          totalSuppliedUsd = totalSuppliedUsd.add(suppliedAmountUsd);
+        });
+
+        if (totalSuppliedUsd.eq(0) || weightedSupplyAPYSum.eq(0)) {
+          return Decimal.from(0);
+        }
+        return weightedSupplyAPYSum.div(totalSuppliedUsd).mul(100);
+      };
+
+      const computeWeightedBorrowApy = () => {
+        let totalBorrowedUsd = Decimal.from(0);
+        let weightedBorrowAPYSum = Decimal.from(0);
+
+        summary.userReservesData.forEach((reserve) => {
+          const borrowedAmountUsd = Decimal.from(reserve.totalBorrowsUSD);
+          const borrowAPY = Decimal.from(reserve.reserve.variableBorrowAPY);
+
+          weightedBorrowAPYSum = weightedBorrowAPYSum.add(
+            borrowAPY.mul(borrowedAmountUsd),
+          );
+          totalBorrowedUsd = totalBorrowedUsd.add(borrowedAmountUsd);
+        });
+
+        if (totalBorrowedUsd.eq(0) || weightedBorrowAPYSum.eq(0)) {
+          return Decimal.from(0);
+        }
+        return weightedBorrowAPYSum.div(totalBorrowedUsd).mul(100);
+      };
+
+      const supplyWeightedApy = computeWeightedSupplyApy();
+      const borrowWeightedApy = computeWeightedBorrowApy();
+
+      const netApy = netWorth.eq(0)
+        ? Decimal.from(0)
+        : supplyWeightedApy
+            .mul(supplyBalance)
+            .div(netWorth)
+            .sub(borrowWeightedApy.mul(borrowBalance).div(netWorth));
+
+      const currentLiquidationThreshold = Decimal.from(
+        summary.currentLiquidationThreshold,
+      );
+      const borrowPower = collateralBalance
+        .mul(currentLiquidationThreshold)
+        .div(1.1);
+      const borrowPowerUsed = borrowPower.eq(0)
+        ? Decimal.from(100)
+        : Decimal.from(borrowBalance).div(borrowPower).mul(100);
+
+      const healthFactor = borrowBalance.eq(0)
+        ? Decimal.INFINITY
+        : collateralBalance.mul(currentLiquidationThreshold).div(borrowBalance);
+
+      const collateralRatio = borrowBalance.eq(0)
+        ? Decimal.INFINITY
+        : Decimal.from(summary.healthFactor);
+
+      const userPositions = summary.userReservesData.map((item) => {
+        const token = tokens.find((t) =>
+          areAddressesEqual(t.address, item.underlyingAsset),
+        );
+
+        const availableLiquidity = Decimal.from(
+          item.reserve.availableLiquidity,
+          item.reserve.decimals,
+        );
+        // how much the user can borrow if there is no limit of supply
+        const canBorrow = Decimal.max(
+          borrowPower.sub(borrowBalance).div(item.reserve.priceInUSD),
+          Decimal.ZERO,
+        );
+
+        // available to borrow for user including liquidity limitation
+        const availableToBorrow = availableLiquidity.lt(canBorrow)
+          ? availableLiquidity
+          : canBorrow;
+        const availableToBorrowUsd = availableToBorrow.mul(
+          item.reserve.priceInUSD,
+        );
+
+        const borrowRateMode = Decimal.from(item.variableBorrows).gt(0) ? 2 : 1;
+
+        const canToggleCollateral =
+          !item.usageAsCollateralEnabledOnUser ||
+          (borrowBalance.eq(0)
+            ? Decimal.INFINITY
+            : collateralBalance
+                .sub(item.underlyingBalanceUSD)
+                .div(borrowBalance)
+          ).gt(1.5);
+
+        return {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          id: (item as any).id,
+          pool,
+          token,
+          reserve: {
+            id: item.reserve.id,
+            priceUsd: Decimal.from(item.reserve.priceInUSD).toFixed(
+              USD_DECIMALS,
+            ),
+            liquidity: Decimal.from(item.reserve.totalLiquidity).toString(),
+            liquidityUsd: Decimal.from(item.reserve.totalLiquidity)
+              .mul(Decimal.from(item.reserve.priceInUSD))
+              .toFixed(USD_DECIMALS),
+            canBeBorrowed: item.reserve.borrowingEnabled,
+            supplyApy: Decimal.from(item.reserve.supplyAPY)
+              .mul(100)
+              .toFixed(USD_DECIMALS),
+            stableBorrowApy: Decimal.from(item.reserve.stableBorrowAPY)
+              .mul(100)
+              .toFixed(USD_DECIMALS),
+            variableBorrowApy: Decimal.from(item.reserve.variableBorrowAPY)
+              .mul(100)
+              .toFixed(USD_DECIMALS),
+            canBeCollateral: item.reserve.usageAsCollateralEnabled,
+            isActive: item.reserve.isActive,
+            isFroze: item.reserve.isFrozen,
+            // eModes: item.reserve.eModes,
+          },
+          supplied: item.underlyingBalance,
+          suppliedUsd: item.underlyingBalanceUSD,
+
+          supplyApy: Decimal.from(item.reserve.supplyAPY).mul(100).toString(),
+          canToggleCollateral,
+
+          borrowed: item.variableBorrows,
+          borrowedUsd: item.variableBorrowsUSD,
+
+          collateral: item.usageAsCollateralEnabledOnUser,
+
+          availableToBorrow: availableToBorrow.toString(),
+          availableToBorrowUsd: availableToBorrowUsd.toFixed(USD_DECIMALS),
+
+          borrowRateMode,
+          borrowApy: Decimal.from(
+            borrowRateMode === 1
+              ? item.reserve.stableBorrowAPY
+              : item.reserve.variableBorrowAPY,
+          )
+            .mul(100)
+            .toString(),
+          stableBorrowApy: Decimal.from(item.reserve.stableBorrowAPY ?? 0)
+            .mul(100)
+            .toString(),
+          variableBorrowApy: Decimal.from(item.reserve.variableBorrowAPY ?? 0)
+            .mul(100)
+            .toString(),
+        };
+      });
+
+      return {
+        data: {
+          positions: userPositions,
+          summary: {
+            netApy: netApy.toFixed(USD_DECIMALS),
+            healthFactor: healthFactor.toFixed(USD_DECIMALS),
+            collateralRatio: collateralRatio.toFixed(USD_DECIMALS),
+            borrowPower: borrowPower.toFixed(USD_DECIMALS),
+            borrowPowerUsed: borrowPowerUsed.toFixed(USD_DECIMALS),
+
+            borrowWeightedApy: borrowWeightedApy.toFixed(USD_DECIMALS),
+            supplyWeightedApy: supplyWeightedApy.toFixed(USD_DECIMALS),
+
+            totalLiquidityUsd: supplyBalance.toFixed(USD_DECIMALS),
+            totalCollateralUsd: collateralBalance.toFixed(USD_DECIMALS),
+            totalBorrowsUsd: borrowBalance.toFixed(USD_DECIMALS),
+            availableBorrowsUsd: summary.availableBorrowsUSD,
+
+            currentLoanToValue: summary.currentLoanToValue,
+            currentLiquidationThreshold: summary.currentLiquidationThreshold,
+
+            supplyBalanceUsd: supplyBalance.toFixed(USD_DECIMALS),
+            collateralBalanceUsd: collateralBalance.toFixed(USD_DECIMALS),
+
+            netWorthUsd: summary.netWorthUSD,
+            userEmodeCategoryId: summary.userEmodeCategoryId,
+            isInIsolationMode: summary.isInIsolationMode,
+          },
+          reservesData,
+        },
+      };
     },
   );
 }

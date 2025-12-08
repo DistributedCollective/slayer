@@ -95,6 +95,7 @@ export class HttpClient {
         if (isTimeout) throw new HTTPTimeoutError(url, reason);
         throw new HTTPAbortError(url, reason);
       }
+      console.error('HTTP request failed', { error, url });
       throw new HTTPClientError(500, 'Internal Server Error', '', url);
     } finally {
       if (timeout) clearTimeout(timeout);

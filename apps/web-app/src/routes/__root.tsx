@@ -21,6 +21,7 @@ import { useEffect, type PropsWithChildren } from 'react';
 
 interface MyRouterContext {
   queryClient: QueryClient;
+  connection: typeof import('@/integrations/wagmi/config').getConnection;
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({

@@ -7,6 +7,7 @@ import {
   rootstockTestnet,
   sepolia,
 } from 'viem/chains';
+import { getAccount } from 'wagmi/actions';
 
 export const config = createConfig({
   chains: [mainnet, sepolia, bobSepolia, rootstock, rootstockTestnet],
@@ -18,6 +19,8 @@ export const config = createConfig({
     [rootstockTestnet.id]: http(),
   },
 });
+
+export const getConnection = () => getAccount(config);
 
 declare module 'wagmi' {
   interface Register {

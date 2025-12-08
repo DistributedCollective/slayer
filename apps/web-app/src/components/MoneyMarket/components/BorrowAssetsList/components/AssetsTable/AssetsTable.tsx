@@ -19,12 +19,6 @@ type AssetsTableProps = {
 };
 
 export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
-  // const [sortedAssets, setSortedAssets] =
-  //   useState<MoneyMarketPoolReserve[]>(assets);
-  // useEffect(() => {
-  //   setSortedAssets(assets);
-  // }, [assets]);
-
   const handleBorrow = (reserve: MoneyMarketPoolReserve) =>
     borrowRequestStore.getState().setReserve(reserve);
 
@@ -36,16 +30,6 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
             <TableHead>
               <div className="flex items-center gap-2">
                 <span>Asset</span>
-                {/* {assets.some((asset) => asset.isSortable) && (
-                <Button
-                  variant="ghost"
-                  className="p-0 cursor-pointer hover:opacity-80 dark:hover:bg-transparent"
-                  onClick={() => sortAssets(OrderColumn.SYMBOL)}
-                  aria-label="Sort Assets"
-                >
-                  <img src={iconSort} alt="Sort Icon" className="w-2 h-2.5" />
-                </Button>
-              )} */}
               </div>
             </TableHead>
             <TableHead>
@@ -54,16 +38,6 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                   Available
                   <InfoButton content="This is the total amount available for you to borrow. You can borrow based on your collateral and until the borrow cap is reached." />
                 </div>
-                {/* {assets.some((asset) => asset.isSortable) && (
-                <Button
-                  variant="ghost"
-                  className="p-0 cursor-pointer hover:opacity-80 dark:hover:bg-transparent"
-                  onClick={() => sortAssets(OrderColumn.BALANCE)}
-                  aria-label="Sort Wallet Balance"
-                >
-                  <img src={iconSort} alt="Sort Icon" className="w-2 h-2.5" />
-                </Button>
-              )} */}
               </div>
             </TableHead>
             <TableHead>
@@ -72,16 +46,6 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                   APY
                   <InfoButton content="APY - The annual percentage yield (APY) is the real rate of return earned on an investment, taking into account the effect of compounding interest." />
                 </div>
-                {/* {assets.some((asset) => asset.isSortable) && (
-                <Button
-                  variant="ghost"
-                  className="p-0 cursor-pointer hover:opacity-80 dark:hover:bg-transparent"
-                  onClick={() => sortAssets(OrderColumn.APY)}
-                  aria-label="Sort APY"
-                >
-                  <img src={iconSort} alt="Sort Icon" className="w-2 h-2.5" />
-                </Button>
-              )} */}
               </div>
             </TableHead>
             <TableHead></TableHead>
@@ -106,30 +70,32 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                   </div>
                 </TableCell>
                 <TableCell className="border-neutral-800 border-y">
-                  <span className="flex items-center gap-1">
-                    <AmountRenderer value={asset.availableLiquidity} />
-                    {asset.token.symbol}
-                  </span>
-                  <p className="text-neutral-500 font-medium text-xs">
+                  <div className="flex flex-col gap-1">
                     <AmountRenderer
-                      value={asset.availableLiquidity}
-                      prefix="$"
-                      decimals={2}
-                      showApproxSign
+                      value={asset.liquidity}
+                      suffix={asset.token.symbol}
                     />
-                  </p>
+                    <AmountRenderer
+                      value={asset.liquidityUsd}
+                      prefix="$"
+                      showApproxSign
+                      className="text-neutral-500 font-medium text-xs"
+                    />
+                  </div>
                 </TableCell>
                 <TableCell className="border-neutral-800 border-y">
-                  <div className="flex items-center">
-                    <p className="text-gray-50 font-medium">{0}%</p>
-                  </div>
+                  <AmountRenderer
+                    value={asset.variableBorrowApy}
+                    suffix="%"
+                    className="text-gray-50 font-medium"
+                  />
                 </TableCell>
                 <TableCell className="border-neutral-800 border-y border-r rounded-tr-[1.25rem] rounded-br-[1.25rem]">
                   <div className="flex items-center justify-end gap-4">
                     <Button
                       className="rounded-full min-w-24 h-10 hover:cursor-pointer"
                       onClick={() => handleBorrow(asset)}
-                      disabled={!asset.borrowingEnabled}
+                      disabled={!asset.canBeBorrowed}
                     >
                       Borrow
                     </Button>

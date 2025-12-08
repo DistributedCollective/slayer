@@ -6,6 +6,7 @@ import {
   Chain as ViemChain,
 } from 'viem';
 import { bobSepolia, rootstock, rootstockTestnet } from 'viem/chains';
+import { ENV } from '../env';
 type ChainConfig = {
   key: string;
   chainId: number;
@@ -43,7 +44,9 @@ const items = [
     name: 'BOB Sepolia',
     rpc: createPublicClient({
       chain: bobSepolia,
-      transport: http(bobSepolia.rpcUrls.default.http[0]),
+      transport: http(
+        ENV.RPC_BOB_TESTNET ?? bobSepolia.rpcUrls.default.http[0],
+      ),
     }) as PublicClient<Transport, ViemChain>,
     aaveSubgraphUrl:
       'https://bob-mm.test.sovryn.app/subgraphs/name/DistributedCollective/sov-protocol-subgraphs',
