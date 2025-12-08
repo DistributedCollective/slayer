@@ -416,7 +416,10 @@ export default async function (fastify: ZodFastifyInstance) {
           positions: userPositions,
           summary: {
             netApy: netApy.toFixed(USD_DECIMALS),
-            healthFactor: healthFactor.toFixed(USD_DECIMALS),
+            healthFactor:
+              borrowBalance.eq(0) && supplyBalance.eq(0)
+                ? '0'
+                : healthFactor.toFixed(USD_DECIMALS),
             collateralRatio: collateralRatio.toFixed(USD_DECIMALS),
             borrowPower: borrowPower.toFixed(USD_DECIMALS),
             borrowPowerUsed: borrowPowerUsed.toFixed(USD_DECIMALS),
