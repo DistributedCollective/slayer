@@ -38,6 +38,8 @@ export interface MoneyMarketPoolReserve {
   token: SdkToken;
   pool: MoneyMarketPool;
 
+  priceUsd: string;
+
   liquidity: string;
   liquidityUsd: string;
 

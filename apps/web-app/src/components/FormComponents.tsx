@@ -10,7 +10,7 @@ import { Switch as ShadcnSwitch } from '@/components/ui/switch';
 import { Textarea as ShadcnTextarea } from '@/components/ui/textarea';
 import { Decimal } from '@sovryn/slayer-shared';
 import { Loader2Icon } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import type { GetBalanceData } from 'wagmi/query';
 import { Field, FieldDescription, FieldError, FieldLabel } from './ui/field';
 
@@ -24,7 +24,7 @@ export function SubscribeButton({ label }: { label: string }) {
         <Button
           type="submit"
           disabled={isSubmitting || !isFormValid}
-          form={form.formId()}
+          form={form.formId}
         >
           <Loader2Icon
             className={`mr-2 h-4 w-4 animate-spin ${isSubmitting ? '' : 'hidden'}`}
@@ -60,7 +60,7 @@ export function TextField({
   placeholder,
   description,
 }: {
-  label: string;
+  label: ReactNode;
   placeholder?: string;
   description?: string;
 }) {
@@ -69,8 +69,9 @@ export function TextField({
 
   return (
     <Field>
-      <FieldLabel htmlFor={label}>{label}</FieldLabel>
+      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <Input
+        id={field.name}
         value={field.state.value}
         placeholder={placeholder}
         onBlur={field.handleBlur}
@@ -87,7 +88,7 @@ export function TextArea({
   rows = 3,
   description,
 }: {
-  label: string;
+  label: ReactNode;
   rows?: number;
   description?: string;
 }) {
@@ -96,9 +97,9 @@ export function TextArea({
 
   return (
     <Field>
-      <FieldLabel htmlFor={label}>{label}</FieldLabel>
+      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <ShadcnTextarea
-        id={label}
+        id={field.name}
         value={field.state.value}
         onBlur={field.handleBlur}
         rows={rows}
@@ -116,7 +117,7 @@ export function Select({
   placeholder,
   description,
 }: {
-  label: string;
+  label: ReactNode;
   values: Array<{ label: string; value: string }>;
   placeholder?: string;
   description?: string;
@@ -126,7 +127,7 @@ export function Select({
 
   return (
     <Field>
-      <FieldLabel htmlFor={label}>{label}</FieldLabel>
+      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <ShadcnSelect.Select
         name={field.name}
         value={field.state.value}
@@ -156,7 +157,7 @@ export function Slider({
   label,
   description,
 }: {
-  label: string;
+  label: ReactNode;
   description?: string;
 }) {
   const field = useFieldContext<number>();
@@ -164,9 +165,9 @@ export function Slider({
 
   return (
     <Field>
-      <FieldLabel htmlFor={label}>{label}</FieldLabel>
+      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <ShadcnSlider
-        id={label}
+        id={field.name}
         onBlur={field.handleBlur}
         value={[field.state.value]}
         onValueChange={(value) => field.handleChange(value[0])}
@@ -181,7 +182,7 @@ export function Switch({
   label,
   description,
 }: {
-  label: string;
+  label: ReactNode;
   description?: string;
 }) {
   const field = useFieldContext<boolean>();
@@ -191,12 +192,12 @@ export function Switch({
     <Field>
       <div className="flex items-center gap-2">
         <ShadcnSwitch
-          id={label}
+          id={field.name}
           onBlur={field.handleBlur}
           checked={field.state.value}
           onCheckedChange={(checked) => field.handleChange(checked)}
         />
-        <FieldLabel htmlFor={label}>{label}</FieldLabel>
+        <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       </div>
       {description && <FieldDescription>{description}</FieldDescription>}
       {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
@@ -222,7 +223,7 @@ export function AmountField({
   description,
   balance,
 }: {
-  label: string;
+  label: ReactNode;
   placeholder?: string;
   description?: string;
   balance?: GetBalanceData;
@@ -236,14 +237,25 @@ export function AmountField({
 
   const handleChange = (input: string) => {
     setRenderedValue(input);
-    field.handleChange(tryDecimalValue(input));
+    field.setValue(tryDecimalValue(input) as never, {
+      dontRunListeners: true,
+    });
   };
+
+  useEffect(() => {
+    const unsub = field.store.subscribe(({ prevVal, currentVal }) => {
+      if (prevVal.value !== currentVal.value) {
+        setRenderedValue(tryDecimalValue(currentVal.value));
+      }
+    });
+
+    return unsub;
+  }, []);
 
   return (
     <Field>
-      <FieldLabel htmlFor={label}>
+      <FieldLabel htmlFor={field.name}>
         {label}
-
         {balance && (
           <span className="ml-2 text-sm font-normal text-gray-400">
             (Balance:{' '}
@@ -253,6 +265,7 @@ export function AmountField({
         )}
       </FieldLabel>
       <Input
+        id={field.name}
         value={renderedValue}
         placeholder={placeholder}
         onBlur={field.handleBlur}

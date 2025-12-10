@@ -8,6 +8,10 @@ import { BorrowDialog } from '@/components/MoneyMarket/components/BorrowDialog/B
 import { BorrowPositionsList } from '@/components/MoneyMarket/components/BorrowPositionsList/BorrowPositionsList';
 import { LendAssetsList } from '@/components/MoneyMarket/components/LendAssetsList/LendAssetsList';
 import { LendDialog } from '@/components/MoneyMarket/components/LendDialog/LendDialog';
+import {
+  QUERY_KEY_MONEY_MARKET_POSITIONS,
+  useMoneyMarketPositions,
+} from '@/components/MoneyMarket/hooks/use-money-positions';
 import { Heading } from '@/components/ui/heading/heading';
 import { sdk } from '@/lib/sdk';
 import { useQuery } from '@tanstack/react-query';
@@ -50,7 +54,7 @@ export const Route = createFileRoute('/money-market')({
     const owner = context.connection().address;
     if (owner) {
       client.prefetchQuery({
-        queryKey: ['money-market:positions', pool || 'default', owner],
+        queryKey: [QUERY_KEY_MONEY_MARKET_POSITIONS, pool || 'default', owner],
         queryFn: () =>
           sdk.moneyMarket.listUserPositions(pool || 'default', owner),
         staleTime: STALE_TIME,
@@ -75,12 +79,9 @@ function RouteComponent() {
     staleTime: STALE_TIME,
   });
 
-  const { data: positions, isPending } = useQuery({
-    queryKey: ['money-market:positions', pool || 'default', address],
-    queryFn: () =>
-      sdk.moneyMarket.listUserPositions(pool || 'default', address!),
-    staleTime: STALE_TIME,
-    enabled: !!address,
+  const { data: positions, isPending } = useMoneyMarketPositions({
+    pool: pool || 'default',
+    address: address!,
   });
 
   const borrowAssets = useMemo(

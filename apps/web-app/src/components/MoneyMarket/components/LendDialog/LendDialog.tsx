@@ -79,7 +79,7 @@ const LendDialogForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} id={form.formId()}>
+    <form onSubmit={handleSubmit} id={form.formId}>
       <DialogContent
         onInteractOutside={handleEscapes}
         onEscapeKeyDown={handleEscapes}
