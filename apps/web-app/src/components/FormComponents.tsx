@@ -8,11 +8,14 @@ import * as ShadcnSelect from '@/components/ui/select';
 import { Slider as ShadcnSlider } from '@/components/ui/slider';
 import { Switch as ShadcnSwitch } from '@/components/ui/switch';
 import { Textarea as ShadcnTextarea } from '@/components/ui/textarea';
+import type { CheckedState } from '@radix-ui/react-checkbox';
 import { Decimal } from '@sovryn/slayer-shared';
 import { Loader2Icon } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import type { GetBalanceData } from 'wagmi/query';
+import { Checkbox } from './ui/checkbox';
 import { Field, FieldDescription, FieldError, FieldLabel } from './ui/field';
+import { InputGroup, InputGroupAddon, InputGroupInput } from './ui/input-group';
 
 export function SubscribeButton({ label }: { label: string }) {
   const form = useFormContext();
@@ -205,6 +208,36 @@ export function Switch({
   );
 }
 
+export function CheckBox({
+  label,
+  description,
+}: {
+  label: ReactNode;
+  description?: string;
+}) {
+  const field = useFieldContext<CheckedState>();
+  const errors = useStore(field.store, (state) => state.meta.errors);
+
+  return (
+    <Field>
+      <div className="flex items-start gap-3">
+        <Checkbox
+          id={field.name}
+          checked={field.state.value}
+          onCheckedChange={(checked) => field.handleChange(checked)}
+          onBlur={field.handleBlur}
+          className="mt-1"
+        />
+        <div className="grid gap-2">
+          <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+          {description && <FieldDescription>{description}</FieldDescription>}
+        </div>
+      </div>
+      {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
+    </Field>
+  );
+}
+
 const tryDecimalValue = (input: string): string => {
   try {
     if (input) {
@@ -222,11 +255,13 @@ export function AmountField({
   placeholder,
   description,
   balance,
+  addonRight,
 }: {
   label: ReactNode;
   placeholder?: string;
   description?: string;
   balance?: GetBalanceData;
+  addonRight?: ReactNode;
 }) {
   const field = useFieldContext<string>();
   const errors = useStore(field.store, (state) => state.meta.errors);
@@ -264,13 +299,20 @@ export function AmountField({
           </span>
         )}
       </FieldLabel>
-      <Input
-        id={field.name}
-        value={renderedValue}
-        placeholder={placeholder}
-        onBlur={field.handleBlur}
-        onChange={(e) => handleChange(e.target.value)}
-      />
+      <InputGroup>
+        <InputGroupInput
+          id={field.name}
+          value={renderedValue}
+          placeholder={placeholder}
+          onBlur={field.handleBlur}
+          onChange={(e) => handleChange(e.target.value)}
+          type="number"
+          step="0.00001"
+        />
+        {addonRight && (
+          <InputGroupAddon align="inline-end">{addonRight}</InputGroupAddon>
+        )}
+      </InputGroup>
       {description && <FieldDescription>{description}</FieldDescription>}
       {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
     </Field>

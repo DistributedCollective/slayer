@@ -24,8 +24,8 @@ export const validateDecimal = ({
       }
     },
     {
-      error: `Value must be a valid decimal${min !== undefined ? ` >= ${min}` : ''}${
-        max !== undefined ? ` <= ${max}` : ''
+      error: `Value must be a valid decimal${min !== undefined ? ` >= ${Decimal.from(min).toString()}` : ''}${
+        max !== undefined ? ` <= ${Decimal.from(max).toString()}` : ''
       }.`,
     },
   );

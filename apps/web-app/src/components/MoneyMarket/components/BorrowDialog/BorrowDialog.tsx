@@ -10,6 +10,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { HealthFactorBar } from '@/components/ui/health-factor-bar';
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+} from '@/components/ui/item';
 import { useAppForm } from '@/hooks/app-form';
 import { sdk } from '@/lib/sdk';
 import { useSlayerTx } from '@/lib/transactions';
@@ -23,10 +29,6 @@ import { useStore } from 'zustand';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
 import { useMoneyMarketPositions } from '../../hooks/use-money-positions';
 import { borrowRequestStore } from '../../stores/borrow-request.store';
-
-const schema = z.object({
-  amount: validateDecimal({ min: 1n }),
-});
 
 const BorrowDialogForm = () => {
   const { address } = useAccount();
@@ -47,13 +49,32 @@ const BorrowDialogForm = () => {
     },
   });
 
+  const data = useMemo(() => {
+    const position = (items?.data?.positions || []).find(
+      (item) => item.reserve.id === reserve.id,
+    );
+    if (position && items?.data) {
+      return {
+        position,
+        summary: items.data.summary,
+      };
+    }
+    return null;
+  }, [items]);
+
   const form = useAppForm({
     defaultValues: {
       amount: '',
+      agree: false,
     },
     validators: {
-      onMount: schema,
-      onBlur: schema,
+      onChange: z.object({
+        amount: validateDecimal({
+          min: 1n,
+          max: Decimal.from(data?.position.availableToBorrow ?? '0').toBigInt(),
+        }),
+        agree: z.literal(true, 'Must agree to proceed with borrowing'),
+      }),
     },
     onSubmit: ({ value }) => {
       begin(() =>
@@ -85,19 +106,6 @@ const BorrowDialogForm = () => {
     borrowRequestStore.getState().reset();
     e.preventDefault();
   };
-
-  const data = useMemo(() => {
-    const position = (items?.data?.positions || []).find(
-      (item) => item.reserve.id === reserve.id,
-    );
-    if (position && items?.data) {
-      return {
-        position,
-        summary: items.data.summary,
-      };
-    }
-    return null;
-  }, [items]);
 
   const calculateLiquidationPrice = useCallback(
     (amount: string) => {
@@ -140,7 +148,7 @@ const BorrowDialogForm = () => {
       >
         <DialogHeader>
           <DialogTitle>Borrow Asset</DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="sr-only">
             Borrowing functionality is under development.
           </DialogDescription>
         </DialogHeader>
@@ -163,68 +171,96 @@ const BorrowDialogForm = () => {
                         );
                       }}
                     >
-                      Max:
-                      <AmountRenderer
-                        value={data?.position.availableToBorrow ?? '0'}
-                        suffix={data?.position.token.symbol}
-                        showApproxSign
-                      />
+                      <span>
+                        Max:
+                        <AmountRenderer
+                          value={data?.position.availableToBorrow ?? '0'}
+                          suffix={data?.position.token.symbol}
+                          showApproxSign
+                        />
+                      </span>
                     </Button>
                   </div>
                 }
+                placeholder="Amount to borrow"
+                addonRight={data?.position.token.symbol}
               />
+            </>
+          )}
+        </form.AppField>
 
-              <div>
-                <p>
-                  Collateral Ratio:
-                  <AmountRenderer
-                    value={computeHealthFactor(field.state.value ?? 0)
-                      .mul(100)
-                      .toNumber()
-                      .toFixed(8)}
-                    suffix="%"
-                    showApproxSign
-                  />
-                </p>
-
-                <HealthFactorBar
-                  value={computeHealthFactor(field.state.value).toNumber()}
-                  options={{
-                    start: 1,
-                    middleStart: 1.1,
-                    middleEnd: 1.5,
-                    end: 2,
-                  }}
-                />
-
-                <p>
-                  Borrow APY:
+        <form.Subscribe
+          selector={(state) =>
+            [
+              state.values.amount,
+              computeHealthFactor(state.values.amount ?? 0),
+            ] as const
+          }
+        >
+          {([amount, healthFactor]) => (
+            <ItemGroup>
+              <Item size="sm" variant="outline">
+                <ItemContent>
+                  <ItemContent>
+                    <div className="flex flex-row justify-between">
+                      <div>Collateral Ratio</div>
+                      <AmountRenderer
+                        value={healthFactor.mul(100).toNumber().toFixed(8)}
+                        suffix="%"
+                        showApproxSign
+                      />
+                    </div>
+                  </ItemContent>
+                  <ItemDescription>
+                    <HealthFactorBar
+                      value={healthFactor.toNumber()}
+                      options={{
+                        start: 1,
+                        middleStart: 1.1,
+                        middleEnd: 1.5,
+                        end: 2,
+                      }}
+                    />
+                  </ItemDescription>
+                </ItemContent>
+              </Item>
+              <Item size="sm" className="mt-2 py-1">
+                <ItemContent>Borrow APY</ItemContent>
+                <ItemContent>
                   <AmountRenderer
                     value={data?.position.reserve.variableBorrowApy ?? '0'}
                     suffix="%"
                     showApproxSign
                   />
-                </p>
-                <p>
-                  Liquidation price:
+                </ItemContent>
+              </Item>
+              <Item size="sm" className="py-1">
+                <ItemContent>Liquidation price</ItemContent>
+                <ItemContent>
                   <AmountRenderer
-                    value={calculateLiquidationPrice(
-                      field.state.value,
-                    ).toString()}
+                    value={calculateLiquidationPrice(amount).toString()}
                     showApproxSign
                     prefix="$"
                   />
-                </p>
-                <p>
-                  {data?.position.token.symbol} price:{' '}
+                </ItemContent>
+              </Item>
+              <Item size="sm" className="py-1">
+                <ItemContent>{data?.position.token.symbol} Price</ItemContent>
+                <ItemContent>
                   <AmountRenderer
                     value={data?.position.reserve.priceUsd ?? '0'}
                     prefix="$"
                     showApproxSign
                   />
-                </p>
-              </div>
-            </>
+                </ItemContent>
+              </Item>
+            </ItemGroup>
+          )}
+        </form.Subscribe>
+
+        <form.AppField name="agree">
+          {(field) => (
+            <field.CheckBox label="I understand that my collateral may be liquidated or used to pay rollover fees if applicable." />
           )}
         </form.AppField>
 

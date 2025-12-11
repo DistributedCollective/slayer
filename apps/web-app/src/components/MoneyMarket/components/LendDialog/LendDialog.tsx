@@ -1,4 +1,6 @@
+import { AmountRenderer } from '@/components/ui/amount-renderer';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogClose,
@@ -96,10 +98,19 @@ const LendDialogForm = () => {
             <field.AmountField label="Amount to Lend" balance={balance} />
           )}
         </form.AppField>
-        <p>
-          {reserve.token.symbol} can be used as collateral:{' '}
-          {reserve.canBeCollateral ? 'Yes' : 'No'}
-        </p>
+
+        <Card>
+          <CardContent>
+            <div>
+              Lend APY:
+              <AmountRenderer value={'0'} suffix="%" showApproxSign />
+            </div>
+            <div>
+              Collateralization:{' '}
+              {reserve.canBeCollateral ? 'Enabled' : 'Disabled'}
+            </div>
+          </CardContent>
+        </Card>
 
         <DialogFooter>
           <DialogClose asChild>

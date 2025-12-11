@@ -41,7 +41,7 @@ export const HealthFactorBar: FC<HealthFactorBarProps> = ({
       <div className="flex flex-row items-center gap-0.5 relative w-full">
         <div
           className={clsx(
-            'rounded-sm h-1.5 relative bg-red-600 overflow-hidden',
+            'rounded-sm h-1.5 relative bg-red-600/25 overflow-hidden',
           )}
           style={{
             flexBasis: `${(options.middleStart - options.start) * 100}%`,
@@ -49,7 +49,7 @@ export const HealthFactorBar: FC<HealthFactorBarProps> = ({
         >
           {value !== undefined && (
             <span
-              className="absolute left-0 h-1.5 bg-red-300"
+              className="absolute left-0 h-1.5 bg-red-600"
               style={{
                 width: `${getBlurWidth(options.start, options.middleStart)}%`,
               }}
@@ -58,7 +58,7 @@ export const HealthFactorBar: FC<HealthFactorBarProps> = ({
         </div>
         <div
           className={clsx(
-            'rounded-sm h-1.5 relative bg-amber-600 overflow-hidden',
+            'rounded-sm h-1.5 relative bg-amber-600/25 overflow-hidden',
           )}
           style={{
             flexBasis: `${(options.middleEnd - options.middleStart) * 100}%`,
@@ -66,7 +66,7 @@ export const HealthFactorBar: FC<HealthFactorBarProps> = ({
         >
           {value !== undefined && (
             <span
-              className="absolute left-0 h-1.5 bg-amber-300"
+              className="absolute left-0 h-1.5 bg-amber-600"
               style={{
                 width: `${getBlurWidth(options.middleStart, options.middleEnd)}%`,
               }}
@@ -75,7 +75,7 @@ export const HealthFactorBar: FC<HealthFactorBarProps> = ({
         </div>
         <div
           className={clsx(
-            'rounded-sm h-1.5 relative bg-green-600 overflow-hidden',
+            'rounded-sm h-1.5 relative bg-green-600/25 overflow-hidden',
           )}
           style={{
             flexBasis: `${(options.end - options.middleEnd) * 100}%`,
@@ -83,7 +83,7 @@ export const HealthFactorBar: FC<HealthFactorBarProps> = ({
         >
           {value !== undefined && (
             <span
-              className="absolute left-0 h-1.5 bg-green-300"
+              className="absolute left-0 h-1.5 bg-green-600"
               style={{
                 width: `${getBlurWidth(options.middleEnd, options.end)}%`,
               }}
