@@ -70,7 +70,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                   </div>
                 </TableCell>
                 <TableCell className="border-neutral-800 border-y">
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-1 items-start">
                     <AmountRenderer
                       value={asset.liquidity}
                       suffix={asset.token.symbol}
@@ -98,12 +98,6 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                       disabled={!asset.canBeBorrowed}
                     >
                       Borrow
-                    </Button>
-                    <Button
-                      className="rounded-full min-w-24 h-10 hover:cursor-pointer"
-                      variant="secondary"
-                    >
-                      Details
                     </Button>
                   </div>
                 </TableCell>

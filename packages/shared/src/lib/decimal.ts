@@ -26,6 +26,8 @@ export class Decimal {
   static ONE = new Decimal('1');
   static INFINITY = new Decimal('Infinity', 0);
 
+  static DEFAULT_PRECISION = DEFAULT_PRECISION;
+
   constructor(value: string, precision: number = DEFAULT_PRECISION) {
     this.d = new D(value);
     this.precision = precision;
@@ -72,6 +74,10 @@ export class Decimal {
 
   toString(decimalPlaces?: number): string {
     return this.d.toFixed(decimalPlaces);
+  }
+
+  toNumber(): number {
+    return this.d.toNumber();
   }
 
   toFormatted(decimalPlaces?: number): string {

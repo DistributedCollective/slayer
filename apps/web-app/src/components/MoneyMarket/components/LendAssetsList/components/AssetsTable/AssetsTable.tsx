@@ -107,12 +107,6 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                   >
                     Lend
                   </Button>
-                  <Button
-                    className="rounded-full min-w-24 h-10 hover:cursor-pointer"
-                    variant="secondary"
-                  >
-                    Details
-                  </Button>
                 </div>
               </TableCell>
             </TableRow>

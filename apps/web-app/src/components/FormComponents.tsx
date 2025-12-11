@@ -8,11 +8,15 @@ import * as ShadcnSelect from '@/components/ui/select';
 import { Slider as ShadcnSlider } from '@/components/ui/slider';
 import { Switch as ShadcnSwitch } from '@/components/ui/switch';
 import { Textarea as ShadcnTextarea } from '@/components/ui/textarea';
+import type { CheckedState } from '@radix-ui/react-checkbox';
 import { Decimal } from '@sovryn/slayer-shared';
 import { Loader2Icon } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import type { GetBalanceData } from 'wagmi/query';
+import { AmountRenderer } from './ui/amount-renderer';
+import { Checkbox } from './ui/checkbox';
 import { Field, FieldDescription, FieldError, FieldLabel } from './ui/field';
+import { InputGroup, InputGroupAddon, InputGroupInput } from './ui/input-group';
 
 export function SubscribeButton({ label }: { label: string }) {
   const form = useFormContext();
@@ -24,7 +28,7 @@ export function SubscribeButton({ label }: { label: string }) {
         <Button
           type="submit"
           disabled={isSubmitting || !isFormValid}
-          form={form.formId()}
+          form={form.formId}
         >
           <Loader2Icon
             className={`mr-2 h-4 w-4 animate-spin ${isSubmitting ? '' : 'hidden'}`}
@@ -60,7 +64,7 @@ export function TextField({
   placeholder,
   description,
 }: {
-  label: string;
+  label: ReactNode;
   placeholder?: string;
   description?: string;
 }) {
@@ -69,8 +73,9 @@ export function TextField({
 
   return (
     <Field>
-      <FieldLabel htmlFor={label}>{label}</FieldLabel>
+      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <Input
+        id={field.name}
         value={field.state.value}
         placeholder={placeholder}
         onBlur={field.handleBlur}
@@ -87,7 +92,7 @@ export function TextArea({
   rows = 3,
   description,
 }: {
-  label: string;
+  label: ReactNode;
   rows?: number;
   description?: string;
 }) {
@@ -96,9 +101,9 @@ export function TextArea({
 
   return (
     <Field>
-      <FieldLabel htmlFor={label}>{label}</FieldLabel>
+      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <ShadcnTextarea
-        id={label}
+        id={field.name}
         value={field.state.value}
         onBlur={field.handleBlur}
         rows={rows}
@@ -116,7 +121,7 @@ export function Select({
   placeholder,
   description,
 }: {
-  label: string;
+  label: ReactNode;
   values: Array<{ label: string; value: string }>;
   placeholder?: string;
   description?: string;
@@ -126,7 +131,7 @@ export function Select({
 
   return (
     <Field>
-      <FieldLabel htmlFor={label}>{label}</FieldLabel>
+      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <ShadcnSelect.Select
         name={field.name}
         value={field.state.value}
@@ -156,7 +161,7 @@ export function Slider({
   label,
   description,
 }: {
-  label: string;
+  label: ReactNode;
   description?: string;
 }) {
   const field = useFieldContext<number>();
@@ -164,9 +169,9 @@ export function Slider({
 
   return (
     <Field>
-      <FieldLabel htmlFor={label}>{label}</FieldLabel>
+      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <ShadcnSlider
-        id={label}
+        id={field.name}
         onBlur={field.handleBlur}
         value={[field.state.value]}
         onValueChange={(value) => field.handleChange(value[0])}
@@ -181,7 +186,7 @@ export function Switch({
   label,
   description,
 }: {
-  label: string;
+  label: ReactNode;
   description?: string;
 }) {
   const field = useFieldContext<boolean>();
@@ -191,14 +196,44 @@ export function Switch({
     <Field>
       <div className="flex items-center gap-2">
         <ShadcnSwitch
-          id={label}
+          id={field.name}
           onBlur={field.handleBlur}
           checked={field.state.value}
           onCheckedChange={(checked) => field.handleChange(checked)}
         />
-        <FieldLabel htmlFor={label}>{label}</FieldLabel>
+        <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       </div>
       {description && <FieldDescription>{description}</FieldDescription>}
+      {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
+    </Field>
+  );
+}
+
+export function CheckBox({
+  label,
+  description,
+}: {
+  label: ReactNode;
+  description?: string;
+}) {
+  const field = useFieldContext<CheckedState>();
+  const errors = useStore(field.store, (state) => state.meta.errors);
+
+  return (
+    <Field>
+      <div className="flex items-start gap-3">
+        <Checkbox
+          id={field.name}
+          checked={field.state.value}
+          onCheckedChange={(checked) => field.handleChange(checked)}
+          onBlur={field.handleBlur}
+          className="mt-1"
+        />
+        <div className="grid gap-2">
+          <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+          {description && <FieldDescription>{description}</FieldDescription>}
+        </div>
+      </div>
       {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
     </Field>
   );
@@ -221,11 +256,13 @@ export function AmountField({
   placeholder,
   description,
   balance,
+  addonRight,
 }: {
-  label: string;
+  label: ReactNode;
   placeholder?: string;
   description?: string;
-  balance?: GetBalanceData;
+  balance?: Omit<GetBalanceData, 'formatted'>;
+  addonRight?: ReactNode;
 }) {
   const field = useFieldContext<string>();
   const errors = useStore(field.store, (state) => state.meta.errors);
@@ -236,28 +273,71 @@ export function AmountField({
 
   const handleChange = (input: string) => {
     setRenderedValue(input);
-    field.handleChange(tryDecimalValue(input));
+    field.setValue(tryDecimalValue(input) as never, {
+      dontRunListeners: true,
+    });
   };
+
+  useEffect(() => {
+    const unsub = field.store.subscribe(({ prevVal, currentVal }) => {
+      if (prevVal.value !== currentVal.value) {
+        setRenderedValue(tryDecimalValue(currentVal.value));
+      }
+    });
+
+    return unsub;
+  }, []);
 
   return (
     <Field>
-      <FieldLabel htmlFor={label}>
-        {label}
-
-        {balance && (
-          <span className="ml-2 text-sm font-normal text-gray-400">
-            (Balance:{' '}
-            {Decimal.from(balance.value, balance.decimals).toFormatted()}{' '}
-            {balance.symbol})
-          </span>
+      <FieldLabel htmlFor={field.name}>
+        {balance ? (
+          <>
+            <div className="w-full flex flex-row gap-4 justify-between items-center">
+              <span>{label}</span>
+              <Button
+                variant="link"
+                size="sm"
+                className="p-0"
+                onClick={() => {
+                  field.setValue(
+                    Decimal.from(balance.value).toString(balance.decimals),
+                  );
+                }}
+              >
+                <span>
+                  (max:&nbsp;
+                  <AmountRenderer
+                    value={Decimal.from(
+                      balance.value,
+                      balance.decimals,
+                    ).toString()}
+                    suffix={balance.symbol}
+                    showApproxSign
+                  />
+                  )
+                </span>
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>{label}</>
         )}
       </FieldLabel>
-      <Input
-        value={renderedValue}
-        placeholder={placeholder}
-        onBlur={field.handleBlur}
-        onChange={(e) => handleChange(e.target.value)}
-      />
+      <InputGroup>
+        <InputGroupInput
+          id={field.name}
+          value={renderedValue}
+          placeholder={placeholder}
+          onBlur={field.handleBlur}
+          onChange={(e) => handleChange(e.target.value)}
+          type="number"
+          step="0.00001"
+        />
+        {addonRight && (
+          <InputGroupAddon align="inline-end">{addonRight}</InputGroupAddon>
+        )}
+      </InputGroup>
       {description && <FieldDescription>{description}</FieldDescription>}
       {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
     </Field>

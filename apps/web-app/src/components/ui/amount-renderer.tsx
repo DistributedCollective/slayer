@@ -1,6 +1,7 @@
 import { Decimal } from '@sovryn/slayer-shared';
+import clsx from 'clsx';
 import { CopyIcon } from 'lucide-react';
-import { type FC, useCallback } from 'react';
+import { type FC, useCallback, useMemo } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
 
 export type AmountRendererProps = {
@@ -13,11 +14,14 @@ export type AmountRendererProps = {
   showApproxSign?: boolean;
 };
 
-function formatAmount(value: string | number | bigint, decimals = 4) {
+function formatAmount(value: string | number | bigint, decimals = 8) {
   try {
     const dec = Decimal.from(value);
-    let str = dec.d.toFixed(decimals);
-    str = str.replace(/\.?(0+)$/, '');
+    let str = dec.d.toFixed(decimals).replace(/\.?(0+)$/, '');
+    // if the value is very small, try with more decimals
+    if (str === '' || str === '0') {
+      str = dec.d.toFixed(decimals * 2).replace(/\.?(0+)$/, '');
+    }
     return str;
   } catch {
     return '-';
@@ -40,34 +44,32 @@ export const AmountRenderer: FC<AmountRendererProps> = ({
   }, [value]);
 
   const approxSign = showApproxSign ? (
-    <span
-      aria-label="approximate"
-      title="Approximate value"
-      style={{ marginRight: 2 }}
-    >
-      &#x223C;
+    <span aria-label="approximate" title="Approximate value">
+      &#x7e;&nbsp;
     </span>
   ) : null;
 
-  if (!showTooltip) {
-    return (
-      <span className={className}>
+  const content = useMemo(
+    () => (
+      <>
         {approxSign}
         {prefix}
         {formatted}
-        {suffix && <span> {suffix}</span>}
-      </span>
-    );
+        {suffix && <span>&nbsp;{suffix}</span>}
+      </>
+    ),
+    [approxSign, prefix, formatted, suffix],
+  );
+
+  if (!showTooltip) {
+    return <span className={className}>{content}</span>;
   }
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className={className} style={{ cursor: 'pointer' }}>
-          {approxSign}
-          {prefix}
-          {formatted}
-          {suffix && <span> {suffix}</span>}
+        <span className={clsx(className, 'w-auto cursor-pointer')}>
+          {content}
         </span>
       </TooltipTrigger>
       <TooltipContent>
