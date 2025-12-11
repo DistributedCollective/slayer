@@ -14,11 +14,14 @@ export type AmountRendererProps = {
   showApproxSign?: boolean;
 };
 
-function formatAmount(value: string | number | bigint, decimals = 4) {
+function formatAmount(value: string | number | bigint, decimals = 8) {
   try {
     const dec = Decimal.from(value);
-    let str = dec.d.toFixed(decimals);
-    str = str.replace(/\.?(0+)$/, '');
+    let str = dec.d.toFixed(decimals).replace(/\.?(0+)$/, '');
+    // if the value is very small, try with more decimals
+    if (str === '' || str === '0') {
+      str = dec.d.toFixed(decimals * 2).replace(/\.?(0+)$/, '');
+    }
     return str;
   } catch {
     return '-';

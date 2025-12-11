@@ -37,9 +37,9 @@ export const HealthFactorBar: FC<HealthFactorBarProps> = ({
   }, [value, options.start, options.end]);
 
   return (
-    <div className="py-3">
-      <div className="flex flex-row items-center gap-0.5 relative w-full">
-        <div
+    <span className="block py-3">
+      <span className="flex flex-row items-center gap-0.5 relative w-full">
+        <span
           className={clsx(
             'rounded-sm h-1.5 relative bg-red-600/25 overflow-hidden',
           )}
@@ -55,8 +55,8 @@ export const HealthFactorBar: FC<HealthFactorBarProps> = ({
               }}
             />
           )}
-        </div>
-        <div
+        </span>
+        <span
           className={clsx(
             'rounded-sm h-1.5 relative bg-amber-600/25 overflow-hidden',
           )}
@@ -72,8 +72,8 @@ export const HealthFactorBar: FC<HealthFactorBarProps> = ({
               }}
             />
           )}
-        </div>
-        <div
+        </span>
+        <span
           className={clsx(
             'rounded-sm h-1.5 relative bg-green-600/25 overflow-hidden',
           )}
@@ -89,15 +89,15 @@ export const HealthFactorBar: FC<HealthFactorBarProps> = ({
               }}
             />
           )}
-        </div>
+        </span>
 
         {value !== undefined && (
-          <div
+          <span
             className="absolute h-4 w-0.5 bg-white/90 top-1/2 -translate-x-1/2 -translate-y-1/2"
             style={{ left: `calc(${caretPosition}% + 0.125rem)` }}
           />
         )}
-      </div>
-    </div>
+      </span>
+    </span>
   );
 };

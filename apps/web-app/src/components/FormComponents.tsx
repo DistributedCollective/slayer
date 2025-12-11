@@ -13,6 +13,7 @@ import { Decimal } from '@sovryn/slayer-shared';
 import { Loader2Icon } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import type { GetBalanceData } from 'wagmi/query';
+import { AmountRenderer } from './ui/amount-renderer';
 import { Checkbox } from './ui/checkbox';
 import { Field, FieldDescription, FieldError, FieldLabel } from './ui/field';
 import { InputGroup, InputGroupAddon, InputGroupInput } from './ui/input-group';
@@ -260,7 +261,7 @@ export function AmountField({
   label: ReactNode;
   placeholder?: string;
   description?: string;
-  balance?: GetBalanceData;
+  balance?: Omit<GetBalanceData, 'formatted'>;
   addonRight?: ReactNode;
 }) {
   const field = useFieldContext<string>();
@@ -290,13 +291,37 @@ export function AmountField({
   return (
     <Field>
       <FieldLabel htmlFor={field.name}>
-        {label}
-        {balance && (
-          <span className="ml-2 text-sm font-normal text-gray-400">
-            (Balance:{' '}
-            {Decimal.from(balance.value, balance.decimals).toFormatted()}{' '}
-            {balance.symbol})
-          </span>
+        {balance ? (
+          <>
+            <div className="w-full flex flex-row gap-4 justify-between items-center">
+              <span>{label}</span>
+              <Button
+                variant="link"
+                size="sm"
+                className="p-0"
+                onClick={() => {
+                  field.setValue(
+                    Decimal.from(balance.value).toString(balance.decimals),
+                  );
+                }}
+              >
+                <span>
+                  (max:&nbsp;
+                  <AmountRenderer
+                    value={Decimal.from(
+                      balance.value,
+                      balance.decimals,
+                    ).toString()}
+                    suffix={balance.symbol}
+                    showApproxSign
+                  />
+                  )
+                </span>
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>{label}</>
         )}
       </FieldLabel>
       <InputGroup>

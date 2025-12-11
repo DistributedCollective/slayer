@@ -1,6 +1,5 @@
 import { AmountRenderer } from '@/components/ui/amount-renderer';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogClose,
@@ -10,19 +9,42 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Item, ItemContent, ItemGroup } from '@/components/ui/item';
 import { useAppForm } from '@/hooks/app-form';
 import { sdk } from '@/lib/sdk';
 import { useSlayerTx } from '@/lib/transactions';
 import { validateDecimal } from '@/lib/validations';
 import { areAddressesEqual } from '@sovryn/slayer-shared';
+import { useMemo } from 'react';
 import { useAccount, useBalance } from 'wagmi';
 import z from 'zod';
 import { useStore } from 'zustand';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
+import { useMoneyMarketPositions } from '../../hooks/use-money-positions';
 import { lendRequestStore } from '../../stores/lend-request.store';
 
 const LendDialogForm = () => {
+  const { address } = useAccount();
+
   const reserve = useStore(lendRequestStore, (state) => state.reserve!);
+
+  const { data: items } = useMoneyMarketPositions({
+    pool: reserve.pool.id || 'default',
+    address: address!,
+  });
+
+  const data = useMemo(() => {
+    const position = (items?.data?.positions || []).find(
+      (item) => item.reserve.id === reserve.id,
+    );
+    if (position && items?.data) {
+      return {
+        position,
+        summary: items.data.summary,
+      };
+    }
+    return null;
+  }, [items]);
 
   const { begin } = useSlayerTx({
     onClosed: (ok: boolean) => {
@@ -32,7 +54,6 @@ const LendDialogForm = () => {
       }
     },
   });
-  const { address } = useAccount();
 
   const { data: balance } = useBalance({
     token: areAddressesEqual(reserve.token.address, reserve.pool.weth)
@@ -47,10 +68,7 @@ const LendDialogForm = () => {
       amount: '',
     },
     validators: {
-      onMount: z.object({
-        amount: validateDecimal({ min: 1n }),
-      }),
-      onBlur: z.object({
+      onChange: z.object({
         amount: validateDecimal({ min: 1n, max: balance?.value ?? undefined }),
       }),
     },
@@ -89,28 +107,39 @@ const LendDialogForm = () => {
       >
         <DialogHeader>
           <DialogTitle>Lend Asset</DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="sr-only">
             Lending functionality is under development.
           </DialogDescription>
         </DialogHeader>
         <form.AppField name="amount">
           {(field) => (
-            <field.AmountField label="Amount to Lend" balance={balance} />
+            <field.AmountField
+              label="Amount to Lend"
+              placeholder="Amount"
+              balance={balance}
+              addonRight={reserve.token.symbol}
+            />
           )}
         </form.AppField>
 
-        <Card>
-          <CardContent>
-            <div>
-              Lend APY:
-              <AmountRenderer value={'0'} suffix="%" showApproxSign />
-            </div>
-            <div>
-              Collateralization:{' '}
+        <ItemGroup>
+          <Item size="sm" className="py-1">
+            <ItemContent>Lend APY:</ItemContent>
+            <ItemContent>
+              <AmountRenderer
+                value={data?.position.reserve.supplyApy ?? '0'}
+                suffix="%"
+                showApproxSign
+              />
+            </ItemContent>
+          </Item>
+          <Item size="sm" className="py-1">
+            <ItemContent>Collateralization:</ItemContent>
+            <ItemContent>
               {reserve.canBeCollateral ? 'Enabled' : 'Disabled'}
-            </div>
-          </CardContent>
-        </Card>
+            </ItemContent>
+          </Item>
+        </ItemGroup>
 
         <DialogFooter>
           <DialogClose asChild>

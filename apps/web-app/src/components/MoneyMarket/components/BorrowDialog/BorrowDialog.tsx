@@ -156,32 +156,14 @@ const BorrowDialogForm = () => {
           {(field) => (
             <>
               <field.AmountField
-                label={
-                  <div className="w-full flex flex-row gap-4 justify-between items-center">
-                    <span>Amount to borrow</span>
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="p-0"
-                      onClick={() => {
-                        field.setValue(
-                          Decimal.from(
-                            data?.position.availableToBorrow ?? '0',
-                          ).toString(Decimal.DEFAULT_PRECISION),
-                        );
-                      }}
-                    >
-                      <span>
-                        Max:
-                        <AmountRenderer
-                          value={data?.position.availableToBorrow ?? '0'}
-                          suffix={data?.position.token.symbol}
-                          showApproxSign
-                        />
-                      </span>
-                    </Button>
-                  </div>
-                }
+                label="Amount to Borrow"
+                balance={{
+                  value: Decimal.from(
+                    data?.position.availableToBorrow ?? '0',
+                  ).toBigInt(),
+                  decimals: data?.position.token.decimals || 18,
+                  symbol: data?.position.token.symbol || '',
+                }}
                 placeholder="Amount to borrow"
                 addonRight={data?.position.token.symbol}
               />
