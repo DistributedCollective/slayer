@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { useCallback, useMemo, type FC } from 'react';
+import { MINIMUM_HEALTH_FACTOR } from '../MoneyMarket/constants';
 
 type HealthFactorBarProps = {
   value: number;
@@ -13,7 +14,12 @@ type HealthFactorBarProps = {
 
 export const HealthFactorBar: FC<HealthFactorBarProps> = ({
   value,
-  options = { start: 1, middleStart: 1.1, middleEnd: 1.5, end: 2 },
+  options = {
+    start: 1,
+    middleStart: MINIMUM_HEALTH_FACTOR,
+    middleEnd: 1.5,
+    end: 2,
+  },
 }) => {
   const getBlurWidth = useCallback(
     (start: number, end: number) => {

@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/table/table';
 import { Fragment, useCallback, useMemo, type FC } from 'react';
 
+import { withdrawRequestStore } from '@/components/MoneyMarket/stores/withdraw-request.store';
 import { AmountRenderer } from '@/components/ui/amount-renderer';
 import { Button } from '@/components/ui/button';
 import { InfoButton } from '@/components/ui/info-button';
@@ -34,6 +35,9 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
     //   ),
     // );
   }, []);
+
+  const withdrawSupply = (position: MoneyMarketPoolPosition) =>
+    withdrawRequestStore.getState().setPosition(position);
 
   return (
     <Table className="w-full border-separate">
@@ -66,31 +70,31 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {items.map((asset, index) => (
-          <Fragment key={asset.token.address}>
+        {items.map((item, index) => (
+          <Fragment key={item.token.address}>
             <TableRow className="hover:bg-transparent">
               <TableCell className="border-neutral-800 border-y border-l rounded-tl-[1.25rem] rounded-bl-[1.25rem]">
                 <div className="flex items-center min-w-24">
                   <img
-                    src={asset.token.logoUrl}
-                    alt={asset.token.name}
+                    src={item.token.logoUrl}
+                    alt={item.token.name}
                     className="w-8 h-8"
                   />
                   <div className="ml-2">
                     <p className="text-gray-50 font-medium">
-                      {asset.token.symbol}
+                      {item.token.symbol}
                     </p>
                   </div>
                 </div>
               </TableCell>
               <TableCell className="border-neutral-800 border-y">
                 <AmountRenderer
-                  value={asset.supplied}
-                  suffix={asset.token.symbol}
+                  value={item.supplied}
+                  suffix={item.token.symbol}
                 />
                 <p className="text-neutral-500 font-medium text-xs">
                   <AmountRenderer
-                    value={asset.suppliedUsd}
+                    value={item.suppliedUsd}
                     prefix="$"
                     showApproxSign
                   />
@@ -99,7 +103,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
               <TableCell className="border-neutral-800 border-y">
                 <div className="flex items-center">
                   <AmountRenderer
-                    value={asset.supplyApy}
+                    value={item.supplyApy}
                     suffix="%"
                     className="text-gray-50 font-medium"
                     showApproxSign
@@ -110,9 +114,9 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                 <div className="flex items-center">
                   <Switch
                     className="cursor-pointer data-[state=checked]:bg-primary"
-                    checked={asset.collateral}
-                    id={`collateral-${asset.token.address}`}
-                    onClick={() => toggleCollateral(asset.id)}
+                    checked={item.collateral}
+                    id={`collateral-${item.token.address}`}
+                    onClick={() => toggleCollateral(item.id)}
                     // disabled={!asset}
                   />
                 </div>
@@ -122,6 +126,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                   <Button
                     className="rounded-full min-w-24 h-10 hover:cursor-pointer"
                     variant="secondary"
+                    onClick={() => withdrawSupply(item)}
                   >
                     Withdraw
                   </Button>

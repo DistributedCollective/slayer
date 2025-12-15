@@ -54,6 +54,28 @@ const poolAbi = [
   },
   {
     type: 'function',
+    name: 'withdraw',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { type: 'address', name: 'asset' },
+      { type: 'uint256', name: 'amount' },
+      { type: 'address', name: 'to' },
+    ],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'withdrawETH',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { type: 'address', name: 'pool' },
+      { type: 'uint256', name: 'amount' },
+      { type: 'address', name: 'to' },
+    ],
+    outputs: [],
+  },
+  {
+    type: 'function',
     name: 'setUserUseReserveAsCollateral',
     stateMutability: 'nonpayable',
     inputs: [
@@ -284,6 +306,87 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
               value.toBigInt(),
               toAddress(opts.account),
               0,
+            ],
+          }),
+        }),
+      },
+    ];
+  }
+
+  async withdraw<account extends Account>(
+    reserve: MoneyMarketPoolReserve,
+    amount: Decimalish,
+    isMaxAmount: boolean,
+    opts: TransactionOpts<account>,
+  ) {
+    const asset = reserve.token;
+    const pool = reserve.pool;
+    const value = Decimal.from(amount);
+
+    if (asset.isNative || areAddressesEqual(asset.address, pool.weth)) {
+      const approval = await makeApprovalTransaction({
+        token: pool.weth,
+        spender: pool.wethGateway,
+        amount: isMaxAmount
+          ? Decimal.MAX_UINT_256.toBigInt()
+          : value.toBigInt(),
+        account: toAddress(opts.account),
+        client: this.ctx.publicClient,
+      });
+
+      return [
+        ...(approval
+          ? [
+              {
+                id: 'approve_withdraw_asset',
+                title: `Approve ${asset.symbol}`,
+                description: `Approve ${value.toString()} ${asset.symbol} for withdrawal`,
+                request: approval,
+              },
+            ]
+          : []),
+        {
+          id: 'withdraw_native_asset',
+          title: `Withdraw ${asset.symbol}`,
+          description: `Withdraw ${value.toString()} ${asset.symbol}`,
+          request: makeTransactionRequest({
+            to: pool.address,
+            value: 0n,
+            chain: this.ctx.publicClient.chain,
+            account: opts.account,
+            data: encodeFunctionData({
+              abi: poolAbi,
+              functionName: 'withdrawETH',
+              args: [
+                toAddress(pool.address),
+                isMaxAmount
+                  ? Decimal.MAX_UINT_256.toBigInt()
+                  : value.toBigInt(),
+                toAddress(opts.account),
+              ],
+            }),
+          }),
+        },
+      ];
+    }
+
+    return [
+      {
+        id: 'withdraw_asset',
+        title: `Withdraw ${asset.symbol}`,
+        description: `Withdraw ${value.toString()} ${asset.symbol}`,
+        request: makeTransactionRequest({
+          to: pool.address,
+          value: 0n,
+          chain: this.ctx.publicClient.chain,
+          account: opts.account,
+          data: encodeFunctionData({
+            abi: poolAbi,
+            functionName: 'withdraw',
+            args: [
+              toAddress(asset.address),
+              isMaxAmount ? Decimal.MAX_UINT_256.toBigInt() : value.toBigInt(),
+              toAddress(opts.account),
             ],
           }),
         }),

@@ -25,6 +25,7 @@ export class Decimal {
   static ZERO = new Decimal('0');
   static ONE = new Decimal('1');
   static INFINITY = new Decimal('Infinity', 0);
+  static MAX_UINT_256 = new Decimal(MAX_UINT_256, 0);
 
   static DEFAULT_PRECISION = DEFAULT_PRECISION;
 

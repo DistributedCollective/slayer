@@ -8,6 +8,7 @@ import { BorrowDialog } from '@/components/MoneyMarket/components/BorrowDialog/B
 import { BorrowPositionsList } from '@/components/MoneyMarket/components/BorrowPositionsList/BorrowPositionsList';
 import { LendAssetsList } from '@/components/MoneyMarket/components/LendAssetsList/LendAssetsList';
 import { LendDialog } from '@/components/MoneyMarket/components/LendDialog/LendDialog';
+import { WithdrawDialog } from '@/components/MoneyMarket/components/WithdrawDialog/WithdrawDialog';
 import {
   QUERY_KEY_MONEY_MARKET_POSITIONS,
   useMoneyMarketPositions,
@@ -135,6 +136,7 @@ function RouteComponent() {
       </div>
       <BorrowDialog />
       <LendDialog />
+      <WithdrawDialog />
     </>
   );
 }
