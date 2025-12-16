@@ -94,7 +94,7 @@ const LendDialogForm = () => {
   };
 
   const handleEscapes = (e: Event) => {
-    lendRequestStore.getState().reset();
+    // lendRequestStore.getState().reset();
     e.preventDefault();
   };
 
@@ -108,7 +108,8 @@ const LendDialogForm = () => {
         <DialogHeader>
           <DialogTitle>Lend Asset</DialogTitle>
           <DialogDescription className="sr-only">
-            Lending functionality is under development.
+            Supply assets to the money market to earn interest and use them as
+            collateral for borrowing.
           </DialogDescription>
         </DialogHeader>
         <form.AppField name="amount">

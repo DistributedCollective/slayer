@@ -27,6 +27,7 @@ import { useAccount } from 'wagmi';
 import z from 'zod';
 import { useStore } from 'zustand';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
+import { MINIMUM_HEALTH_FACTOR } from '../../constants';
 import { useMoneyMarketPositions } from '../../hooks/use-money-positions';
 import { borrowRequestStore } from '../../stores/borrow-request.store';
 
@@ -103,7 +104,7 @@ const BorrowDialogForm = () => {
   };
 
   const handleEscapes = (e: Event) => {
-    borrowRequestStore.getState().reset();
+    // borrowRequestStore.getState().reset();
     e.preventDefault();
   };
 
@@ -198,7 +199,7 @@ const BorrowDialogForm = () => {
                       value={healthFactor.toNumber()}
                       options={{
                         start: 1,
-                        middleStart: 1.1,
+                        middleStart: MINIMUM_HEALTH_FACTOR,
                         middleEnd: 1.5,
                         end: 2,
                       }}
