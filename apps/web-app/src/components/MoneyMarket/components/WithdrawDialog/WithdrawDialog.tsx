@@ -13,6 +13,7 @@ import { Item, ItemContent, ItemGroup } from '@/components/ui/item';
 import { useAppForm } from '@/hooks/app-form';
 import { sdk } from '@/lib/sdk';
 import { useSlayerTx } from '@/lib/transactions';
+import { shouldUseFullAmount } from '@/lib/utils';
 import { validateDecimal } from '@/lib/validations';
 import { Decimal } from '@sovryn/slayer-shared';
 import { useMemo } from 'react';
@@ -101,8 +102,9 @@ const WithdrawDialogForm = () => {
             token: position.token,
           },
           value.amount,
-          // if max amount + summary.borrowPowerUsed.eq(0) then flag it as true
-          false,
+          // if position can be withdrawn in full and user entered near full amount, use full withdrawal to avoid dust issues
+          maximumWithdrawAmount.eq(position.supplied) &&
+            shouldUseFullAmount(value.amount, position.supplied),
           {
             account: address!,
           },
@@ -124,7 +126,7 @@ const WithdrawDialogForm = () => {
   };
 
   const handleEscapes = (e: Event) => {
-    withdrawRequestStore.getState().reset();
+    // withdrawRequestStore.getState().reset();
     e.preventDefault();
   };
 

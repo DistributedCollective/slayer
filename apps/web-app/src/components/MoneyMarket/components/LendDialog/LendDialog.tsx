@@ -94,7 +94,7 @@ const LendDialogForm = () => {
   };
 
   const handleEscapes = (e: Event) => {
-    lendRequestStore.getState().reset();
+    // lendRequestStore.getState().reset();
     e.preventDefault();
   };
 

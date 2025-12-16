@@ -104,7 +104,7 @@ const BorrowDialogForm = () => {
   };
 
   const handleEscapes = (e: Event) => {
-    borrowRequestStore.getState().reset();
+    // borrowRequestStore.getState().reset();
     e.preventDefault();
   };
 

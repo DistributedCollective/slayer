@@ -11,6 +11,7 @@ D.set({
 });
 
 const DEFAULT_PRECISION = 18;
+const MAX_UINT_128 = '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF';
 const MAX_UINT_256 =
   '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
 
@@ -24,12 +25,19 @@ export class Decimal {
 
   static ZERO = new Decimal('0');
   static ONE = new Decimal('1');
-  static INFINITY = new Decimal('Infinity', 0);
-  static MAX_UINT_256 = new Decimal(MAX_UINT_256, 0);
+  static INFINITY = new Decimal(MAX_UINT_256, 0).sub('1', 0);
+  static MAX_UINT_128 = new Decimal(MAX_UINT_128, 0).sub('1', 0);
+  static MAX_UINT_256 = new Decimal(MAX_UINT_256, 0).sub('1', 0);
 
   static DEFAULT_PRECISION = DEFAULT_PRECISION;
 
   constructor(value: string, precision: number = DEFAULT_PRECISION) {
+    if (value?.toLowerCase() === 'infinity') {
+      this.d = new D(MAX_UINT_256).sub(new D(1));
+      this.precision = 0;
+      return;
+    }
+
     this.d = new D(value);
     this.precision = precision;
   }
@@ -47,8 +55,8 @@ export class Decimal {
     }
 
     if (typeof value === 'string') {
-      if (value === 'Infinity') {
-        return new Decimal(MAX_UINT_256, 0);
+      if (value?.toLowerCase() === 'infinity') {
+        return new Decimal(MAX_UINT_256, 0).sub('1', 0);
       }
 
       if (!stringRepresentationFormat.test(value)) {
