@@ -70,7 +70,14 @@ const WithdrawDialogForm = () => {
     return maxWithdrawUsd.gt(position.suppliedUsd)
       ? Decimal.from(position.supplied, position.token.decimals)
       : maxWithdrawUsd.div(position.reserve.priceUsd);
-  }, []);
+  }, [
+    data,
+    position.collateral,
+    position.reserve.priceUsd,
+    position.supplied,
+    position.suppliedUsd,
+    position.token.decimals,
+  ]);
 
   const balance = useMemo(
     () => ({
