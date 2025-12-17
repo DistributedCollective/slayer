@@ -1,3 +1,4 @@
+import { shouldRevalidateQuery } from '@/integrations/tanstack-query/root-provider';
 import { sdk } from '@/lib/sdk';
 import { useQuery } from '@tanstack/react-query';
 import type { Address } from 'viem';
@@ -14,7 +15,12 @@ export const useMoneyMarketPositions = ({
 }) =>
   useQuery({
     queryKey: ['money-market:positions', pool, address],
-    queryFn: () => sdk.moneyMarket.listUserPositions(pool, address!),
+    queryFn: ({ queryKey }) =>
+      sdk.moneyMarket.listUserPositions(
+        pool,
+        address!,
+        shouldRevalidateQuery(queryKey),
+      ),
     staleTime: STALE_TIME,
     enabled: !!address && !!pool,
   });

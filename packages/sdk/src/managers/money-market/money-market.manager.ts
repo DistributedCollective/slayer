@@ -81,6 +81,18 @@ const poolAbi = [
     ],
     outputs: [],
   },
+  {
+    type: 'function',
+    name: 'repay',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { type: 'address', name: 'asset' },
+      { type: 'uint256', name: 'amount' },
+      { type: 'uint256', name: 'rateMode' },
+      { type: 'address', name: 'onBehalfOf' },
+    ],
+    outputs: [],
+  },
 ] as const;
 
 const debtWethApi = [
@@ -132,7 +144,21 @@ const wethGatewayAbi = [
     ],
     outputs: [],
   },
+  {
+    type: 'function',
+    name: 'repayETH',
+    stateMutability: 'payable',
+    inputs: [
+      { type: 'address', name: 'pool' },
+      { type: 'uint256', name: 'amount' },
+      { type: 'uint256', name: 'rateMode' },
+      { type: 'address', name: 'onBehalfOf' },
+    ],
+    outputs: [],
+  },
 ] as const;
+
+const REPAY_ALL_ETH_SURPLUS = Decimal.from('0.01');
 
 export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
   async listPools(opts: SdkRequestOptions = {}) {
@@ -407,6 +433,116 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
             args: [
               toAddress(asset.address),
               isMaxAmount ? Decimal.MAX_UINT_256.toBigInt() : value.toBigInt(),
+              toAddress(opts.account),
+            ],
+          }),
+        }),
+      },
+    ];
+  }
+
+  async repay<account extends Account>(
+    reserve: MoneyMarketPoolReserve,
+    amount: Decimalish,
+    isEntireDebt: boolean,
+    useCollateral: boolean,
+    borrowRateMode: BorrowRateMode,
+    opts: TransactionOpts<account>,
+  ) {
+    log(
+      `Preparing repay of ${Decimal.from(amount).toString()} ${reserve.token.symbol} from pool ${reserve.pool.id}`,
+      { reserve, amount, isEntireDebt, useCollateral, borrowRateMode, opts },
+    );
+    if (!useCollateral) {
+      return this.repayWithBalance(
+        reserve,
+        amount,
+        isEntireDebt,
+        borrowRateMode,
+        opts,
+      );
+    }
+
+    throw new Error('Repay with collateral is not implemented yet');
+  }
+
+  private async repayWithBalance<account extends Account>(
+    reserve: MoneyMarketPoolReserve,
+    amount: Decimalish,
+    isEntireDebt: boolean,
+    borrowRateMode: BorrowRateMode,
+    opts: TransactionOpts<account>,
+  ) {
+    const asset = reserve.token;
+    const pool = reserve.pool;
+
+    if (asset.isNative || areAddressesEqual(asset.address, pool.weth)) {
+      const entry = Decimal.from(amount);
+
+      const value = isEntireDebt ? entry.add(REPAY_ALL_ETH_SURPLUS) : entry;
+
+      return [
+        {
+          id: 'repay_native_asset__balance',
+          title: `Repay ${asset.symbol}`,
+          description: `Repay ${entry.toString()} ${asset.symbol}`,
+          request: makeTransactionRequest({
+            to: pool.wethGateway,
+            value: value.toBigInt(),
+            chain: this.ctx.publicClient.chain,
+            account: opts.account,
+            data: encodeFunctionData({
+              abi: wethGatewayAbi,
+              functionName: 'repayETH',
+              args: [
+                toAddress(pool.address),
+                value.toBigInt(),
+                borrowRateMode,
+                toAddress(opts.account),
+              ],
+            }),
+          }),
+        },
+      ];
+    }
+
+    const entry = Decimal.from(amount);
+    const value = isEntireDebt ? Decimal.MAX_UINT_256 : entry;
+    const approval = await makeApprovalTransaction({
+      spender: pool.address,
+      token: asset.address,
+      amount: value.toBigInt(),
+      account: toAddress(opts.account),
+      client: this.ctx.publicClient,
+    });
+
+    return [
+      ...(approval
+        ? [
+            {
+              id: 'approve_repay_asset__balance',
+              title: `Approve ${asset.symbol}`,
+              description: `Approve ${entry.toString()} ${asset.symbol} for repayment`,
+              request: approval,
+            },
+          ]
+        : []),
+      {
+        id: 'repay_asset__balance',
+        title: `Repay ${asset.symbol}`,
+        description: `Repay ${entry.toString()} ${asset.symbol}`,
+        request: makeTransactionRequest({
+          to: pool.address,
+          value: 0n,
+          chain: this.ctx.publicClient.chain,
+          account: opts.account,
+          data: encodeFunctionData({
+            abi: poolAbi,
+            functionName: 'repay',
+            args: [
+              toAddress(asset.address),
+              value.toBigInt(),
+              borrowRateMode,
               toAddress(opts.account),
             ],
           }),

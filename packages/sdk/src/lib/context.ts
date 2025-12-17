@@ -34,6 +34,7 @@ export interface SdkRequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   // per-call baseUrl override if needed:
   baseUrlOverride?: string;
+  revalidateCache?: boolean;
 }
 
 export class Context<chain extends Chain> {
@@ -42,7 +43,7 @@ export class Context<chain extends Chain> {
 
   readonly http: HttpClient;
   readonly publicClient: PublicClient<Transport, chain>;
-  readonly chainId: number;
+  readonly chainId: chain['id'];
 
   constructor(cfg: SdkConfig<chain>) {
     if (!cfg.publicClient)

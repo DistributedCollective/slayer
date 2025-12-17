@@ -8,6 +8,7 @@ import { BorrowDialog } from '@/components/MoneyMarket/components/BorrowDialog/B
 import { BorrowPositionsList } from '@/components/MoneyMarket/components/BorrowPositionsList/BorrowPositionsList';
 import { LendAssetsList } from '@/components/MoneyMarket/components/LendAssetsList/LendAssetsList';
 import { LendDialog } from '@/components/MoneyMarket/components/LendDialog/LendDialog';
+import { RepayDialog } from '@/components/MoneyMarket/components/RepayDialog/RepayDialog';
 import { WithdrawDialog } from '@/components/MoneyMarket/components/WithdrawDialog/WithdrawDialog';
 import {
   QUERY_KEY_MONEY_MARKET_POSITIONS,
@@ -47,7 +48,7 @@ export const Route = createFileRoute('/money-market')({
     });
 
     client.prefetchQuery({
-      queryKey: ['money-market:reserve', pool || 'default'],
+      queryKey: ['money-market:reserves', pool || 'default'],
       queryFn: () => sdk.moneyMarket.listReserves(pool || 'default'),
       staleTime: STALE_TIME,
     });
@@ -75,8 +76,11 @@ function RouteComponent() {
   // });
 
   const { data: reserves } = useQuery({
-    queryKey: ['money-market:reserve', pool || 'default'],
-    queryFn: () => sdk.moneyMarket.listReserves(pool || 'default'),
+    queryKey: ['money-market:reserves', pool || 'default'],
+    queryFn: ({ meta }) =>
+      sdk.moneyMarket.listReserves(pool || 'default', {
+        revalidateCache: meta?.revalidateCache ?? false,
+      }),
     staleTime: STALE_TIME,
   });
 
@@ -137,6 +141,7 @@ function RouteComponent() {
       <BorrowDialog />
       <LendDialog />
       <WithdrawDialog />
+      <RepayDialog />
     </>
   );
 }

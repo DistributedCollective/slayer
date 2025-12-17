@@ -20,84 +20,125 @@ import { useAppForm } from '@/hooks/app-form';
 import { revalidateQuery } from '@/integrations/tanstack-query/root-provider';
 import { sdk } from '@/lib/sdk';
 import { useSlayerTx } from '@/lib/transactions';
+import { shouldUseFullAmount } from '@/lib/utils';
 import { validateDecimal } from '@/lib/validations';
-import { BORROW_RATE_MODES } from '@sovryn/slayer-sdk';
-import { Decimal } from '@sovryn/slayer-shared';
-import { useCallback, useMemo } from 'react';
-import { useAccount } from 'wagmi';
+import { areAddressesEqual, Decimal } from '@sovryn/slayer-shared';
+import { useCallback, useMemo, useReducer } from 'react';
+import { useAccount, useBalance } from 'wagmi';
 import z from 'zod';
 import { useStore } from 'zustand';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
 import { MINIMUM_HEALTH_FACTOR } from '../../constants';
 import { useMoneyMarketPositions } from '../../hooks/use-money-positions';
-import { borrowRequestStore } from '../../stores/borrow-request.store';
+import { repayRequestStore } from '../../stores/repay-request.store';
 
-const BorrowDialogForm = () => {
+const RepayDialogForm = () => {
   const { address } = useAccount();
-  const reserve = useStore(borrowRequestStore, (state) => state.reserve!);
 
-  const { data: items } = useMoneyMarketPositions({
-    pool: reserve.pool.id || 'default',
+  const position = useStore(repayRequestStore, (state) => state.position!);
+
+  const [useCollateral] = useReducer((state) => !state, false);
+
+  const { data } = useMoneyMarketPositions({
+    pool: position.pool.id || 'default',
     address: address!,
   });
 
+  const summary = useMemo(() => {
+    const pos = (data?.data?.positions || []).find(
+      (item) => item.reserve.id === position.reserve.id,
+    );
+    if (pos && data?.data) {
+      return data.data.summary;
+    }
+    return null;
+  }, [data]);
+
   const { begin } = useSlayerTx({
     onClosed: (ok: boolean) => {
-      console.log('borrow tx modal closed, success:', ok);
       if (ok) {
-        // close borrowing dialog if tx was successful
-        borrowRequestStore.getState().reset();
+        // close withdrawal dialog if tx was successful
+        repayRequestStore.getState().reset();
       }
     },
     onCompleted: () => {
       revalidateQuery({
         queryKey: [
           'money-market:positions',
-          reserve.pool.id || 'default',
+          position.pool.id || 'default',
           address,
         ],
       });
     },
   });
 
-  const data = useMemo(() => {
-    const position = (items?.data?.positions || []).find(
-      (item) => item.reserve.id === reserve.id,
-    );
-    if (position && items?.data) {
-      return {
-        position,
-        summary: items.data.summary,
-      };
-    }
-    return null;
-  }, [items]);
+  const { data: walletBalance } = useBalance({
+    token: areAddressesEqual(position.token.address, position.pool.weth)
+      ? undefined
+      : position.token.address,
+    address: address,
+    chainId: sdk.ctx.chainId,
+  });
+
+  const maximumRepayAmount = useMemo(() => {
+    return Decimal.from(position.borrowed, position.token.decimals).gt(
+      walletBalance?.value ?? 0n,
+      walletBalance?.decimals,
+    )
+      ? Decimal.from(walletBalance?.value ?? 0n, walletBalance?.decimals)
+      : Decimal.from(position.borrowed, position.token.decimals);
+  }, [
+    position.borrowed,
+    position.token.decimals,
+    walletBalance?.decimals,
+    walletBalance?.value,
+  ]);
+
+  const balance = useMemo(
+    () => ({
+      value: maximumRepayAmount.toBigInt(),
+      decimals: position.token.decimals,
+      symbol: position.token.symbol,
+    }),
+    [position, maximumRepayAmount],
+  );
 
   const form = useAppForm({
     defaultValues: {
       amount: '',
-      agree: false,
     },
     validators: {
       onChange: z.object({
         amount: validateDecimal({
           min: 1n,
-          max: Decimal.from(data?.position.availableToBorrow ?? '0').toBigInt(),
+          max: balance.value ?? undefined,
         }),
-        agree: z.literal(true, 'Must agree to proceed with borrowing'),
       }),
     },
     onSubmit: ({ value }) => {
       begin(() =>
-        sdk.moneyMarket.borrow(
-          reserve,
+        sdk.moneyMarket.repay(
+          {
+            ...position.reserve,
+            pool: position.pool,
+            token: position.token,
+          },
           value.amount,
-          BORROW_RATE_MODES.variable,
+          maximumRepayAmount.lte(value.amount) ||
+            shouldUseFullAmount(value.amount, position.borrowed),
+          useCollateral,
+          position.borrowRateMode,
           {
             account: address!,
           },
         ),
       );
+    },
+    onSubmitInvalid(props) {
+      console.log('Withdraw request submission invalid:', props);
+    },
+    onSubmitMeta() {
+      console.log('Withdraw request submission meta:', form);
     },
   });
 
@@ -111,37 +152,36 @@ const BorrowDialogForm = () => {
     e.preventDefault();
   };
 
-  const calculateLiquidationPrice = useCallback(
-    (amount: string) => {
-      if (!data || Decimal.from(data.summary.collateralBalanceUsd).eq(0)) {
-        return Decimal.INFINITY;
-      }
-
-      return Decimal.from(
-        Decimal.from(amount || '0').mul(data.position.reserve.priceUsd),
-      )
-        .mul(data.summary.currentLiquidationThreshold)
-        .div(data.summary.collateralBalanceUsd);
-    },
-    [data],
-  );
-
   const computeHealthFactor = useCallback(
     (amount: string) => {
-      if (!data || Decimal.from(data.summary.totalBorrowsUsd).eq(0)) {
+      if (!summary || Decimal.from(summary.totalBorrowsUsd).eq(0)) {
         return Decimal.INFINITY;
       }
 
-      return Decimal.from(data.summary.collateralBalanceUsd)
-        .mul(data.summary.currentLiquidationThreshold)
+      return Decimal.from(summary.collateralBalanceUsd)
+        .mul(summary.currentLiquidationThreshold)
         .div(
-          Decimal.from(data.summary.totalBorrowsUsd).add(
-            Decimal.from(amount || '0').mul(data.position.reserve.priceUsd),
+          Decimal.from(summary.totalBorrowsUsd).sub(
+            Decimal.from(amount || '0').mul(position.reserve.priceUsd),
           ),
         );
     },
-    [data],
+    [summary, position],
   );
+
+  const calculateRemainingDebt = (repaymentAmount: string) => {
+    const amount = Decimal.from(
+      repaymentAmount || '0',
+      position.token.decimals,
+    );
+    const current = Decimal.from(position.borrowed, position.token.decimals);
+    if (amount.gt(current)) {
+      return Decimal.ZERO.toString();
+    }
+    return Decimal.from(position.borrowed, position.token.decimals)
+      .sub(repaymentAmount || '0')
+      .toString();
+  };
 
   return (
     <form onSubmit={handleSubmit} id={form.formId}>
@@ -151,27 +191,19 @@ const BorrowDialogForm = () => {
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>Borrow Asset</DialogTitle>
+          <DialogTitle>Repay Loan</DialogTitle>
           <DialogDescription className="sr-only">
-            Borrowing functionality is under development.
+            Repay your borrowed assets in the money market.
           </DialogDescription>
         </DialogHeader>
         <form.AppField name="amount">
           {(field) => (
-            <>
-              <field.AmountField
-                label="Amount to Borrow"
-                balance={{
-                  value: Decimal.from(
-                    data?.position.availableToBorrow ?? '0',
-                  ).toBigInt(),
-                  decimals: data?.position.token.decimals || 18,
-                  symbol: data?.position.token.symbol || '',
-                }}
-                placeholder="Amount to borrow"
-                addonRight={data?.position.token.symbol}
-              />
-            </>
+            <field.AmountField
+              label="Amount to Repay"
+              placeholder="Amount"
+              balance={balance}
+              addonRight={balance.symbol}
+            />
           )}
         </form.AppField>
 
@@ -210,45 +242,19 @@ const BorrowDialogForm = () => {
                   </ItemDescription>
                 </ItemContent>
               </Item>
-              <Item size="sm" className="mt-2 py-1">
-                <ItemContent>Borrow APY</ItemContent>
-                <ItemContent>
-                  <AmountRenderer
-                    value={data?.position.reserve.variableBorrowApy ?? '0'}
-                    suffix="%"
-                    showApproxSign
-                  />
-                </ItemContent>
-              </Item>
               <Item size="sm" className="py-1">
-                <ItemContent>Liquidation price</ItemContent>
+                <ItemContent>Remaining debt</ItemContent>
                 <ItemContent>
                   <AmountRenderer
-                    value={calculateLiquidationPrice(amount).toString()}
+                    value={calculateRemainingDebt(amount)}
                     showApproxSign
-                    prefix="$"
-                  />
-                </ItemContent>
-              </Item>
-              <Item size="sm" className="py-1">
-                <ItemContent>{data?.position.token.symbol} Price</ItemContent>
-                <ItemContent>
-                  <AmountRenderer
-                    value={data?.position.reserve.priceUsd ?? '0'}
-                    prefix="$"
-                    showApproxSign
+                    suffix={position.token.symbol}
                   />
                 </ItemContent>
               </Item>
             </ItemGroup>
           )}
         </form.Subscribe>
-
-        <form.AppField name="agree">
-          {(field) => (
-            <field.CheckBox label="I understand that my collateral may be liquidated or used to pay rollover fees if applicable." />
-          )}
-        </form.AppField>
 
         <DialogFooter>
           <DialogClose asChild>
@@ -257,7 +263,7 @@ const BorrowDialogForm = () => {
             </Button>
           </DialogClose>
           <form.AppForm>
-            <form.SubscribeButton label="Submit" />
+            <form.SubscribeButton label="Repay" />
           </form.AppForm>
         </DialogFooter>
       </DialogContent>
@@ -265,21 +271,21 @@ const BorrowDialogForm = () => {
   );
 };
 
-export const BorrowDialog = () => {
+export const RepayDialog = () => {
   const isOpen = useStoreWithEqualityFn(
-    borrowRequestStore,
-    (state) => state.reserve !== null,
+    repayRequestStore,
+    (state) => state.position !== null,
   );
 
   const handleClose = (open: boolean) => {
     if (!open) {
-      borrowRequestStore.getState().reset();
+      repayRequestStore.getState().reset();
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      {isOpen && <BorrowDialogForm />}
+      {isOpen && <RepayDialogForm />}
     </Dialog>
   );
 };

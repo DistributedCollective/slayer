@@ -12,6 +12,7 @@ export interface HttpRequestOptions {
   signal?: AbortSignal;
   headers?: Record<string, string>;
   query?: Record<string, string | number | boolean | undefined>;
+  revalidateCache?: boolean;
   body?: unknown;
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   // per-call baseUrl override if needed:
@@ -60,6 +61,11 @@ export class HttpClient {
         ? { authorization: `Bearer ${this.config.apiKey}` }
         : {}),
       ...(this.config.userAgent ? { 'user-agent': this.config.userAgent } : {}),
+      ...(opts.revalidateCache
+        ? {
+            'x-cache-revalidate': '1',
+          }
+        : {}),
       ...(opts.headers ?? {}),
     };
 

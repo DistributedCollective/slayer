@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/table/table';
 import { Fragment, useCallback, useMemo, useState, type FC } from 'react';
 
+import { repayRequestStore } from '@/components/MoneyMarket/stores/repay-request.store';
 import { AmountRenderer } from '@/components/ui/amount-renderer';
 import { Button } from '@/components/ui/button';
 import { InfoButton } from '@/components/ui/info-button';
@@ -63,6 +64,9 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
       selectedApy[rowKey(a, idx)] ?? inferDefaultSelected(a),
     [selectedApy, rowKey],
   );
+
+  const repayLoan = (position: MoneyMarketPoolPosition) =>
+    repayRequestStore.getState().setPosition(position);
 
   return (
     <Table className="w-full border-separate">
@@ -178,6 +182,7 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                     <Button
                       className="rounded-full min-w-24 h-10 hover:cursor-pointer"
                       variant="secondary"
+                      onClick={() => repayLoan(asset)}
                     >
                       Repay
                     </Button>
