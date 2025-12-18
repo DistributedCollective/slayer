@@ -11,7 +11,9 @@ import {
 import {
   BORROW_RATE_MODES,
   BorrowRateMode,
+  MoneyMarketBaseCurrencyData,
   MoneyMarketPool,
+  MoneyMarketPoolEmodeCategory,
   MoneyMarketPoolPosition,
   MoneyMarketPoolReserve,
   MoneyMarketUserSummary,
@@ -174,15 +176,16 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
     opts: SdkRequestOptions = {},
   ) {
     const response = await this.ctx.http.request<{
-      data: { reservesData: MoneyMarketPoolReserve[] };
+      data: {
+        reservesData: MoneyMarketPoolReserve[];
+        baseCurrencyData: MoneyMarketBaseCurrencyData;
+        eModes: MoneyMarketPoolEmodeCategory[];
+      };
     }>(`/${this.ctx.chainId}/money-market/${pool}/reserves`, {
       ...opts,
       query: buildQuery(opts.query),
     });
-    return {
-      ...response,
-      data: response.data.reservesData,
-    };
+    return response;
   }
 
   async listUserPositions(

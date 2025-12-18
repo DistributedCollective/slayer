@@ -1,3 +1,4 @@
+import { Decimal } from '@sovryn/slayer-shared';
 import { Address } from 'viem';
 import { maybeCache } from '../../app/plugins/cache';
 import { ChainId, chains, ChainSelector } from '../../configs/chains';
@@ -411,6 +412,55 @@ const uiPoolDataProviderAbi = [
   },
 ] as const;
 
+const poolAbi = [
+  {
+    inputs: [
+      {
+        internalType: 'uint8',
+        name: 'id',
+        type: 'uint8',
+      },
+    ],
+    name: 'getEModeCategoryData',
+    outputs: [
+      {
+        components: [
+          {
+            internalType: 'uint16',
+            name: 'ltv',
+            type: 'uint16',
+          },
+          {
+            internalType: 'uint16',
+            name: 'liquidationThreshold',
+            type: 'uint16',
+          },
+          {
+            internalType: 'uint16',
+            name: 'liquidationBonus',
+            type: 'uint16',
+          },
+          {
+            internalType: 'address',
+            name: 'priceSource',
+            type: 'address',
+          },
+          {
+            internalType: 'string',
+            name: 'label',
+            type: 'string',
+          },
+        ],
+        internalType: 'struct DataTypes.EModeCategory',
+        name: '',
+        type: 'tuple',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
+
 export type PoolDefinition = {
   id: string | 'default';
   name: string;
@@ -699,4 +749,52 @@ export async function fetchUserReserves(
     })),
     userEmodeCategoryId,
   };
+}
+
+export async function fetchEmodeCategoryData(
+  chainId: ChainSelector,
+  pool: PoolDefinition,
+  reserves: Awaited<ReturnType<typeof fetchPoolReserves>>['reservesData'],
+) {
+  const chain = chains.get(chainId);
+  if (!chain) {
+    throw new Error(`Unsupported chain: ${chainId}`);
+  }
+
+  const categoryIds = Array.from(
+    new Set(reserves.map((reserve) => reserve.eModeCategoryId)),
+  ).filter((id) => id !== 0);
+
+  const results = await chain.rpc.multicall({
+    contracts: categoryIds.map((id) => ({
+      address: pool.address,
+      abi: poolAbi,
+      functionName: 'getEModeCategoryData',
+      args: [id],
+    })),
+  });
+
+  return results
+    .map(({ result }, index) => {
+      if (!result) {
+        return null;
+      }
+
+      const { ltv, liquidationThreshold, liquidationBonus, label } = result;
+      const categoryId = categoryIds[index];
+
+      return {
+        id: categoryId,
+        ltv: Decimal.from(ltv).div(100).toString(),
+        liquidationThreshold: Decimal.from(liquidationThreshold)
+          .div(100)
+          .toString(),
+        liquidationBonus: Decimal.from(liquidationBonus).div(100).toString(),
+        label,
+        assets: reserves
+          .filter((reserve) => reserve.eModeCategoryId === categoryId)
+          .map((reserve) => reserve.underlyingAsset.toLowerCase()),
+      };
+    })
+    .filter((item) => item != null);
 }

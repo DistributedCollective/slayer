@@ -11,6 +11,7 @@ import { client } from '../../../database/client';
 import { tTokens } from '../../../database/schema';
 import { tTokensSelectors } from '../../../database/selectors';
 import {
+  fetchEmodeCategoryData,
   fetchPoolList,
   fetchPoolReserves,
   fetchUserReserves,
@@ -112,6 +113,12 @@ export default async function (fastify: ZodFastifyInstance) {
         pool,
       );
 
+      const categories = await fetchEmodeCategoryData(
+        req.chain.chainId,
+        pool,
+        reservesData,
+      );
+
       const tokens = await client.query.tTokens.findMany({
         columns: tTokensSelectors.columns,
         where: and(
@@ -160,11 +167,26 @@ export default async function (fastify: ZodFastifyInstance) {
           stableBorrowRateEnabled: item.stableBorrowRateEnabled,
           isActive: item.isActive,
           isFroze: item.isFrozen,
-          // eModes: item.eModes,
+
+          eModeCategoryId: item.eModeCategoryId,
+          borrowCap: item.borrowCap.toString(),
+          supplyCap: item.supplyCap.toString(),
+          eModeLtv: item.eModeLtv,
+          eModeLiquidationThreshold: item.eModeLiquidationThreshold,
+          eModeLiquidationBonus: item.eModeLiquidationBonus,
+          eModePriceSource: item.eModePriceSource.toString(),
+          eModeLabel: item.eModeLabel.toString(),
         };
       });
 
-      return { data: { reservesData: items, baseCurrencyData } };
+      const eModes = categories.map((category) => ({
+        ...category,
+        assets: category.assets.map((asset) => {
+          return tokens.find((t) => areAddressesEqual(t.address, asset));
+        }),
+      }));
+
+      return { data: { reservesData: items, baseCurrencyData, eModes } };
     },
   );
 
@@ -380,7 +402,15 @@ export default async function (fastify: ZodFastifyInstance) {
             stableBorrowRateEnabled: item.reserve.stableBorrowRateEnabled,
             isActive: item.reserve.isActive,
             isFroze: item.reserve.isFrozen,
-            // eModes: item.reserve.eModes,
+
+            eModeCategoryId: item.reserve.eModeCategoryId,
+            borrowCap: item.reserve.borrowCap.toString(),
+            supplyCap: item.reserve.supplyCap.toString(),
+            eModeLtv: item.reserve.eModeLtv,
+            eModeLiquidationThreshold: item.reserve.eModeLiquidationThreshold,
+            eModeLiquidationBonus: item.reserve.eModeLiquidationBonus,
+            eModePriceSource: item.reserve.eModePriceSource.toString(),
+            eModeLabel: item.reserve.eModeLabel.toString(),
           },
           supplied: item.underlyingBalance,
           suppliedUsd: item.underlyingBalanceUSD,

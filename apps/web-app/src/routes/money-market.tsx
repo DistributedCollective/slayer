@@ -6,6 +6,7 @@ import { TopPanel } from '@/components/MoneyMarket/components/TopPanel/TopPanel'
 import { BorrowAssetsList } from '@/components/MoneyMarket/components/BorrowAssetsList/BorrowAssetsList';
 import { BorrowPositionsList } from '@/components/MoneyMarket/components/BorrowPositionsList/BorrowPositionsList';
 import { BorrowDialog } from '@/components/MoneyMarket/components/Dialogs/BorrowDialog/BorrowDialog';
+import { EfficiencyModeDialog } from '@/components/MoneyMarket/components/Dialogs/EfficiencyModeDialog/EfficiencyModeDialog';
 import { LendDialog } from '@/components/MoneyMarket/components/Dialogs/LendDialog/LendDialog';
 import { RepayDialog } from '@/components/MoneyMarket/components/Dialogs/RepayDialog/RepayDialog';
 import { WithdrawDialog } from '@/components/MoneyMarket/components/Dialogs/WithdrawDialog/WithdrawDialog';
@@ -14,9 +15,12 @@ import {
   QUERY_KEY_MONEY_MARKET_POSITIONS,
   useMoneyMarketPositions,
 } from '@/components/MoneyMarket/hooks/use-money-positions';
+import {
+  QUERY_KEY_MONEY_MARKET_RESERVES,
+  useMoneyMarketReserves,
+} from '@/components/MoneyMarket/hooks/use-money-reserves';
 import { Heading } from '@/components/ui/heading/heading';
 import { sdk } from '@/lib/sdk';
-import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import z from 'zod';
@@ -48,7 +52,7 @@ export const Route = createFileRoute('/money-market')({
     });
 
     client.prefetchQuery({
-      queryKey: ['money-market:reserves', pool || 'default'],
+      queryKey: [QUERY_KEY_MONEY_MARKET_RESERVES, pool || 'default'],
       queryFn: () => sdk.moneyMarket.listReserves(pool || 'default'),
       staleTime: STALE_TIME,
     });
@@ -69,13 +73,8 @@ function RouteComponent() {
   const { pool } = Route.useLoaderDeps();
   const { address } = useAccount();
 
-  const { data: reserves } = useQuery({
-    queryKey: ['money-market:reserves', pool || 'default'],
-    queryFn: ({ meta }) =>
-      sdk.moneyMarket.listReserves(pool || 'default', {
-        revalidateCache: meta?.revalidateCache ?? false,
-      }),
-    staleTime: STALE_TIME,
+  const { reserves } = useMoneyMarketReserves({
+    pool: pool || 'default',
   });
 
   const { data: positions, isPending } = useMoneyMarketPositions({
@@ -84,7 +83,7 @@ function RouteComponent() {
   });
 
   const borrowAssets = useMemo(
-    () => (reserves?.data ?? []).filter((r) => r.canBeBorrowed),
+    () => reserves.filter((r) => r.canBeBorrowed),
     [reserves],
   );
 
@@ -117,7 +116,7 @@ function RouteComponent() {
                 positions?.data?.summary?.supplyWeightedApy ?? '0'
               }
             />
-            <LendAssetsList lendAssets={reserves?.data ?? []} />
+            <LendAssetsList lendAssets={reserves ?? []} />
           </div>
           <div className="space-y-4">
             <BorrowPositionsList
@@ -126,6 +125,9 @@ function RouteComponent() {
               borrowPower={positions?.data?.summary?.borrowPowerUsed ?? '0'}
               borrowWeightedApy={
                 positions?.data?.summary?.borrowWeightedApy ?? '0'
+              }
+              eModesCategoryId={
+                positions?.data?.summary?.userEmodeCategoryId ?? 0
               }
             />
             <BorrowAssetsList borrowAssets={borrowAssets} />
@@ -136,6 +138,7 @@ function RouteComponent() {
       <LendDialog />
       <WithdrawDialog />
       <RepayDialog />
+      <EfficiencyModeDialog />
     </>
   );
 }

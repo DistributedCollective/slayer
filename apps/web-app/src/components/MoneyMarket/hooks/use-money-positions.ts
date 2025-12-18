@@ -12,9 +12,9 @@ export const useMoneyMarketPositions = ({
 }: {
   address: Address;
   pool: string;
-}) =>
-  useQuery({
-    queryKey: ['money-market:positions', pool, address],
+}) => {
+  const { data, ...etc } = useQuery({
+    queryKey: [QUERY_KEY_MONEY_MARKET_POSITIONS, pool, address],
     queryFn: ({ queryKey }) =>
       sdk.moneyMarket.listUserPositions(
         pool,
@@ -24,3 +24,11 @@ export const useMoneyMarketPositions = ({
     staleTime: STALE_TIME,
     enabled: !!address && !!pool,
   });
+
+  return {
+    ...etc,
+    data,
+    positions: data?.data.positions || [],
+    summary: data?.data.summary,
+  };
+};

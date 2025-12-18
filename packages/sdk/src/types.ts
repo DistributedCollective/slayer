@@ -54,6 +54,22 @@ export interface MoneyMarketPoolReserve {
 
   isActive: boolean;
   isFrozen: boolean;
+
+  eModeCategoryId: number;
+  eModeLtv: number;
+  eModeLiquidationThreshold: number;
+  eModeLiquidationBonus: number;
+  eModePriceSource: string;
+  eModeLabel: string;
+}
+
+export interface MoneyMarketPoolEmodeCategory {
+  id: number;
+  ltv: string;
+  liquidationThreshold: string;
+  liquidationBonus: string;
+  label: string;
+  assets: SdkToken[];
 }
 
 export interface MoneyMarketPool {
@@ -69,6 +85,13 @@ export interface MoneyMarketPool {
   treasury: Address;
   subgraphURI: string;
   priceFeedURI: string;
+}
+
+export interface MoneyMarketBaseCurrencyData {
+  marketReferenceCurrencyDecimals: number;
+  marketReferenceCurrencyPriceInUsd: string;
+  networkBaseTokenPriceInUsd: string;
+  networkBaseTokenPriceDecimals: number;
 }
 
 export const BORROW_RATE_MODES = {
