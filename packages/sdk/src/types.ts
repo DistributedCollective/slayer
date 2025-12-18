@@ -50,6 +50,8 @@ export interface MoneyMarketPoolReserve {
   canBeBorrowed: boolean;
   canBeCollateral: boolean;
 
+  stableBorrowRateEnabled: boolean;
+
   isActive: boolean;
   isFrozen: boolean;
 }

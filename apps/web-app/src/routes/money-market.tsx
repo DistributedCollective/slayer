@@ -4,12 +4,12 @@ import { LendPositionsList } from '@/components/MoneyMarket/components/LendPosit
 import { TopPanel } from '@/components/MoneyMarket/components/TopPanel/TopPanel';
 
 import { BorrowAssetsList } from '@/components/MoneyMarket/components/BorrowAssetsList/BorrowAssetsList';
-import { BorrowDialog } from '@/components/MoneyMarket/components/BorrowDialog/BorrowDialog';
 import { BorrowPositionsList } from '@/components/MoneyMarket/components/BorrowPositionsList/BorrowPositionsList';
+import { BorrowDialog } from '@/components/MoneyMarket/components/Dialogs/BorrowDialog/BorrowDialog';
+import { LendDialog } from '@/components/MoneyMarket/components/Dialogs/LendDialog/LendDialog';
+import { RepayDialog } from '@/components/MoneyMarket/components/Dialogs/RepayDialog/RepayDialog';
+import { WithdrawDialog } from '@/components/MoneyMarket/components/Dialogs/WithdrawDialog/WithdrawDialog';
 import { LendAssetsList } from '@/components/MoneyMarket/components/LendAssetsList/LendAssetsList';
-import { LendDialog } from '@/components/MoneyMarket/components/LendDialog/LendDialog';
-import { RepayDialog } from '@/components/MoneyMarket/components/RepayDialog/RepayDialog';
-import { WithdrawDialog } from '@/components/MoneyMarket/components/WithdrawDialog/WithdrawDialog';
 import {
   QUERY_KEY_MONEY_MARKET_POSITIONS,
   useMoneyMarketPositions,
@@ -68,12 +68,6 @@ export const Route = createFileRoute('/money-market')({
 function RouteComponent() {
   const { pool } = Route.useLoaderDeps();
   const { address } = useAccount();
-
-  // const { data: pools } = useQuery({
-  //   queryKey: ['money-market:pools'],
-  //   queryFn: () => sdk.moneyMarket.listPools(),
-  //   staleTime: 1000 * 60 * 60, // 1 hour
-  // });
 
   const { data: reserves } = useQuery({
     queryKey: ['money-market:reserves', pool || 'default'],

@@ -6,7 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table/table';
-import { Fragment, useCallback, useMemo, useState, type FC } from 'react';
+import { Fragment, useCallback, useMemo, type FC } from 'react';
 
 import { repayRequestStore } from '@/components/MoneyMarket/stores/repay-request.store';
 import { AmountRenderer } from '@/components/ui/amount-renderer';
@@ -19,54 +19,67 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { MoneyMarketPoolPosition } from '@sovryn/slayer-sdk';
+import { revalidateQuery } from '@/integrations/tanstack-query/root-provider';
+import { sdk } from '@/lib/sdk';
+import { useSlayerTx } from '@/lib/transactions';
+import {
+  BORROW_RATE_MODES,
+  type BorrowRateMode,
+  type MoneyMarketPoolPosition,
+} from '@sovryn/slayer-sdk';
 import { Decimal } from '@sovryn/slayer-shared';
-import type { BorrowPosition } from '../../BorrowPositionsList.types';
+import { useAccount } from 'wagmi';
 
 type AssetsTableProps = {
   assets: MoneyMarketPoolPosition[];
 };
 
 export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
+  const { address } = useAccount();
   const items = useMemo(
     () => assets.filter((a) => Decimal.from(a.borrowed).gt(0)),
     [assets],
   );
 
-  const [selectedApy, setSelectedApy] = useState<Record<string, number>>({});
-
-  const parsePct = (v: unknown): number => {
-    if (typeof v === 'number') return v;
-    if (typeof v === 'string') {
-      const n = Number(v.replace('%', '').trim());
-      return Number.isFinite(n) ? n : 0;
-    }
-    return 0;
-  };
-
-  const inferDefaultSelected = (asset: BorrowPosition): number => {
-    const candidates = (asset.apyType ?? [])
-      .map(Number)
-      .filter(Number.isFinite);
-    const active = parsePct(asset.apy);
-    if (candidates.includes(active)) return active;
-    return candidates.length ? candidates[0] : active;
-  };
-
-  const rowKey = useMemo(
-    () => (asset: BorrowPosition, idx: number) =>
-      asset.poolId ?? asset.address ?? `${asset.symbol}-${idx}`,
-    [],
-  );
-
-  const currentApy = useCallback(
-    (a: BorrowPosition, idx: number) =>
-      selectedApy[rowKey(a, idx)] ?? inferDefaultSelected(a),
-    [selectedApy, rowKey],
-  );
+  const { begin } = useSlayerTx({
+    onCompleted: () =>
+      revalidateQuery({
+        queryKey: [
+          'money-market:positions',
+          items[0]?.pool.id || 'default',
+          address,
+        ],
+      }),
+  });
 
   const repayLoan = (position: MoneyMarketPoolPosition) =>
     repayRequestStore.getState().setPosition(position);
+
+  const handleBorrowRateChange = useCallback(
+    (position: MoneyMarketPoolPosition, value: string) => {
+      const currentMode = position.borrowRateMode;
+      const selected = BigInt(value) as BorrowRateMode;
+
+      if (currentMode === selected) {
+        return;
+      }
+
+      return begin(() =>
+        sdk.moneyMarket.swapBorrowRateMode(
+          {
+            ...position.reserve,
+            token: position.token,
+            pool: position.pool,
+          },
+          currentMode,
+          {
+            account: address!,
+          },
+        ),
+      );
+    },
+    [address, begin],
+  );
 
   return (
     <Table className="w-full border-separate">
@@ -147,16 +160,16 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                 <TableCell className="border-neutral-800 border-y">
                   <div className="flex items-center">
                     <Select
-                      value={String(asset.borrowApy)}
-                      // onValueChange={(val) =>
-                      //   handleApyTypeChange(asset, index, val)
-                      // }
+                      value={String(asset.borrowRateMode)}
+                      onValueChange={(value) =>
+                        handleBorrowRateChange(asset, value)
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={String(asset.variableBorrowApy)}>
+                        <SelectItem value={String(BORROW_RATE_MODES.variable)}>
                           APY, variable{' '}
                           <AmountRenderer
                             value={asset.variableBorrowApy}
@@ -164,14 +177,19 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                             showApproxSign
                           />
                         </SelectItem>
-                        <SelectItem value={String(asset.stableBorrowApy)}>
-                          APY, stable{' '}
-                          <AmountRenderer
-                            value={asset.stableBorrowApy}
-                            suffix="%"
-                            showApproxSign
-                          />
-                        </SelectItem>
+                        {((asset.reserve.stableBorrowRateEnabled &&
+                          !asset.collateral) ||
+                          asset.borrowRateMode ===
+                            BORROW_RATE_MODES.stable) && (
+                          <SelectItem value={String(BORROW_RATE_MODES.stable)}>
+                            APY, stable{' '}
+                            <AmountRenderer
+                              value={asset.stableBorrowApy}
+                              suffix="%"
+                              showApproxSign
+                            />
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>

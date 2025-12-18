@@ -157,6 +157,7 @@ export default async function (fastify: ZodFastifyInstance) {
             .mul(100)
             .toFixed(USD_DECIMALS),
           canBeCollateral: item.usageAsCollateralEnabled,
+          stableBorrowRateEnabled: item.stableBorrowRateEnabled,
           isActive: item.isActive,
           isFroze: item.isFrozen,
           // eModes: item.eModes,
@@ -376,6 +377,7 @@ export default async function (fastify: ZodFastifyInstance) {
               .mul(100)
               .toFixed(USD_DECIMALS),
             canBeCollateral: item.reserve.usageAsCollateralEnabled,
+            stableBorrowRateEnabled: item.reserve.stableBorrowRateEnabled,
             isActive: item.reserve.isActive,
             isFroze: item.reserve.isFrozen,
             // eModes: item.reserve.eModes,
@@ -386,8 +388,12 @@ export default async function (fastify: ZodFastifyInstance) {
           supplyApy: Decimal.from(item.reserve.supplyAPY).mul(100).toString(),
           canToggleCollateral,
 
-          borrowed: item.variableBorrows,
-          borrowedUsd: item.variableBorrowsUSD,
+          borrowed: Decimal.from(item.variableBorrows)
+            .add(item.stableBorrows)
+            .toString(),
+          borrowedUsd: Decimal.from(item.variableBorrowsUSD)
+            .add(item.stableBorrowsUSD)
+            .toString(),
 
           collateral: item.usageAsCollateralEnabledOnUser,
 

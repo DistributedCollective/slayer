@@ -22,9 +22,9 @@ import { useAccount } from 'wagmi';
 import z from 'zod';
 import { useStore } from 'zustand';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
-import { MINIMUM_HEALTH_FACTOR } from '../../constants';
-import { useMoneyMarketPositions } from '../../hooks/use-money-positions';
-import { withdrawRequestStore } from '../../stores/withdraw-request.store';
+import { MINIMUM_HEALTH_FACTOR } from '../../../constants';
+import { useMoneyMarketPositions } from '../../../hooks/use-money-positions';
+import { withdrawRequestStore } from '../../../stores/withdraw-request.store';
 
 const WithdrawDialogForm = () => {
   const { address } = useAccount();

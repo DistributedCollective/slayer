@@ -21,8 +21,8 @@ import { useAccount, useBalance } from 'wagmi';
 import z from 'zod';
 import { useStore } from 'zustand';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
-import { useMoneyMarketPositions } from '../../hooks/use-money-positions';
-import { lendRequestStore } from '../../stores/lend-request.store';
+import { useMoneyMarketPositions } from '../../../hooks/use-money-positions';
+import { lendRequestStore } from '../../../stores/lend-request.store';
 
 const LendDialogForm = () => {
   const { address } = useAccount();

@@ -9,6 +9,7 @@ import {
   makeTransactionRequest,
 } from '../../lib/transaction.js';
 import {
+  BORROW_RATE_MODES,
   BorrowRateMode,
   MoneyMarketPool,
   MoneyMarketPoolPosition,
@@ -275,6 +276,41 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
     ];
   }
 
+  async swapBorrowRateMode(
+    reserve: MoneyMarketPoolReserve,
+    currentRateMode: BorrowRateMode,
+    opts: TransactionOpts<Account>,
+  ) {
+    const asset = reserve.token;
+    const pool = reserve.pool;
+    log(
+      `Swapping borrow rate mode for ${asset.symbol} in pool ${pool.id} from ${currentRateMode}`,
+      { reserve, currentRateMode, opts },
+    );
+
+    const newRateMode =
+      currentRateMode === BORROW_RATE_MODES.stable ? 'Variable' : 'Stable';
+
+    return [
+      {
+        id: 'swap_borrow_rate_mode',
+        title: `Swap borrow rate mode for ${asset.symbol}`,
+        description: `Swap borrow rate mode for ${asset.symbol} to ${newRateMode}`,
+        request: makeTransactionRequest({
+          to: pool.address,
+          value: 0n,
+          chain: this.ctx.publicClient.chain,
+          account: opts.account,
+          data: encodeFunctionData({
+            abi: poolAbi,
+            functionName: 'swapBorrowRateMode',
+            args: [toAddress(asset.address), currentRateMode],
+          }),
+        }),
+      },
+    ];
+  }
+
   async supply<account extends Account>(
     reserve: MoneyMarketPoolReserve,
     amount: Decimalish,
@@ -342,6 +378,45 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
               toAddress(opts.account),
               0,
             ],
+          }),
+        }),
+      },
+    ];
+  }
+
+  async changeCollateralMode<account extends Account>(
+    reserve: MoneyMarketPoolReserve,
+    useAsCollateral: boolean,
+    opts: TransactionOpts<account>,
+  ) {
+    const asset = reserve.token;
+    const pool = reserve.pool;
+
+    log(
+      `Switching collateral for ${asset.symbol} in pool ${pool.id} to ${useAsCollateral}`,
+      { reserve, useAsCollateral, opts },
+    );
+
+    const tokenAddress = toAddress(
+      asset.isNative || areAddressesEqual(asset.address, pool.weth)
+        ? pool.weth
+        : asset.address,
+    );
+
+    return [
+      {
+        id: 'switch_collateral',
+        title: `${useAsCollateral ? 'Enable' : 'Disable'} ${asset.symbol} as collateral`,
+        description: `${useAsCollateral ? 'Enable' : 'Disable'} ${asset.symbol} as collateral in pool ${pool.id}`,
+        request: makeTransactionRequest({
+          to: pool.address,
+          value: 0n,
+          chain: this.ctx.publicClient.chain,
+          account: opts.account,
+          data: encodeFunctionData({
+            abi: poolAbi,
+            functionName: 'setUserUseReserveAsCollateral',
+            args: [tokenAddress, useAsCollateral],
           }),
         }),
       },

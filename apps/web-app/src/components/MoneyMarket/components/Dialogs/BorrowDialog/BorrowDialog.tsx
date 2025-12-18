@@ -28,9 +28,9 @@ import { useAccount } from 'wagmi';
 import z from 'zod';
 import { useStore } from 'zustand';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
-import { MINIMUM_HEALTH_FACTOR } from '../../constants';
-import { useMoneyMarketPositions } from '../../hooks/use-money-positions';
-import { borrowRequestStore } from '../../stores/borrow-request.store';
+import { MINIMUM_HEALTH_FACTOR } from '../../../constants';
+import { useMoneyMarketPositions } from '../../../hooks/use-money-positions';
+import { borrowRequestStore } from '../../../stores/borrow-request.store';
 
 const BorrowDialogForm = () => {
   const { address } = useAccount();
@@ -92,7 +92,7 @@ const BorrowDialogForm = () => {
         sdk.moneyMarket.borrow(
           reserve,
           value.amount,
-          BORROW_RATE_MODES.variable,
+          data?.position.borrowRateMode ?? BORROW_RATE_MODES.variable,
           {
             account: address!,
           },
@@ -214,7 +214,12 @@ const BorrowDialogForm = () => {
                 <ItemContent>Borrow APY</ItemContent>
                 <ItemContent>
                   <AmountRenderer
-                    value={data?.position.reserve.variableBorrowApy ?? '0'}
+                    value={
+                      data?.position.borrowRateMode ===
+                      BORROW_RATE_MODES.variable
+                        ? (data?.position.reserve.variableBorrowApy ?? '0')
+                        : (data?.position.reserve.stableBorrowApy ?? '0')
+                    }
                     suffix="%"
                     showApproxSign
                   />

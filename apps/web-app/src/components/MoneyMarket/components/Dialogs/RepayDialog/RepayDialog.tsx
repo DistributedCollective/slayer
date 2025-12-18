@@ -28,9 +28,9 @@ import { useAccount, useBalance } from 'wagmi';
 import z from 'zod';
 import { useStore } from 'zustand';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
-import { MINIMUM_HEALTH_FACTOR } from '../../constants';
-import { useMoneyMarketPositions } from '../../hooks/use-money-positions';
-import { repayRequestStore } from '../../stores/repay-request.store';
+import { MINIMUM_HEALTH_FACTOR } from '../../../constants';
+import { useMoneyMarketPositions } from '../../../hooks/use-money-positions';
+import { repayRequestStore } from '../../../stores/repay-request.store';
 
 const RepayDialogForm = () => {
   const { address } = useAccount();
