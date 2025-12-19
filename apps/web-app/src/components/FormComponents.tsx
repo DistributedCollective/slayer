@@ -278,7 +278,7 @@ export function AmountField({
   );
 
   const handleChange = (input: string) => {
-    const value = input.replace(',', '.');
+    const value = input.replace(/,/g, '.');
     setRenderedValue(input);
     field.setValue(tryDecimalValue(value) as never, {
       dontRunListeners: true,

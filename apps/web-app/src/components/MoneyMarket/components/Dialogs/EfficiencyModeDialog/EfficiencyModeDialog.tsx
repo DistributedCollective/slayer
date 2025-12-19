@@ -47,7 +47,6 @@ const EfficiencyModeDialogForm = () => {
 
   const { begin } = useSlayerTx({
     onClosed: (ok: boolean) => {
-      console.log('borrow tx modal closed, success:', ok);
       if (ok) {
         efficiencyModeRequestStore.getState().reset();
       }
