@@ -17,6 +17,7 @@ import {
   ItemGroup,
 } from '@/components/ui/item';
 import { useAppForm } from '@/hooks/app-form';
+import { revalidateQuery } from '@/integrations/tanstack-query/root-provider';
 import { sdk } from '@/lib/sdk';
 import { useSlayerTx } from '@/lib/transactions';
 import { validateDecimal } from '@/lib/validations';
@@ -27,9 +28,9 @@ import { useAccount } from 'wagmi';
 import z from 'zod';
 import { useStore } from 'zustand';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
-import { MINIMUM_HEALTH_FACTOR } from '../../constants';
-import { useMoneyMarketPositions } from '../../hooks/use-money-positions';
-import { borrowRequestStore } from '../../stores/borrow-request.store';
+import { MINIMUM_HEALTH_FACTOR } from '../../../constants';
+import { useMoneyMarketPositions } from '../../../hooks/use-money-positions';
+import { borrowRequestStore } from '../../../stores/borrow-request.store';
 
 const BorrowDialogForm = () => {
   const { address } = useAccount();
@@ -47,6 +48,15 @@ const BorrowDialogForm = () => {
         // close borrowing dialog if tx was successful
         borrowRequestStore.getState().reset();
       }
+    },
+    onCompleted: () => {
+      revalidateQuery({
+        queryKey: [
+          'money-market:positions',
+          reserve.pool.id || 'default',
+          address,
+        ],
+      });
     },
   });
 
@@ -82,18 +92,15 @@ const BorrowDialogForm = () => {
         sdk.moneyMarket.borrow(
           reserve,
           value.amount,
-          BORROW_RATE_MODES.variable,
+          data?.position.reserve.stableBorrowRateEnabled &&
+            !data?.position.collateral
+            ? (data?.position.borrowRateMode ?? BORROW_RATE_MODES.variable)
+            : BORROW_RATE_MODES.variable,
           {
             account: address!,
           },
         ),
       );
-    },
-    onSubmitInvalid(props) {
-      console.log('Borrow request submission invalid:', props);
-    },
-    onSubmitMeta() {
-      console.log('Borrow request submission meta:', form);
     },
   });
 
@@ -104,7 +111,6 @@ const BorrowDialogForm = () => {
   };
 
   const handleEscapes = (e: Event) => {
-    // borrowRequestStore.getState().reset();
     e.preventDefault();
   };
 
@@ -211,7 +217,12 @@ const BorrowDialogForm = () => {
                 <ItemContent>Borrow APY</ItemContent>
                 <ItemContent>
                   <AmountRenderer
-                    value={data?.position.reserve.variableBorrowApy ?? '0'}
+                    value={
+                      data?.position.borrowRateMode ===
+                      BORROW_RATE_MODES.variable
+                        ? (data?.position.reserve.variableBorrowApy ?? '0')
+                        : (data?.position.reserve.stableBorrowApy ?? '0')
+                    }
                     suffix="%"
                     showApproxSign
                   />

@@ -13,7 +13,7 @@ import {
 import { TxList } from './TxList';
 
 export const TransactionDialogProvider = () => {
-  const { t } = useTranslation('tx');
+  const { t } = useTranslation();
 
   const [isOpen, isReady, isClosing] = useStoreWithEqualityFn(
     txStore,
@@ -53,12 +53,14 @@ export const TransactionDialogProvider = () => {
         ) : (
           <>
             <DialogHeader className="sr-only">
-              <DialogTitle>{t(($) => $.title)}</DialogTitle>
-              <DialogDescription>{t(($) => $.description)}</DialogDescription>
+              <DialogTitle>{t(($) => $.tx.title)}</DialogTitle>
+              <DialogDescription>
+                {t(($) => $.tx.description)}
+              </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col justify-center items-center gap-4">
               <Loader2Icon className="mr-2 animate-spin" size={48} />
-              <p className="text-sm">{t(($) => $.preparing)}</p>
+              <p className="text-sm">{t(($) => $.tx.preparing)}</p>
             </div>
           </>
         )}

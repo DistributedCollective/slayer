@@ -24,7 +24,7 @@ import { useInternalTxHandler } from './hooks/use-internal-tx-handler';
 import { TransactionItem } from './TransactionItem';
 
 export const TxList = () => {
-  const { t } = useTranslation(['tx', 'common']);
+  const { t } = useTranslation();
   const { switchChain } = useSwitchChain();
   const config = useConfig();
   const { isConnected, chainId } = useAccount();
@@ -75,14 +75,14 @@ export const TxList = () => {
   const confirmLabel = useMemo(() => {
     if (currentTx) {
       if (isMessageRequest(currentTx)) {
-        return t(($) => $.signMessage, { ns: 'tx' });
+        return t(($) => $.tx.signMessage);
       } else if (isTransactionRequest(currentTx)) {
-        return t(($) => $.sendTransaction, { ns: 'tx' });
+        return t(($) => $.tx.sendTransaction);
       } else if (isTypedDataRequest(currentTx)) {
-        return t(($) => $.signTypedData, { ns: 'tx' });
+        return t(($) => $.tx.signTypedData);
       }
     }
-    return t(($) => $.confirm, { ns: 'common' });
+    return t(($) => $.confirm);
   }, [currentTx]);
 
   const handleSwitchChain = useCallback(() => {
@@ -100,21 +100,19 @@ export const TxList = () => {
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{t(($) => $.title, { ns: 'tx' })}</DialogTitle>
-        <DialogDescription>
-          {t(($) => $.description, { ns: 'tx' })}
-        </DialogDescription>
+        <DialogTitle>{t(($) => $.tx.title)}</DialogTitle>
+        <DialogDescription>{t(($) => $.tx.description)}</DialogDescription>
       </DialogHeader>
       {items.map((tx, index) => (
         <TransactionItem key={tx.id} item={tx} index={index} />
       ))}
 
-      {!isConnected && <p>{t(($) => $.connectWallet)}</p>}
+      {!isConnected && <p>{t(($) => $.tx.connectWallet)}</p>}
 
       <DialogFooter>
         <DialogClose asChild>
           <Button variant={currentTx ? 'outline' : 'default'}>
-            {t(($) => (currentTx ? $.abort : $.continue), { ns: 'common' })}
+            {t(($) => (currentTx ? $.abort : $.continue))}
           </Button>
         </DialogClose>
 
@@ -124,8 +122,7 @@ export const TxList = () => {
             requiredChain !== undefined &&
             currentChain?.id !== requiredChain?.id ? (
               <Button onClick={handleSwitchChain}>
-                {t(($) => $.switchNetwork, {
-                  ns: 'tx',
+                {t(($) => $.tx.switchNetwork, {
                   name: requiredChain.name,
                 })}
               </Button>

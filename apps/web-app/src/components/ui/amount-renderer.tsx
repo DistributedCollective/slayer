@@ -17,6 +17,11 @@ export type AmountRendererProps = {
 function formatAmount(value: string | number | bigint, decimals = 8) {
   try {
     const dec = Decimal.from(value);
+
+    if (dec.isInfinite()) {
+      return '∞';
+    }
+
     let str = dec.d.toFixed(decimals).replace(/\.?(0+)$/, '');
     // if the value is very small, try with more decimals
     if (str === '' || str === '0') {

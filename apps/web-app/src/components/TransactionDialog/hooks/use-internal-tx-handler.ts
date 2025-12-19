@@ -8,6 +8,7 @@ import {
   isTransactionRequest,
   isTypedDataRequest,
 } from '@sovryn/slayer-sdk';
+import debug from 'debug';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { prepareTransactionRequest } from 'viem/actions';
 import {
@@ -20,6 +21,9 @@ import {
 import { useStore } from 'zustand';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
 import { handleErrorMessage } from '../utils';
+
+const log = debug('slayer-app:use-internal-tx-handler');
+const logError = debug('slayer-app:use-internal-tx-handler:error');
 
 export function useInternalTxHandler(
   props: Pick<TxHandlers, 'onError' | 'onCompleted'> = {},
@@ -44,6 +48,7 @@ export function useInternalTxHandler(
     mutation: {
       onError(error) {
         if (!currentTx) return;
+        logError('Sign message error:', error);
         const msg = handleErrorMessage(error);
         setItemError(currentTx.id, msg);
         props.onError?.(currentTx!, msg, error);
@@ -51,6 +56,7 @@ export function useInternalTxHandler(
       },
       onSuccess(data) {
         if (!currentTx) return;
+        log('Message signed successfully:', data);
         updateItem(currentTx.id, TRANSACTION_STATE.success, {
           transactionHash: data,
         });
@@ -68,6 +74,7 @@ export function useInternalTxHandler(
     mutation: {
       onError(error) {
         if (!currentTx) return;
+        logError('Sign typed data error:', error);
         const msg = handleErrorMessage(error);
         setItemError(currentTx?.id || '', msg);
         props.onError?.(currentTx!, msg, error);
@@ -75,6 +82,7 @@ export function useInternalTxHandler(
       },
       onSuccess(data) {
         if (!currentTx) return;
+        log('Typed data signed successfully:', data);
         updateItem(currentTx?.id || '', TRANSACTION_STATE.success, {
           transactionHash: data,
         });
@@ -97,6 +105,7 @@ export function useInternalTxHandler(
       onSettled(data, error) {
         if (!currentTx) return;
         if (data) {
+          log('Transaction sent successfully:', data);
           updateItem(currentTx.id, TRANSACTION_STATE.pending, {
             transactionHash: data,
           });
@@ -106,7 +115,7 @@ export function useInternalTxHandler(
             pendingTxs,
           );
         } else if (error) {
-          console.log('Send transaction error:', error);
+          logError('Send transaction error:', error);
           const msg = handleErrorMessage(error);
           setItemError(currentTx.id, msg);
           props.onError?.(currentTx, msg, error);
@@ -134,6 +143,7 @@ export function useInternalTxHandler(
     onReplaced: (tx) => {
       if (!currentTx) return;
       if (tx.reason === 'cancelled') {
+        log('Transaction was cancelled by the user:', tx);
         updateItemState(currentTx.id, TRANSACTION_STATE.idle);
         props.onError?.(
           currentTx,
@@ -160,9 +170,11 @@ export function useInternalTxHandler(
   useEffect(() => {
     if (!currentTx || !receipt) return;
     if (receiptStatus === 'success') {
+      log('Transaction completed successfully:', receipt);
       updateItem(currentTx.id, TRANSACTION_STATE.success, receipt);
       handlers.onSuccess?.(currentTx, receipt);
     } else if (receiptStatus === 'error') {
+      logError('Transaction failed with status:', receipt.status);
       updateItem(currentTx.id, TRANSACTION_STATE.error, receipt);
       setItemError(
         currentTx.id,
@@ -184,6 +196,7 @@ export function useInternalTxHandler(
   const handleConfirm = useCallback(async () => {
     if (!currentTx) return;
     try {
+      log('Confirming transaction:', currentTx);
       setIsPreparing(true);
       updateItemState(currentTx.id, TRANSACTION_STATE.pending);
 
@@ -193,10 +206,13 @@ export function useInternalTxHandler(
         currentTx.request.data;
 
       if (isMessageRequest(currentTx)) {
+        log('Signing message request', currentTx);
         signMessage(modifiedData);
       } else if (isTypedDataRequest(currentTx)) {
+        log('Signing typed data request', currentTx);
         signTypedData(modifiedData);
       } else if (isTransactionRequest(currentTx)) {
+        log('Preparing transaction request', currentTx);
         const prepared = await prepareTransactionRequest(
           config.getClient(),
           modifiedData,
@@ -204,9 +220,11 @@ export function useInternalTxHandler(
 
         sendTransaction(prepared);
       } else {
+        logError('Unknown transaction request type', currentTx);
         throw new Error('Unknown transaction request type');
       }
     } catch (e) {
+      logError('Error during transaction confirmation:', e);
       const msg = handleErrorMessage(e);
       setItemError(currentTx.id, msg);
       props.onError?.(currentTx, msg, e);

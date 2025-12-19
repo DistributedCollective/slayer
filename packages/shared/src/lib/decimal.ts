@@ -188,6 +188,10 @@ export class Decimal {
     return this.d.isNegative();
   }
 
+  isInfinite(): boolean {
+    return this.gte(Decimal.INFINITY);
+  }
+
   abs(): Decimal {
     return Decimal.from(this.d.abs().toString(), this.precision);
   }

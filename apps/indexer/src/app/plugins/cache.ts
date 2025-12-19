@@ -115,8 +115,8 @@ const redisCachePlugin: FastifyPluginAsync<RedisCachePluginOptions> = async (
 ) => {
   const redis = opts.redisClient ?? cacheRedisConnection;
 
-  const defaultTtl = opts.defaultTtlSeconds ?? 60;
-  const defaultStaleTtl = opts.defaultStaleTtlSeconds ?? 600; // 10 minutes
+  const defaultTtl = opts.defaultTtlSeconds ?? 10; // 10 seconds
+  const defaultStaleTtl = opts.defaultStaleTtlSeconds ?? 60; // 1 minute
   const keyPrefix = opts.keyPrefix ?? 'route-cache';
 
   // @ts-expect-error declare decorator
@@ -305,7 +305,7 @@ export const maybeCache = async <T = unknown>(
 
   const redis = cacheRedisConnection;
 
-  const ttl = opts.ttlSeconds ?? 30; // 30 seconds
+  const ttl = opts.ttlSeconds ?? 10; // 10 seconds
 
   const cacheKey = 'maybe-cache:fn:' + encode.sha256(key);
 

@@ -11,6 +11,7 @@ import { client } from '../../../database/client';
 import { tTokens } from '../../../database/schema';
 import { tTokensSelectors } from '../../../database/selectors';
 import {
+  fetchEmodeCategoryData,
   fetchPoolList,
   fetchPoolReserves,
   fetchUserReserves,
@@ -112,6 +113,12 @@ export default async function (fastify: ZodFastifyInstance) {
         pool,
       );
 
+      const categories = await fetchEmodeCategoryData(
+        req.chain.chainId,
+        pool,
+        reservesData,
+      );
+
       const tokens = await client.query.tTokens.findMany({
         columns: tTokensSelectors.columns,
         where: and(
@@ -157,13 +164,29 @@ export default async function (fastify: ZodFastifyInstance) {
             .mul(100)
             .toFixed(USD_DECIMALS),
           canBeCollateral: item.usageAsCollateralEnabled,
+          stableBorrowRateEnabled: item.stableBorrowRateEnabled,
           isActive: item.isActive,
           isFroze: item.isFrozen,
-          // eModes: item.eModes,
+
+          eModeCategoryId: item.eModeCategoryId,
+          borrowCap: item.borrowCap.toString(),
+          supplyCap: item.supplyCap.toString(),
+          eModeLtv: item.eModeLtv,
+          eModeLiquidationThreshold: item.eModeLiquidationThreshold,
+          eModeLiquidationBonus: item.eModeLiquidationBonus,
+          eModePriceSource: item.eModePriceSource.toString(),
+          eModeLabel: item.eModeLabel.toString(),
         };
       });
 
-      return { data: { reservesData: items, baseCurrencyData } };
+      const eModes = categories.map((category) => ({
+        ...category,
+        assets: category.assets.map((asset) => {
+          return tokens.find((t) => areAddressesEqual(t.address, asset));
+        }),
+      }));
+
+      return { data: { reservesData: items, baseCurrencyData, eModes } };
     },
   );
 
@@ -376,18 +399,48 @@ export default async function (fastify: ZodFastifyInstance) {
               .mul(100)
               .toFixed(USD_DECIMALS),
             canBeCollateral: item.reserve.usageAsCollateralEnabled,
+            stableBorrowRateEnabled: item.reserve.stableBorrowRateEnabled,
             isActive: item.reserve.isActive,
             isFroze: item.reserve.isFrozen,
-            // eModes: item.reserve.eModes,
+
+            eModeCategoryId: item.reserve.eModeCategoryId,
+            borrowCap: item.reserve.borrowCap.toString(),
+            supplyCap: item.reserve.supplyCap.toString(),
+            eModeLtv: item.reserve.eModeLtv,
+            eModeLiquidationThreshold: item.reserve.eModeLiquidationThreshold,
+            eModeLiquidationBonus: item.reserve.eModeLiquidationBonus,
+            eModePriceSource: item.reserve.eModePriceSource.toString(),
+            eModeLabel: item.reserve.eModeLabel.toString(),
           },
           supplied: item.underlyingBalance,
           suppliedUsd: item.underlyingBalanceUSD,
+          suppliedBalanceMarketReferenceCurrency: Decimal.from(
+            item.underlyingBalanceMarketReferenceCurrency,
+            baseCurrencyData.marketReferenceCurrencyDecimals,
+          ).toFixed(USD_DECIMALS),
 
           supplyApy: Decimal.from(item.reserve.supplyAPY).mul(100).toString(),
           canToggleCollateral,
 
-          borrowed: item.variableBorrows,
-          borrowedUsd: item.variableBorrowsUSD,
+          borrowed: Decimal.from(item.totalBorrows).toString(),
+          borrowedUsd: Decimal.from(item.totalBorrowsUSD).toString(),
+          borrowedBalanceMarketReferenceCurrency: Decimal.from(
+            item.totalBorrowsMarketReferenceCurrency,
+            baseCurrencyData.marketReferenceCurrencyDecimals,
+          ).toFixed(USD_DECIMALS),
+
+          borrowedStable: Decimal.from(item.stableBorrows).toString(),
+          borrowedStableUsd: Decimal.from(item.stableBorrowsUSD).toString(),
+          borrowedBalanceStableMarketReferenceCurrency: Decimal.from(
+            item.stableBorrowsMarketReferenceCurrency,
+            baseCurrencyData.marketReferenceCurrencyDecimals,
+          ).toFixed(USD_DECIMALS),
+          borrowedVariable: Decimal.from(item.variableBorrows).toString(),
+          borrowedVariableUsd: Decimal.from(item.variableBorrowsUSD).toString(),
+          borrowedBalanceVariableMarketReferenceCurrency: Decimal.from(
+            item.variableBorrowsMarketReferenceCurrency,
+            baseCurrencyData.marketReferenceCurrencyDecimals,
+          ).toFixed(USD_DECIMALS),
 
           collateral: item.usageAsCollateralEnabledOnUser,
 
@@ -441,6 +494,10 @@ export default async function (fastify: ZodFastifyInstance) {
             netWorthUsd: summary.netWorthUSD,
             userEmodeCategoryId: summary.userEmodeCategoryId,
             isInIsolationMode: summary.isInIsolationMode,
+
+            underlyingBalanceMarketReferenceCurrency: Decimal.from(
+              summary.totalBorrowsUSD,
+            ),
           },
         },
       };

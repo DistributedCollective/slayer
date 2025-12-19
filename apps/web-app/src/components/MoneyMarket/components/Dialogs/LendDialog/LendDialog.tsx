@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Item, ItemContent, ItemGroup } from '@/components/ui/item';
 import { useAppForm } from '@/hooks/app-form';
+import { revalidateQuery } from '@/integrations/tanstack-query/root-provider';
 import { sdk } from '@/lib/sdk';
 import { useSlayerTx } from '@/lib/transactions';
 import { validateDecimal } from '@/lib/validations';
@@ -20,8 +21,8 @@ import { useAccount, useBalance } from 'wagmi';
 import z from 'zod';
 import { useStore } from 'zustand';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
-import { useMoneyMarketPositions } from '../../hooks/use-money-positions';
-import { lendRequestStore } from '../../stores/lend-request.store';
+import { useMoneyMarketPositions } from '../../../hooks/use-money-positions';
+import { lendRequestStore } from '../../../stores/lend-request.store';
 
 const LendDialogForm = () => {
   const { address } = useAccount();
@@ -53,6 +54,15 @@ const LendDialogForm = () => {
         lendRequestStore.getState().reset();
       }
     },
+    onCompleted: () => {
+      revalidateQuery({
+        queryKey: [
+          'money-market:positions',
+          reserve.pool.id || 'default',
+          address,
+        ],
+      });
+    },
   });
 
   const { data: balance } = useBalance({
@@ -60,7 +70,7 @@ const LendDialogForm = () => {
       ? undefined
       : reserve.token.address,
     address: address,
-    // chainId: sdk.ctx.chainId,
+    chainId: sdk.ctx.chainId,
   });
 
   const form = useAppForm({
@@ -79,12 +89,6 @@ const LendDialogForm = () => {
         }),
       );
     },
-    onSubmitInvalid(props) {
-      console.log('Lend request submission invalid:', props);
-    },
-    onSubmitMeta() {
-      console.log('Lend request submission meta:', form);
-    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -94,7 +98,6 @@ const LendDialogForm = () => {
   };
 
   const handleEscapes = (e: Event) => {
-    // lendRequestStore.getState().reset();
     e.preventDefault();
   };
 

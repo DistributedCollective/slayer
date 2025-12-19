@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Item, ItemContent, ItemGroup } from '@/components/ui/item';
 import { useAppForm } from '@/hooks/app-form';
+import { revalidateQuery } from '@/integrations/tanstack-query/root-provider';
 import { sdk } from '@/lib/sdk';
 import { useSlayerTx } from '@/lib/transactions';
 import { shouldUseFullAmount } from '@/lib/utils';
@@ -21,9 +22,9 @@ import { useAccount } from 'wagmi';
 import z from 'zod';
 import { useStore } from 'zustand';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
-import { MINIMUM_HEALTH_FACTOR } from '../../constants';
-import { useMoneyMarketPositions } from '../../hooks/use-money-positions';
-import { withdrawRequestStore } from '../../stores/withdraw-request.store';
+import { MINIMUM_HEALTH_FACTOR } from '../../../constants';
+import { useMoneyMarketPositions } from '../../../hooks/use-money-positions';
+import { withdrawRequestStore } from '../../../stores/withdraw-request.store';
 
 const WithdrawDialogForm = () => {
   const { address } = useAccount();
@@ -41,6 +42,15 @@ const WithdrawDialogForm = () => {
         // close withdrawal dialog if tx was successful
         withdrawRequestStore.getState().reset();
       }
+    },
+    onCompleted: () => {
+      revalidateQuery({
+        queryKey: [
+          'money-market:positions',
+          position.pool.id || 'default',
+          address,
+        ],
+      });
     },
   });
 
@@ -117,12 +127,6 @@ const WithdrawDialogForm = () => {
           },
         ),
       );
-    },
-    onSubmitInvalid(props) {
-      console.log('Withdraw request submission invalid:', props);
-    },
-    onSubmitMeta() {
-      console.log('Withdraw request submission meta:', form);
     },
   });
 

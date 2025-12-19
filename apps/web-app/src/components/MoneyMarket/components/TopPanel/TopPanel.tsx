@@ -18,7 +18,7 @@ export const TopPanel: FC<TopPanelProps> = ({
 }) => (
   <div className="w-full flex flex-col gap-6">
     <div className="flex flex-col gap-6 md:flex-row">
-      <div className="flex flex-col gap-4 md:py-12 md:flex-row md:gap-9 flex-shrink-0">
+      <div className="flex flex-col gap-4 md:flex-row md:gap-9 flex-shrink-0">
         <StatisticsCard
           label="Net Worth"
           value={

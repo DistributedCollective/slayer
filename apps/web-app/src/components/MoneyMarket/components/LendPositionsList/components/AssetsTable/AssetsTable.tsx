@@ -13,28 +13,52 @@ import { AmountRenderer } from '@/components/ui/amount-renderer';
 import { Button } from '@/components/ui/button';
 import { InfoButton } from '@/components/ui/info-button';
 import { Switch } from '@/components/ui/switch';
+import { revalidateQuery } from '@/integrations/tanstack-query/root-provider';
+import { sdk } from '@/lib/sdk';
+import { useSlayerTx } from '@/lib/transactions';
 import type { MoneyMarketPoolPosition } from '@sovryn/slayer-sdk';
 import { Decimal } from '@sovryn/slayer-shared';
+import { useAccount } from 'wagmi';
 
 type AssetsTableProps = {
   assets: MoneyMarketPoolPosition[];
 };
 
 export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
+  const { address } = useAccount();
+
   const items = useMemo(
     () => assets.filter((asset) => Decimal.from(asset.supplied).gt(0)),
     [assets],
   );
+  const { begin } = useSlayerTx({
+    onCompleted: () =>
+      revalidateQuery({
+        queryKey: [
+          'money-market:positions',
+          items[0]?.pool.id || 'default',
+          address,
+        ],
+      }),
+  });
 
-  const toggleCollateral = useCallback((symbol: string) => {
-    // setSortedAssets((prevAssets) =>
-    //   prevAssets.map((asset) =>
-    //     asset.symbol === symbol
-    //       ? { ...asset, collateral: !asset.collateral }
-    //       : asset,
-    //   ),
-    // );
-  }, []);
+  const toggleCollateral = useCallback(
+    (position: MoneyMarketPoolPosition, useAsCollateral: boolean) =>
+      begin(() =>
+        sdk.moneyMarket.changeCollateralMode(
+          {
+            ...position.reserve,
+            token: position.token,
+            pool: position.pool,
+          },
+          useAsCollateral,
+          {
+            account: address!,
+          },
+        ),
+      ),
+    [address, begin],
+  );
 
   const withdrawSupply = (position: MoneyMarketPoolPosition) =>
     withdrawRequestStore.getState().setPosition(position);
@@ -116,8 +140,9 @@ export const AssetsTable: FC<AssetsTableProps> = ({ assets }) => {
                     className="cursor-pointer data-[state=checked]:bg-primary"
                     checked={item.collateral}
                     id={`collateral-${item.token.address}`}
-                    onClick={() => toggleCollateral(item.id)}
-                    // disabled={!asset}
+                    onCheckedChange={(checked) =>
+                      toggleCollateral(item, checked)
+                    }
                   />
                 </div>
               </TableCell>

@@ -1,8 +1,10 @@
 import { Accordion } from '@/components/ui/accordion';
+import { buttonVariants } from '@/components/ui/button';
 import type { MoneyMarketPoolPosition } from '@sovryn/slayer-sdk';
 import { Settings, Zap } from 'lucide-react';
 import { useState, type FC } from 'react';
 import { AmountRenderer } from '../../../ui/amount-renderer';
+import { efficiencyModeRequestStore } from '../../stores/efficiency-mode-request.store';
 import { PoolPositionStat } from '../PoolPositionStat/PoolPositionStat';
 import { AssetsTable } from './components/AssetsTable/AssetsTable';
 
@@ -12,6 +14,7 @@ type BorrowPositionsListProps = {
   borrowPower: string;
   borrowPositions: MoneyMarketPoolPosition[];
   loading?: boolean;
+  eModesCategoryId?: number;
 };
 
 export const BorrowPositionsList: FC<BorrowPositionsListProps> = ({
@@ -19,21 +22,31 @@ export const BorrowPositionsList: FC<BorrowPositionsListProps> = ({
   borrowWeightedApy,
   borrowPower,
   borrowPositions,
+  eModesCategoryId,
 }) => {
   const [open, setOpen] = useState(false);
+
+  const handleEmodeToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    efficiencyModeRequestStore.getState().setActive(true);
+  };
 
   return (
     <Accordion
       label={
         <div className="flex items-center gap-6">
           <span className="text-[1rem] font-medium">Your loans</span>
-          <div className="flex gap-3 items-center">
+          <div
+            onClick={handleEmodeToggle}
+            className={buttonVariants({
+              variant: 'ghost',
+              className: 'cursor-pointer',
+            })}
+          >
             <span className="text-neutral-300 font-medium text-sm">E-Mode</span>
             <Zap className="w-4 h-4 text-neutral-300" />
-          </div>
-          <div className="flex gap-3 items-center">
             <span className="text-neutral-300 font-medium text-sm">
-              Disabled
+              {eModesCategoryId === 0 ? 'Disabled' : 'Enabled'}
             </span>
             <Settings className="w-4 h-4 text-neutral-300" />
           </div>
