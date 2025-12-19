@@ -93,6 +93,18 @@ describe('decimal', () => {
         '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
       );
     });
+
+    it('isInfinite() returns true for Infinity Decimal', () => {
+      const d = Decimal.from('Infinity');
+      expect(d.isInfinite()).toBe(true);
+    });
+
+    it('isInfinite() returns true for very large number', () => {
+      const d = Decimal.from(
+        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+      );
+      expect(d.isInfinite()).toBe(true);
+    });
   });
 
   describe('arithmetics', () => {

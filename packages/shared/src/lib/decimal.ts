@@ -189,7 +189,7 @@ export class Decimal {
   }
 
   isInfinite(): boolean {
-    return this.gte(Decimal.INFINITY, 0);
+    return this.gte(Decimal.INFINITY);
   }
 
   abs(): Decimal {

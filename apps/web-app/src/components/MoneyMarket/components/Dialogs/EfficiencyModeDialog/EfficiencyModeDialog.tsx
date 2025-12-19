@@ -16,7 +16,6 @@ import { useAppForm } from '@/hooks/app-form';
 import { revalidateQuery } from '@/integrations/tanstack-query/root-provider';
 import { sdk } from '@/lib/sdk';
 import { useSlayerTx } from '@/lib/transactions';
-import type { MoneyMarketUserSummary } from '@sovryn/slayer-sdk';
 import { Decimal } from '@sovryn/slayer-shared';
 import { useStore } from '@tanstack/react-form';
 import { useLoaderDeps } from '@tanstack/react-router';
@@ -27,33 +26,6 @@ import { useStoreWithEqualityFn } from 'zustand/traditional';
 import { useMoneyMarketPositions } from '../../../hooks/use-money-positions';
 
 const DISABLED_EMODE_CATEGORY_ID = '0';
-
-const normalizeEmodeSummary = (
-  summary: MoneyMarketUserSummary,
-  categoryId: string,
-) => {
-  if (!summary) {
-    return {
-      ltv: Decimal.ZERO,
-      collateralRatio: Decimal.INFINITY,
-      liquidationRisk: false,
-    };
-  }
-
-  const healthFactor = Decimal.from(summary.healthFactor);
-  const liquidationRisk = healthFactor.lte(1) && healthFactor.gt(0);
-
-  const borrowed = Decimal.from(summary.totalBorrowsUsd);
-  const collateralRatio = borrowed.eq(0)
-    ? Decimal.INFINITY
-    : Decimal.from(summary.totalCollateralUsd).div(borrowed);
-
-  return {
-    ltv: Decimal.from(summary.currentLoanToValue).mul(100),
-    collateralRatio,
-    liquidationRisk,
-  };
-};
 
 const EfficiencyModeDialogForm = () => {
   const { pool } = useLoaderDeps({ from: '/money-market' });
@@ -71,10 +43,6 @@ const EfficiencyModeDialogForm = () => {
   const currentCategoryId = useMemo(
     () => String(summary?.userEmodeCategoryId ?? DISABLED_EMODE_CATEGORY_ID),
     [summary],
-  );
-  const currentCategory = useMemo(
-    () => eModes.find((c) => c.id.toString() === currentCategoryId),
-    [eModes, currentCategoryId],
   );
 
   const { begin } = useSlayerTx({
@@ -218,7 +186,7 @@ const EfficiencyModeDialogForm = () => {
             <form.SubscribeButton
               label="Submit"
               disabled={
-                currentCategoryId == selectedCategoryId ||
+                currentCategoryId === selectedCategoryId ||
                 hasLoansInOutsideCategory
               }
             />

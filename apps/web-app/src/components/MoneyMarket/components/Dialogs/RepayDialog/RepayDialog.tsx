@@ -57,7 +57,7 @@ const RepayDialogForm = () => {
   const { begin } = useSlayerTx({
     onClosed: (ok: boolean) => {
       if (ok) {
-        // close withdrawal dialog if tx was successful
+        // close dialog if tx was successful
         repayRequestStore.getState().reset();
       }
     },
@@ -133,12 +133,6 @@ const RepayDialogForm = () => {
           },
         ),
       );
-    },
-    onSubmitInvalid(props) {
-      console.log('Withdraw request submission invalid:', props);
-    },
-    onSubmitMeta() {
-      console.log('Withdraw request submission meta:', form);
     },
   });
 

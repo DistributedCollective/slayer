@@ -24,7 +24,7 @@ export const BorrowAssetsList: FC<BorrowAssetsListProps> = ({
       open={open}
       onClick={setOpen}
     >
-      {eModesCategoryId && (
+      {!!eModesCategoryId && (
         <Alert>
           <CircleAlert />
           <AlertDescription>

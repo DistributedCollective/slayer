@@ -94,12 +94,21 @@ function RouteComponent() {
 
   const borrowAssets = useMemo(
     () =>
-      reserves.filter(
-        (r) =>
-          r.canBeBorrowed &&
-          summary?.userEmodeCategoryId &&
-          r.eModeCategoryId === summary?.userEmodeCategoryId,
-      ),
+      reserves.filter((r) => {
+        if (!r.canBeBorrowed) {
+          return false;
+        }
+
+        const userEmodeCategoryId = summary?.userEmodeCategoryId;
+
+        // When E-Mode is disabled (category 0 or undefined, allow all borrowable assets)
+        if (userEmodeCategoryId === undefined || userEmodeCategoryId === 0) {
+          return true;
+        }
+
+        // When E-Mode is enabled, restrict to assets in the same E-Mode category.
+        return r.eModeCategoryId === userEmodeCategoryId;
+      }),
     [reserves, summary],
   );
 
@@ -121,7 +130,7 @@ function RouteComponent() {
           </p>
         </div>
 
-        <div className="flex flex-row justify-between md: py-12">
+        <div className="flex flex-row justify-between md:py-12">
           <TopPanel
             healthFactor={summary?.healthFactor ?? '0'}
             netApy={summary?.netApy ?? '0'}
