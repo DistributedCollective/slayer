@@ -414,16 +414,33 @@ export default async function (fastify: ZodFastifyInstance) {
           },
           supplied: item.underlyingBalance,
           suppliedUsd: item.underlyingBalanceUSD,
+          suppliedBalanceMarketReferenceCurrency: Decimal.from(
+            item.underlyingBalanceMarketReferenceCurrency,
+            baseCurrencyData.marketReferenceCurrencyDecimals,
+          ).toFixed(USD_DECIMALS),
 
           supplyApy: Decimal.from(item.reserve.supplyAPY).mul(100).toString(),
           canToggleCollateral,
 
-          borrowed: Decimal.from(item.variableBorrows)
-            .add(item.stableBorrows)
-            .toString(),
-          borrowedUsd: Decimal.from(item.variableBorrowsUSD)
-            .add(item.stableBorrowsUSD)
-            .toString(),
+          borrowed: Decimal.from(item.totalBorrows).toString(),
+          borrowedUsd: Decimal.from(item.totalBorrowsUSD).toString(),
+          borrowedBalanceMarketReferenceCurrency: Decimal.from(
+            item.totalBorrowsMarketReferenceCurrency,
+            baseCurrencyData.marketReferenceCurrencyDecimals,
+          ).toFixed(USD_DECIMALS),
+
+          borrowedStable: Decimal.from(item.stableBorrows).toString(),
+          borrowedStableUsd: Decimal.from(item.stableBorrowsUSD).toString(),
+          borrowedBalanceStableMarketReferenceCurrency: Decimal.from(
+            item.stableBorrowsMarketReferenceCurrency,
+            baseCurrencyData.marketReferenceCurrencyDecimals,
+          ).toFixed(USD_DECIMALS),
+          borrowedVariable: Decimal.from(item.variableBorrows).toString(),
+          borrowedVariableUsd: Decimal.from(item.variableBorrowsUSD).toString(),
+          borrowedBalanceVariableMarketReferenceCurrency: Decimal.from(
+            item.variableBorrowsMarketReferenceCurrency,
+            baseCurrencyData.marketReferenceCurrencyDecimals,
+          ).toFixed(USD_DECIMALS),
 
           collateral: item.usageAsCollateralEnabledOnUser,
 
@@ -477,6 +494,10 @@ export default async function (fastify: ZodFastifyInstance) {
             netWorthUsd: summary.netWorthUSD,
             userEmodeCategoryId: summary.userEmodeCategoryId,
             isInIsolationMode: summary.isInIsolationMode,
+
+            underlyingBalanceMarketReferenceCurrency: Decimal.from(
+              summary.totalBorrowsUSD,
+            ),
           },
         },
       };

@@ -116,6 +116,15 @@ export type MoneyMarketPoolPosition = {
 
   borrowed: string;
   borrowedUsd: string;
+  borrowedBalanceMarketReferenceCurrency: string;
+
+  borrowedStable: string;
+  borrowedStableUsd: string;
+  borrowedBalanceStableMarketReferenceCurrency: string;
+
+  borrowedVariable: string;
+  borrowedVariableUsd: string;
+  borrowedBalanceVariableMarketReferenceCurrency: string;
 
   borrowApy: string;
   stableBorrowApy: string;

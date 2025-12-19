@@ -92,7 +92,10 @@ const BorrowDialogForm = () => {
         sdk.moneyMarket.borrow(
           reserve,
           value.amount,
-          data?.position.borrowRateMode ?? BORROW_RATE_MODES.variable,
+          data?.position.reserve.stableBorrowRateEnabled &&
+            !data?.position.collateral
+            ? (data?.position.borrowRateMode ?? BORROW_RATE_MODES.variable)
+            : BORROW_RATE_MODES.variable,
           {
             account: address!,
           },

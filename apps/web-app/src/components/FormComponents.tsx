@@ -18,7 +18,13 @@ import { Checkbox } from './ui/checkbox';
 import { Field, FieldDescription, FieldError, FieldLabel } from './ui/field';
 import { InputGroup, InputGroupAddon, InputGroupInput } from './ui/input-group';
 
-export function SubscribeButton({ label }: { label: string }) {
+export function SubscribeButton({
+  label,
+  disabled,
+}: {
+  label: string;
+  disabled?: boolean;
+}) {
   const form = useFormContext();
   return (
     <form.Subscribe
@@ -27,7 +33,7 @@ export function SubscribeButton({ label }: { label: string }) {
       {([isSubmitting, isFormValid]) => (
         <Button
           type="submit"
-          disabled={isSubmitting || !isFormValid}
+          disabled={isSubmitting || !isFormValid || disabled}
           form={form.formId}
         >
           <Loader2Icon
@@ -272,8 +278,9 @@ export function AmountField({
   );
 
   const handleChange = (input: string) => {
+    const value = input.replace(',', '.');
     setRenderedValue(input);
-    field.setValue(tryDecimalValue(input) as never, {
+    field.setValue(tryDecimalValue(value) as never, {
       dontRunListeners: true,
     });
   };
@@ -331,8 +338,6 @@ export function AmountField({
           placeholder={placeholder}
           onBlur={field.handleBlur}
           onChange={(e) => handleChange(e.target.value)}
-          type="number"
-          step="0.00001"
         />
         {addonRight && (
           <InputGroupAddon align="inline-end">{addonRight}</InputGroupAddon>

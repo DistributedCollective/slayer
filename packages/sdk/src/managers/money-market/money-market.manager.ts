@@ -96,6 +96,13 @@ const poolAbi = [
     ],
     outputs: [],
   },
+  {
+    type: 'function',
+    name: 'setUserEMode',
+    stateMutability: 'nonpayable',
+    inputs: [{ type: 'uint8', name: 'categoryId' }],
+    outputs: [],
+  },
 ] as const;
 
 const debtWethApi = [
@@ -542,6 +549,36 @@ export class MoneyMarketManager<chain extends Chain> extends BaseClient<chain> {
     }
 
     throw new Error('Repay with collateral is not implemented yet');
+  }
+
+  async changeEfficiencyMode<account extends Account>(
+    pool: MoneyMarketPool,
+    categoryId: MoneyMarketPoolEmodeCategory['id'],
+    opts: TransactionOpts<account>,
+  ) {
+    log(`Changing efficiency mode to category ${categoryId} in pool ${pool}`, {
+      categoryId,
+      opts,
+    });
+
+    return [
+      {
+        id: 'set_user_emode',
+        title: !categoryId ? 'Disable E-Mode' : 'Enable E-Mode',
+        description: !categoryId ? 'Disable E-Mode' : `Enable E-Mode`,
+        request: makeTransactionRequest({
+          to: pool.address,
+          value: 0n,
+          chain: this.ctx.publicClient.chain,
+          account: opts.account,
+          data: encodeFunctionData({
+            abi: poolAbi,
+            functionName: 'setUserEMode',
+            args: [categoryId],
+          }),
+        }),
+      },
+    ];
   }
 
   private async repayWithBalance<account extends Account>(

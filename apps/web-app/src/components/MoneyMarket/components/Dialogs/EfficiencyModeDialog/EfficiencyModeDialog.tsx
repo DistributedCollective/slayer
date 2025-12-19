@@ -1,29 +1,36 @@
 import { useMoneyMarketReserves } from '@/components/MoneyMarket/hooks/use-money-reserves';
 import { efficiencyModeRequestStore } from '@/components/MoneyMarket/stores/efficiency-mode-request.store';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AmountRenderer } from '@/components/ui/amount-renderer';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Item, ItemContent, ItemGroup } from '@/components/ui/item';
 import { useAppForm } from '@/hooks/app-form';
+import { revalidateQuery } from '@/integrations/tanstack-query/root-provider';
+import { sdk } from '@/lib/sdk';
 import { useSlayerTx } from '@/lib/transactions';
 import type { MoneyMarketUserSummary } from '@sovryn/slayer-sdk';
 import { Decimal } from '@sovryn/slayer-shared';
+import { useStore } from '@tanstack/react-form';
 import { useLoaderDeps } from '@tanstack/react-router';
+import { CircleAlert } from 'lucide-react';
 import { useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
 import { useMoneyMarketPositions } from '../../../hooks/use-money-positions';
-import { borrowRequestStore } from '../../../stores/borrow-request.store';
+
+const DISABLED_EMODE_CATEGORY_ID = '0';
 
 const normalizeEmodeSummary = (
   summary: MoneyMarketUserSummary,
-  categoryId: number,
+  categoryId: string,
 ) => {
   if (!summary) {
     return {
@@ -52,43 +59,35 @@ const EfficiencyModeDialogForm = () => {
   const { pool } = useLoaderDeps({ from: '/money-market' });
   const { address } = useAccount();
 
-  const { eModes } = useMoneyMarketReserves({
+  const { eModes, reserves } = useMoneyMarketReserves({
     pool: pool || 'default',
   });
 
-  const { summary } = useMoneyMarketPositions({
+  const { summary, positions } = useMoneyMarketPositions({
     pool: pool || 'default',
     address: address!,
   });
 
   const currentCategoryId = useMemo(
-    () => summary?.userEmodeCategoryId ?? 0,
+    () => String(summary?.userEmodeCategoryId ?? DISABLED_EMODE_CATEGORY_ID),
     [summary],
   );
   const currentCategory = useMemo(
-    () => eModes.find((c) => c.id === currentCategoryId),
+    () => eModes.find((c) => c.id.toString() === currentCategoryId),
     [eModes, currentCategoryId],
   );
-
-  const emodeSummary = normalizeEmodeSummary(summary!, currentCategoryId);
-  const emodeThen = normalizeEmodeSummary(summary!, 0);
 
   const { begin } = useSlayerTx({
     onClosed: (ok: boolean) => {
       console.log('borrow tx modal closed, success:', ok);
       if (ok) {
-        // close borrowing dialog if tx was successful
-        borrowRequestStore.getState().reset();
+        efficiencyModeRequestStore.getState().reset();
       }
     },
     onCompleted: () => {
-      // revalidateQuery({
-      //   queryKey: [
-      //     'money-market:positions',
-      //     reserve.pool.id || 'default',
-      //     address,
-      //   ],
-      // });
+      revalidateQuery({
+        queryKey: ['money-market:positions', pool || 'default', address],
+      });
     },
   });
 
@@ -97,18 +96,35 @@ const EfficiencyModeDialogForm = () => {
       mode: currentCategoryId,
     },
     onSubmit: ({ value }) => {
-      // begin(() =>
-      //   sdk.moneyMarket.borrow(
-      //     reserve,
-      //     value.amount,
-      //     data?.position.borrowRateMode ?? BORROW_RATE_MODES.variable,
-      //     {
-      //       account: address!,
-      //     },
-      //   ),
-      // );
+      begin(() =>
+        sdk.moneyMarket.changeEfficiencyMode(
+          reserves[0].pool,
+          Number(value.mode),
+          {
+            account: address!,
+          },
+        ),
+      );
     },
   });
+
+  const selectedCategoryId = useStore(form.store, (state) => state.values.mode);
+
+  const selectedCategory = useMemo(
+    () => eModes.find((c) => c.id.toString() === selectedCategoryId),
+    [eModes, selectedCategoryId],
+  );
+
+  const hasLoansInOutsideCategory = useMemo(
+    () =>
+      selectedCategoryId !== DISABLED_EMODE_CATEGORY_ID &&
+      positions.some(
+        (item) =>
+          item.reserve.eModeCategoryId !== Number(selectedCategoryId) &&
+          Decimal.from(item.borrowed).gt(0),
+      ),
+    [positions, selectedCategoryId],
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,58 +132,82 @@ const EfficiencyModeDialogForm = () => {
     form.handleSubmit();
   };
 
-  // const handleEscapes = (e: Event) => {
-  //   e.preventDefault();
-  // };
-
-  // const calculateLiquidationPrice = useCallback(
-  //   (amount: string) => {
-  //     if (!data || Decimal.from(data.summary.collateralBalanceUsd).eq(0)) {
-  //       return Decimal.INFINITY;
-  //     }
-
-  //     return Decimal.from(
-  //       Decimal.from(amount || '0').mul(data.position.reserve.priceUsd),
-  //     )
-  //       .mul(data.summary.currentLiquidationThreshold)
-  //       .div(data.summary.collateralBalanceUsd);
-  //   },
-  //   [data],
-  // );
-
-  // const computeHealthFactor = useCallback(
-  //   (amount: string) => {
-  //     if (!data || Decimal.from(data.summary.totalBorrowsUsd).eq(0)) {
-  //       return Decimal.INFINITY;
-  //     }
-
-  //     return Decimal.from(data.summary.collateralBalanceUsd)
-  //       .mul(data.summary.currentLiquidationThreshold)
-  //       .div(
-  //         Decimal.from(data.summary.totalBorrowsUsd).add(
-  //           Decimal.from(amount || '0').mul(data.position.reserve.priceUsd),
-  //         ),
-  //       );
-  //   },
-  //   [data],
-  // );
+  const handleEscapes = (e: Event) => {
+    e.preventDefault();
+  };
 
   return (
     <form onSubmit={handleSubmit} id={form.formId}>
-      <DialogContent>
+      <DialogContent
+        onInteractOutside={handleEscapes}
+        onEscapeKeyDown={handleEscapes}
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Efficiency Mode</DialogTitle>
-          <DialogDescription>emode: {pool}</DialogDescription>
         </DialogHeader>
-        {summary?.userEmodeCategoryId} // {currentCategoryId} -{' '}
-        {currentCategory?.label || 'None'}
-        <p>ltv: {emodeSummary.ltv.toString()}</p>
-        <p>collateralRatio: {emodeSummary.collateralRatio.toString()}</p>
-        <p>liquidationRisk: {emodeSummary.liquidationRisk.toString()}</p>
-        <p>--- Previous ---</p>
-        <p>ltv: {emodeThen.ltv.toString()}</p>
-        <p>collateralRatio: {emodeThen.collateralRatio.toString()}</p>
-        <p>liquidationRisk: {emodeThen.liquidationRisk.toString()}</p>
+        <form.AppField name="mode">
+          {(field) => (
+            <field.Select
+              label="E-Mode Category"
+              values={[
+                {
+                  label: 'Disabled',
+                  value: DISABLED_EMODE_CATEGORY_ID,
+                },
+                ...eModes.map((category) => ({
+                  label: category.label,
+                  value: category.id.toString(),
+                })),
+              ]}
+            />
+          )}
+        </form.AppField>
+
+        {selectedCategory &&
+          selectedCategory.id.toString() !== DISABLED_EMODE_CATEGORY_ID && (
+            <>
+              <ItemGroup>
+                <Item size="sm" className="py-1">
+                  <ItemContent>Available assets:</ItemContent>
+                  <ItemContent>
+                    {selectedCategory.assets
+                      .map((token) => token.symbol)
+                      .join(', ')}
+                  </ItemContent>
+                </Item>
+                <Item size="sm" className="py-1">
+                  <ItemContent>Max Loan to value:</ItemContent>
+                  <ItemContent>
+                    <AmountRenderer
+                      value={selectedCategory.ltv.toString()}
+                      suffix="%"
+                      showApproxSign
+                    />
+                  </ItemContent>
+                </Item>
+              </ItemGroup>
+
+              {hasLoansInOutsideCategory ? (
+                <Alert variant="destructive">
+                  <CircleAlert />
+                  <AlertDescription>
+                    To enable E-mode for the {selectedCategory.label} category,
+                    all borrow positions outside of this category must be
+                    closed.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <Alert>
+                  <CircleAlert />
+                  <AlertDescription>
+                    Enabling E-Mode only allows you to borrow assets belonging
+                    to the selected category!
+                  </AlertDescription>
+                </Alert>
+              )}
+            </>
+          )}
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="secondary" type="button">
@@ -175,138 +215,18 @@ const EfficiencyModeDialogForm = () => {
             </Button>
           </DialogClose>
           <form.AppForm>
-            <form.SubscribeButton label="Submit" />
+            <form.SubscribeButton
+              label="Submit"
+              disabled={
+                currentCategoryId == selectedCategoryId ||
+                hasLoansInOutsideCategory
+              }
+            />
           </form.AppForm>
         </DialogFooter>
       </DialogContent>
     </form>
   );
-
-  // return (
-  //   <form onSubmit={handleSubmit} id={form.formId}>
-  //     <DialogContent
-  // onInteractOutside={handleEscapes}
-  // onEscapeKeyDown={handleEscapes}
-  // onOpenAutoFocus={(e) => e.preventDefault()}
-  //     >
-  //       <DialogHeader>
-  //         <DialogTitle>Borrow Asset</DialogTitle>
-  //         <DialogDescription className="sr-only">
-  //           Borrowing functionality is under development.
-  //         </DialogDescription>
-  //       </DialogHeader>
-  //       <form.AppField name="amount">
-  //         {(field) => (
-  //           <>
-  //             <field.AmountField
-  //               label="Amount to Borrow"
-  //               balance={{
-  //                 value: Decimal.from(
-  //                   data?.position.availableToBorrow ?? '0',
-  //                 ).toBigInt(),
-  //                 decimals: data?.position.token.decimals || 18,
-  //                 symbol: data?.position.token.symbol || '',
-  //               }}
-  //               placeholder="Amount to borrow"
-  //               addonRight={data?.position.token.symbol}
-  //             />
-  //           </>
-  //         )}
-  //       </form.AppField>
-
-  //       <form.Subscribe
-  //         selector={(state) =>
-  //           [
-  //             state.values.amount,
-  //             computeHealthFactor(state.values.amount ?? 0),
-  //           ] as const
-  //         }
-  //       >
-  //         {([amount, healthFactor]) => (
-  //           <ItemGroup>
-  //             <Item size="sm" variant="outline">
-  //               <ItemContent>
-  //                 <ItemContent>
-  //                   <div className="flex flex-row justify-between">
-  //                     <div>Collateral Ratio</div>
-  //                     <AmountRenderer
-  //                       value={healthFactor.mul(100).toNumber().toFixed(8)}
-  //                       suffix="%"
-  //                       showApproxSign
-  //                     />
-  //                   </div>
-  //                 </ItemContent>
-  //                 <ItemDescription>
-  //                   <HealthFactorBar
-  //                     value={healthFactor.toNumber()}
-  //                     options={{
-  //                       start: 1,
-  //                       middleStart: MINIMUM_HEALTH_FACTOR,
-  //                       middleEnd: 1.5,
-  //                       end: 2,
-  //                     }}
-  //                   />
-  //                 </ItemDescription>
-  //               </ItemContent>
-  //             </Item>
-  //             <Item size="sm" className="mt-2 py-1">
-  //               <ItemContent>Borrow APY</ItemContent>
-  //               <ItemContent>
-  //                 <AmountRenderer
-  //                   value={
-  //                     data?.position.borrowRateMode ===
-  //                     BORROW_RATE_MODES.variable
-  //                       ? (data?.position.reserve.variableBorrowApy ?? '0')
-  //                       : (data?.position.reserve.stableBorrowApy ?? '0')
-  //                   }
-  //                   suffix="%"
-  //                   showApproxSign
-  //                 />
-  //               </ItemContent>
-  //             </Item>
-  //             <Item size="sm" className="py-1">
-  //               <ItemContent>Liquidation price</ItemContent>
-  //               <ItemContent>
-  //                 <AmountRenderer
-  //                   value={calculateLiquidationPrice(amount).toString()}
-  //                   showApproxSign
-  //                   prefix="$"
-  //                 />
-  //               </ItemContent>
-  //             </Item>
-  //             <Item size="sm" className="py-1">
-  //               <ItemContent>{data?.position.token.symbol} Price</ItemContent>
-  //               <ItemContent>
-  //                 <AmountRenderer
-  //                   value={data?.position.reserve.priceUsd ?? '0'}
-  //                   prefix="$"
-  //                   showApproxSign
-  //                 />
-  //               </ItemContent>
-  //             </Item>
-  //           </ItemGroup>
-  //         )}
-  //       </form.Subscribe>
-
-  //       <form.AppField name="agree">
-  //         {(field) => (
-  //           <field.CheckBox label="I understand that my collateral may be liquidated or used to pay rollover fees if applicable." />
-  //         )}
-  //       </form.AppField>
-
-  //       <DialogFooter>
-  //         <DialogClose asChild>
-  //           <Button variant="secondary" type="button">
-  //             Close
-  //           </Button>
-  //         </DialogClose>
-  //         <form.AppForm>
-  //           <form.SubscribeButton label="Submit" />
-  //         </form.AppForm>
-  //       </DialogFooter>
-  //     </DialogContent>
-  //   </form>
-  // );
 };
 
 export const EfficiencyModeDialog = () => {
